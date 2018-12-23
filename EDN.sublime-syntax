@@ -1,0 +1,122 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/3/syntax.html
+name: EDN
+file_extensions:
+  - edn
+scope: source.edn
+variables:
+  wsb:     '(?<=^|[\s,()\[\]{}"]|#_)' # Clojure: add ~ @ ~@ ' `
+  wse:     '(?=$|[\s,()\[\]{}"])'
+  nwse:    '[^\s,()\[\]{}"]'
+  symbol:  '([-+.]|[-+.][\p{Alpha}.*+!\-_?$%&=<>''][\p{Alnum}.*+!\-_?$%&=<>'':#]*|[\p{Alpha}*!\_?$%&=<>][\p{Alnum}.*+!\-_?$%&=<>'':#]*)'
+  keyword: '[\p{Alnum}.*+!\-_?$%&=<>#][\p{Alnum}.*+!\-_?$%&=<>:#]*'
+contexts:
+  main:
+    - include: string
+    - include: char
+    - include: comment
+    - include: keyword
+    - include: constant
+    - include: symbol
+    - include: integer
+    - include: float
+    - include: ratio
+    - include: list
+    - include: vector
+    - include: set
+    - include: map
+    - match: '[\]\)\}]'
+      scope: invalid.illegal.stray-bracket-end
+
+  constant:
+    - match: '{{wsb}}nil{{wse}}'
+      scope: constant.nil.edn
+    - match: '{{wsb}}(true|false){{wse}}'
+      scope: constant.boolean.edn
+
+
+  string:
+    - match: '"'
+      scope: punctuation.definition.string.begin.edn
+      push:
+      - meta_scope: string.quoted.double.edn
+      - match: '\\(u[0-9a-fA-F]{4}|b|t|n|f|r|"|''|\\|[0-3]?[0-7]{1,2})|(\\.)'
+        scope: constant.character.escape.edn
+        captures:
+          2: invalid.illegal.escape.string.edn
+      - match: '"'
+        scope: punctuation.definition.string.end.edn
+        pop: true
+
+  char:
+    - match: '{{wsb}}(\\(u[0-9a-fA-F]{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s]){{wse}}|(\\{{nwse}}*))'
+      scope: constant.character.edn
+      captures:
+        3: invalid.illegal.char.edn
+
+  comment:
+    - match: '(;+).*$'
+      scope: comment.line.edn
+      captures:
+        1: punctuation.definition.comment.clojure
+#    - match: '#_|comment'
+#      scope: comment.form
+
+  symbol:
+    - match: '{{wsb}}(/|{{symbol}}(/{{symbol}})?){{wse}}'
+      scope: source.symbol.edn
+
+  keyword:
+    - match: '{{wsb}}:{{keyword}}(/{{keyword}})?{{wse}}' # Clojure: ::keywords
+      scope: constant.keyword.edn
+
+  integer:
+    - match: '{{wsb}}[+-]?(0|[1-9][0-9]*)N?{{wse}}'
+      scope: constant.numeric.integer.edn
+
+  float:
+    - match: '{{wsb}}[+-]?(0|[1-9][0-9]*)(M|\.[0-9]*M?|[eE][+-]?[0-9]+M?|\.[0-9]*[eE][+-]?[0-9]+M?){{wse}}'
+      scope: constant.numeric.float.edn
+    - match: '{{wsb}}(##Inf|##-Inf|##NaN){{wse}}'
+      scope: constant.numeric.float.edn
+
+  ratio:
+    - match: '{{wsb}}[+-]?(0|[1-9][0-9]*)/[1-9][0-9]*{{wse}}'
+      scope: constant.numeric.ratio.edn
+
+  list:
+    - match: '\('
+      scope: punctuation.definition.list.begin.edn
+      push:
+      - match: \)
+        scope: punctuation.definition.list.end.edn
+        pop: true
+      - include: main
+
+  vector:
+    - match: \[
+      scope: punctuation.definition.vector.begin.edn
+      push:
+      - match: \]
+        scope: punctuation.definition.vector.end.edn
+        pop: true
+      - include: main
+
+  map:
+    - match: '\{'
+      scope: punctuation.definition.map.begin.edn
+      push:
+      - match: \}
+        scope: punctuation.definition.map.end.edn
+        pop: true
+      - include: main
+
+  set:
+    - match: '#\{'
+      scope: punctuation.definition.set.begin.edn
+      push:
+      - match: \}
+        scope: punctuation.definition.set.end.edn
+        pop: true
+      - include: main
