@@ -1,74 +1,341 @@
-;; constants
-nil true false
-;; not constants
-nils Nil True ###Inf ##inf ##+Inf
+; SYNTAX TEST "Packages/sublime-clojure/EDN.sublime-syntax"
 
-;; strings
-"a(b))c" ""
-"([{)]} ;"
-"multi
-   line
+
+;; CONSTANTS
+  nil true false
+; ^^^ constant.language.edn
+;     ^^^^ constant.language.edn
+;          ^^^^^ constant.language.edn
+  Nil
+; ^^^ -constant.language.edn
+
+
+;; STRINGS
+  "abcde" 
+; ^^^^^^^ string.quoted.double.edn
+; ^       punctuation.definition.string.begin.edn
+;       ^ punctuation.definition.string.end.edn
+;        ^ -string.quoted.double.edn
+  "" 
+; ^^ string.quoted.double.edn
+; ^  punctuation.definition.string.begin.edn
+;  ^ punctuation.definition.string.end.edn
+;   ^ -string.quoted.double.edn
+  "([{)]} ;"
+; ^^^^^^^^^^ string.quoted.double.edn
+  "multi
+; ^       punctuation.definition.string.begin.edn
+; ^^^^^^  string.quoted.double.edn
+  line
+; ^^^^    string.quoted.double.edn
 string"
-;; escapes
-"\" \\ \' \r \n \b \t \f \377 \u221e \u221E"
-;; incorrect strings
-"\x \8 \u000 \u000g"
+; ^^^^^   string.quoted.double.edn
+;     ^   punctuation.definition.string.end.edn
+;; ESCAPES
+  "\" \\ \' \r \n \b \t \f \377 \u221e \u221E"
+;  ^^ constant.character.escape.edn
+;  ^  punctuation.definition.character.escape.begin.edn     
+;    ^ -constant.character.escape.edn
+;     ^^ constant.character.escape.edn
+;        ^^ constant.character.escape.edn
+;           ^^ constant.character.escape.edn
+;              ^^ constant.character.escape.edn
+;                 ^^ constant.character.escape.edn
+;                    ^^ constant.character.escape.edn
+;                       ^^ constant.character.escape.edn
+;                          ^^^^ constant.character.escape.edn
+;                               ^^^^^^ constant.character.escape.edn
+;                                      ^^^^^^ constant.character.escape.edn
+;; INCORRECT STRINGS
+  "\x \888 \u000 \u000g"
+;  ^^ constant.character.escape.edn invalid.illegal.escape.string.edn
+;  ^  punctuation.definition.character.escape.begin.edn 
+;    ^ -constant.character.escape.edn
+;     ^^ constant.character.escape.edn invalid.illegal.escape.string.edn
+;          ^^ constant.character.escape.edn invalid.illegal.escape.string.edn
+;                ^^ constant.character.escape.edn invalid.illegal.escape.string.edn
 
-;; chars
-\c \newline \\ \u221E \u221e \u2135 \o3 \o50 \o377 \а \] \) \} \" \' \; \,
-;; not chars
-\aa \u11 \o378 a\b \ (\aa)
 
-;; comments
-; single quote
-"abc" ; after something
-; "abc" ([{)]} ; ___
-#_(abc) #_[123] #_xyz
-(comment abc)
+;; CHARACTERS
+  \c \newline \u221E \u221e \o3 \o50 \o377
+; ^  punctuation.definition.character.begin.edn
+; ^^ constant.character.edn
+;   ^ -constant.character.edn
+;    ^^^^^^^^ constant.character.edn
+;             ^^^^^^ constant.character.edn
+;                    ^^^^^^ constant.character.edn
+;                           ^^^ constant.character.edn
+;                               ^^^^ constant.character.edn
+;                                    ^^^^^ constant.character.edn
+  \\ \] \) \} \" \' \; \,
+; ^^ constant.character.edn
+;    ^^ constant.character.edn
+;       ^^ constant.character.edn
+;          ^^ constant.character.edn
+;             ^^ constant.character.edn
+;                ^^ constant.character.edn
+;                   ^^ constant.character.edn
+;                      ^^ constant.character.edn
+;; NOT CHARACTERS
+  \aa \u11 \o378 \
+; ^^ constant.character.edn invalid.illegal.character.edn
+; ^  punctuation.definition.character.begin.edn
+;     ^^^^ constant.character.edn invalid.illegal.character.edn
+;          ^^^^^ constant.character.edn invalid.illegal.character.edn
+;                ^ constant.character.edn invalid.illegal.character.edn
+  a\b
+; ^^^ -constant.character.edn
 
-;; symbols
-abc, a11 абв a-b
-. * + ! - _ ? $ % & = < > .* -* +* ->> ?? $= a++ a: a:b a:b:c a# a#b a#b#c a' a'b -'
-a/b .../... a1/b2 абв/где / -a +a .a
-;; not symbols
-a/ /b 1a -1a +1a .1a 'a k::v
 
-;; keywords
-:a :abc :a1 :1 :1a:a1: :абв
-:. :* :+ :! :- :_ :? :$ :% :& := :< :> :.* :-* :+* :->> :?? :$= :a++ :a# :a#b :a#b#c
-:a/b :.../... :a1/b2 :1/2 :абв/где :-a :+a :.a
-;; not keywords
-:kv/ :/kv :/ :::kv :k/:v :k/v/v ::kv ::k/v :k::v
+;; COMMENTS
+  ; single semicolon
+; ^^^^^^^^^^^^^^^^^^ comment.line.semicolon.edn
+; ^                  punctuation.definition.comment.edn
+;  ^^^^^^^^^^^^^^^^^ -punctuation.definition.comment.edn
+  "abc" ; after something
+;       ^^^^^^^^^^^^^^^^^ comment.line.semicolon.edn
+;       ^                 punctuation.definition.comment.edn
+  #_(abc) #_[123] #_xyz
+; ^^ comment.block.edn punctuation.definition.comment.edn
+;         ^^ comment.block.edn punctuation.definition.comment.edn
+;                 ^^ comment.block.edn punctuation.definition.comment.edn
 
-;; integers
-0 1 9 10 100 -0 -1 -100 +0 +1 +100 1234567890
-0N 1N 9N 10N 100N -0N -1N -100N +0N +1N +100N 1234567890N
-;; not integers
-01 1n ++1 --1 +N -N
 
-;; floats
-0M 999M -0M +0M
-0.0 0.000 999.999 1. -0.0 +0.0 -999.999 +999.999
-0.0M 999.999M
-0e1 0e+1 0e-1 0E1 0E+1 0E-1 999e999 999e+999 999e-999 999E999 999E+999 999E-999
--0e+1 +0E-1
-0e1M 0e+1M 0e-1M 0E1M 0E+1M 0E-1M 999e999M 999e+999M 999e-999M 999E999M 999E+999M 999E-999M
-1.2e3 444.555E+666 1.e3 -1.2e3 +444.555E+666 1.2e3M 444.555E+666M
-##Inf ##-Inf ##NaN
-;; not floats
-00.0 1e2.3 1e 1.0e --1.0 ++1.0 +M -M 1m 
+;; SYMBOLS
+  a abc абв
+; ^ source.symbol.edn
+;  ^ -source.symbol.edn
+;   ^^^ source.symbol.edn
+;       ^^^ source.symbol.edn
+  . * + ! - _ ? $ % & = < > /
+; ^ source.symbol.edn
+;   ^ source.symbol.edn
+;     ^ source.symbol.edn
+;       ^ source.symbol.edn
+;         ^ source.symbol.edn
+;           ^ source.symbol.edn
+;             ^ source.symbol.edn
+;               ^ source.symbol.edn
+;                 ^ source.symbol.edn
+;                   ^ source.symbol.edn
+;                     ^ source.symbol.edn
+;                       ^ source.symbol.edn
+;                         ^ source.symbol.edn
+;                           ^ source.symbol.edn
+  a1 a: a# a' -a +a .a k::v
+; ^^ source.symbol.edn
+;    ^^ source.symbol.edn
+;       ^^ source.symbol.edn
+;          ^^ source.symbol.edn
+;             ^^ source.symbol.edn
+;                ^^ source.symbol.edn
+;                   ^^ source.symbol.edn
+;                      ^^^^ source.symbol.edn
+  a/b a1/b2 абв/где abc.def/uvw.xyz
+; ^^^ source.symbol.edn
+;  ^  punctuation.definition.symbol.namespace.edn
+;     ^^^^^ source.symbol.edn
+;       ^ punctuation.definition.symbol.namespace.edn
+;           ^^^^^^^ source.symbol.edn
+;              ^ punctuation.definition.symbol.namespace.edn
+;                   ^^^^^^^^^^^^^^^ source.symbol.edn
+;                          ^ punctuation.definition.symbol.namespace.edn
+; NOT SYMBOLS
+  a/ /b 1a -1a +1a .1a 'a
+; ^^^^^^^^^^^^^^^^^^^^^^^ -source.symbol.edn
 
-;; ratios
-1/2 0/2 999/999 +1/2 -1/2
-;; not ratios
-1/0 00/2 0/01 ++0/2 --0/2
+;; KEYWORDS
+  :a :abc :абв
+; ^^ constant.keyword.edn
+; ^  punctuation.definition.keyword.begin.edn
+;  ^ -punctuation.definition.keyword.begin.edn
+;   ^ -constant.keyword.edn
+;    ^^^^ constant.keyword.edn
+;         ^^^^ constant.keyword.edn
+  :. :* :+ :! :- :_ :? :$ :% :& := :< :> :# :1 :' :a: :k::v
+; ^^ constant.keyword.edn
+;    ^^ constant.keyword.edn
+;       ^^ constant.keyword.edn
+;          ^^ constant.keyword.edn
+;             ^^ constant.keyword.edn
+;                ^^ constant.keyword.edn
+;                   ^^ constant.keyword.edn
+;                      ^^ constant.keyword.edn
+;                         ^^ constant.keyword.edn
+;                            ^^ constant.keyword.edn
+;                               ^^ constant.keyword.edn
+;                                  ^^ constant.keyword.edn
+;                                     ^^ constant.keyword.edn
+;                                        ^^ constant.keyword.edn
+;                                           ^^ constant.keyword.edn
+;                                              ^^ constant.keyword.edn
+;                                                 ^^^ constant.keyword.edn
+;                                                     ^^^^^ constant.keyword.edn
+  :a/b :1/2 :абв/где :abc.def/uvw.xyz
+; ^^^^ constant.keyword.edn
+; ^    punctuation.definition.keyword.begin.edn
+;   ^  punctuation.definition.keyword.namespace.edn
+;     ^ -constant.keyword.edn
+;      ^^^^ constant.keyword.edn
+;        ^ punctuation.definition.keyword.namespace.edn
+;           ^^^^^^^^ constant.keyword.edn
+;               ^ punctuation.definition.keyword.namespace.edn
+;                    ^^^^^^^^^^^^^^^^ constant.keyword.edn
+;                            ^ punctuation.definition.keyword.namespace.edn
+;; NOT KEYWORDS
+  :kv/ :/kv :/ ::kv ::k/v :k/:v :k/v/v :::kv 
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ -constant.keyword.edn
 
-;; balancing
-[]]
-{}}}
-())))
-([)]))
-{[(}])]}
-{(["abc])}"])}
-{[()]} ;; )]}
-#{{)]}}}
+;; INTEGERS
+  0 1 23 1234567890 -0 +0 0N
+; ^ constant.numeric.integer.edn
+;  ^ -constant.numeric.integer.edn
+;   ^ constant.numeric.integer.edn
+;     ^^ constant.numeric.integer.edn
+;        ^^^^^^^^^^ constant.numeric.integer.edn
+;                   ^^ constant.numeric.integer.edn
+;                      ^^ constant.numeric.integer.edn
+;                         ^^ constant.numeric.integer.edn
+;                          ^ punctuation.definition.integer.precision.edn
+;; NOT INTEGERS
+  01 1n ++1 --1 +N -N
+; ^^^^^^^^^^^^^^^^^^^ -constant.numeric.integer.edn
+
+;; FLOATS
+  0.0 0.000 999.999 1. 0e1 2e+3 4e-5 67E89 1.2e3 444.555E+666 1.e3
+; ^^^ constant.numeric.float.edn
+;    ^ -constant.numeric.float.edn
+;     ^^^^^ constant.numeric.float.edn
+;           ^^^^^^^ constant.numeric.float.edn
+;                   ^^ constant.numeric.float.edn
+;                      ^^^ constant.numeric.float.edn
+;                          ^^^^ constant.numeric.float.edn
+;                               ^^^^ constant.numeric.float.edn
+;                                    ^^^^^ constant.numeric.float.edn
+;                                          ^^^^^ constant.numeric.float.edn
+;                                                ^^^^^^^^^^^^ constant.numeric.float.edn
+;                                                             ^^^^ constant.numeric.float.edn
+  0M 123M 4.M 5e6M 7.8e9M -3.14 +2e19M
+; ^^ constant.numeric.float.edn
+;  ^ punctuation.definition.float.precision.edn
+;    ^^^^ constant.numeric.float.edn
+;       ^ punctuation.definition.float.precision.edn
+;         ^^^ constant.numeric.float.edn
+;           ^ punctuation.definition.float.precision.edn
+;             ^^^^ constant.numeric.float.edn
+;                ^ punctuation.definition.float.precision.edn
+;                  ^^^^^^ constant.numeric.float.edn
+;                       ^ punctuation.definition.float.precision.edn
+;                         ^^^^^ constant.numeric.float.edn
+;                               ^^^^^^ constant.numeric.float.edn
+;                                    ^ punctuation.definition.float.precision.edn
+  ##Inf ##-Inf ##NaN
+; ^^^^^ constant.numeric.float.edn
+;       ^^^^^^ constant.numeric.float.edn
+;              ^^^^^ constant.numeric.float.edn
+;; NOT FLOATS
+  00.0 1e2.3 1e 1.0e --1.0 ++1.0 +M -M 1m ###Inf ##inf ##+Inf
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ -constant.numeric.float.edn
+
+
+;; RATIOS
+  1/2 0/2 999/999 +1/2 -1/2
+; ^^^ constant.numeric.ratio.edn
+;    ^ -constant.numeric.ratio.edn
+;     ^^^ constant.numeric.ratio.edn
+;         ^^^^^^^ constant.numeric.ratio.edn
+;                 ^^^^ constant.numeric.ratio.edn
+;                      ^^^^ constant.numeric.ratio.edn
+;; NOT RATIOS
+  1/0 00/2 0/01 ++0/2 --0/2
+; ^^^^^^^^^^^^^^^^^^^^^^^^^ -constant.numeric.ratio.edn
+
+
+;; TAGS
+  #inst "1985-01-25" 
+; ^^^^^^^^^^^^^^^^^^ constant.other.instant.edn
+;                   ^ -constant.other.instant.edn
+  #inst"2018-03-28T10:48:00.000"
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn
+  #inst   "2018-03-28T10:48:00.000Z"
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn
+  #inst "2018-03-28T10:48:00.000+01:30"
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn
+  #inst "2018-12-31T23:59:60.999999999-23:59"
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn
+  #uuid "c5634984-363d-4727-B8CE-b06ab1253c81"
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.uuid.edn
+  #datascript/DB {:schema {}, :datoms {}}
+; ^^^^^^^^^^^^^^ storage.type.tag.edn
+;; NOT TAGS
+  #inst "1985-"
+; ^^^^^^^^^^^^^ constant.other.instant.edn invalid.illegal.instant.edn
+  #inst "1985-20"
+; ^^^^^^^^^^^^^^^ constant.other.instant.edn invalid.illegal.instant.edn
+  #inst "1985-12-40"
+; ^^^^^^^^^^^^^^^^^^ constant.other.instant.edn invalid.illegal.instant.edn
+  #inst "1985-12-31T30"
+; ^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn invalid.illegal.instant.edn
+  #inst "1985-12-31T23:60"
+; ^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn invalid.illegal.instant.edn
+  #inst "1985-12-31T23:59:70"
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn invalid.illegal.instant.edn
+  #inst "1985-12-31T23:59:60.999+30:00"
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn invalid.illegal.instant.edn
+  #inst "1985-12-31T23:59:60.999+12:60"
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn invalid.illegal.instant.edn
+  #uuid "abc"
+; ^^^^^^^^^^^ constant.other.uuid.edn invalid.illegal.uuid.edn
+  #uuid "g5634984-363d-4727-b8ce-b06ab1253c81"
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.uuid.edn invalid.illegal.uuid.edn
+  #123 #a/ #_tag #{} ##Inf
+; ^^^^^^^^^^^^^^^^^^^^^^^^ -storage.type.tag.edn
+
+;; punctuation
+  , 
+; ^ punctuation.definition.comma.edn
+;  ^ -punctuation
+  " "
+; ^ punctuation.definition.string.begin.edn
+;  ^ -punctuation
+;   ^ punctuation.definition.string.end.edn
+  ( )
+; ^ punctuation.definition.list.begin.edn
+;  ^ -punctuation
+;   ^ punctuation.definition.list.end.edn
+  [ ]
+; ^ punctuation.definition.vector.begin.edn
+;  ^ -punctuation
+;   ^ punctuation.definition.vector.end.edn
+  { }
+; ^ punctuation.definition.map.begin.edn
+;  ^ -punctuation
+;   ^ punctuation.definition.map.end.edn
+  #{ }
+; ^^ punctuation.definition.set.begin.edn
+;   ^ -punctuation
+;    ^ punctuation.definition.set.end.edn
+  ; ...
+; ^ punctuation.definition.comment.edn
+;  ^ -punctuation
+
+;; BALANCING
+  []]
+; ^^ -invalid.illegal.stray-bracket-end
+;   ^ invalid.illegal.stray-bracket-end
+  {}}}
+; ^^ -invalid.illegal.stray-bracket-end
+;   ^^ invalid.illegal.stray-bracket-end
+  ())))
+; ^^ -invalid.illegal.stray-bracket-end
+;   ^^^ invalid.illegal.stray-bracket-end
+  ([)]))   {[(}])]}   #{{)]}}}
+;   ^    invalid.illegal.stray-bracket-end
+;      ^ invalid.illegal.stray-bracket-end
+;             ^^ invalid.illegal.stray-bracket-end
+;                        ^^ invalid.illegal.stray-bracket-end
+;                            ^ invalid.illegal.stray-bracket-end
+  {(["abc])}"])}
+; ^^^^^^^^^^^^^^ -invalid.illegal.stray-bracket-end
+  {[()]} ;; )]}
+; ^^^^^^^^^^^^^ -invalid.illegal.stray-bracket-end
