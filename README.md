@@ -1,5 +1,28 @@
 # Better EDN syntax for SublimeText 3
 
+## Why another syntax?
+
+All existing Clojure syntaxes for TextMate, Atom, VS Code and SublimeText get many things right, but annoyingly leave tons of edge cases (and sometimes later additions) out. Some examples:
+
+```clojure
+a'    ;; is a valid symbol
+/     ;; also a valid symbol
+:1    ;; is a valid keyword
+:a:b  ;; also a valid keyword
+\o377 ;; a valid character
+100N  ;; bigint 
+01/2  ;; invalid ratio
+#datascript/DB {} ;; custom reader tag with a namespace
+```
+
+Want to put your parser to test? Check out [syntax_specimen_edn.edn](./syntax_specimen_edn.edn).
+
+Sublime Text 3 also extended syntax definitions with stacks. With stacks it’s now possible to correctly highlight unbalanced brackets efficiently.
+
+Third reason is that EDN is a limited subset of Clojure. Many things allowed in Clojure are not allowed in EDN (anonymous functions, metadata, double-colon keywords, namespaced maps, derefs, quotes etc). So I decided EDN deserves its own grammar, same way JSON is separate from JavaScript in ST.
+
+## Highlights
+
 - Pedantic as per [EDN spec](https://github.com/edn-format/edn).
 - Strings, escape sequences, characters, comments, symbols, keywords, integers, floats, ratios, constants, instants, uuids and custom reader tags.
 - Highlights unbalanced brackets and incorrect escape sequences.
