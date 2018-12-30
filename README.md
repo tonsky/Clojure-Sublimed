@@ -51,6 +51,14 @@ Open `syntax_specimen_edn.edn` and see if it highlights everything it should and
 
 ## CHANGES
 
+### Dec 30, 2018
+
+- Supported namespaced `/` symbol.
+- Tokens can end directly with `;`, without any whitespace in between.
+- Content of `()[]{}` is marked with `meta.brackets.inner`, making possible different highlight for top-level and nested brackets.
+- All bracket/paren/braces classes replaces with single `punctuation.brackets.begin`/`...end`.
+- Beginning of Clojure syntax, highlighting `entity.name` in all `def*`/`ns` forms.
+
 ### Dec 24, 2018
 
 - Instants, uuids, custom reader tags;

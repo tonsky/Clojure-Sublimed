@@ -6,12 +6,18 @@ file_extensions:
   - edn
 scope: source.edn
 variables:
-  wsb:     '(?<=^|[\s,()\[\]{}"]|#_)' # Clojure: add ~ @ ~@ ' `
-  wse:     '(?=$|[\s,()\[\]{}"])'
-  nwse:    '[^\s,()\[\]{}"]'
-  hd:      '[0-9a-fA-F]'
-  symbol:  '(?:[-+.]|[-+.][\p{Alpha}.*+!\-_?$%&=<>''][\p{Alnum}.*+!\-_?$%&=<>''#:]*|[\p{Alpha}*!\_?$%&=<>][\p{Alnum}.*+!\-_?$%&=<>''#:]*)'
-  keyword: '[\p{Alnum}.*+!\-_?$%&=<>#''][\p{Alnum}.*+!\-_?$%&=<>#'':]*'
+  wsb:          '(?<=^|[\s,()\[\]{}"]|#_)' # Clojure: add ~ @ ~@ ' `
+  wse:           '(?=$|[\s,()\[\]{}";])'
+  nwse:              '[^\s,()\[\]{}";]'
+  hd:           '[0-9a-fA-F]'
+  sym_head:     '[\p{Alpha}*!_?$%&=<>]'
+  sym_head_lax: '[\p{Alpha}*!_?$%&=<>''\-+.#:]'
+  sym_body:     '[\p{Alpha}*!_?$%&=<>''\-+.#:0-9]'
+  ns_symbol:    '(?:[\-+.]|[\-+.]{{sym_head_lax}}{{sym_body}}*|{{sym_head}}{{sym_body}}*)'
+  symbol:       '(?:/|{{ns_symbol}})'
+  kw_head:      '[\p{Alpha}*!_?$%&=<>''\-+.#0-9]'
+  kw_body:      '[\p{Alpha}*!_?$%&=<>''\-+.#0-9:]'
+  keyword:      '{{kw_head}}{{kw_body}}*'
 contexts:
   main:
     - include: string
@@ -24,14 +30,10 @@ contexts:
     - include: float
     - include: ratio
     - include: tag
-    - include: list
-    - include: vector
-    - include: set
-    - include: map
+    - include: brackets
+    - include: stray-brackets
     - match: ','
       scope: punctuation.definition.comma.edn 
-    - match: '[\]\)\}]'
-      scope: invalid.illegal.stray-bracket-end
 
   constant:
     - match: '{{wsb}}(nil|true|false){{wse}}'
@@ -69,7 +71,7 @@ contexts:
       scope: comment.block.edn punctuation.definition.comment.edn
 
   symbol:
-    - match: '{{wsb}}(?:/|{{symbol}}(?:(/){{symbol}})?){{wse}}'
+    - match: '{{wsb}}(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
       scope: source.symbol.edn
       captures:
         1: punctuation.definition.symbol.namespace.edn
@@ -111,41 +113,35 @@ contexts:
       scope: constant.other.uuid.edn
       captures:
         2: invalid.illegal.uuid.edn
-    - match: '{{wsb}}#(?![_#{])(/|{{symbol}}(/{{symbol}})?){{wse}}'
+    - match: '{{wsb}}#(?![_#{])(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
       scope: storage.type.tag.edn
 
-  list:
-    - match: '\('
-      scope: punctuation.definition.list.begin.edn
+  brackets:
+    - match: '#?\('
+      scope: punctuation.brackets.begin.edn
       push:
+      - meta_content_scope: meta.brackets.inner
       - match: \)
-        scope: punctuation.definition.list.end.edn
-        pop: true
+        scope: punctuation.brackets.end.edn
+        pop:   true
       - include: main
-
-  vector:
     - match: \[
-      scope: punctuation.definition.vector.begin.edn
+      scope: punctuation.brackets.begin.edn
       push:
+      - meta_content_scope: meta.brackets.inner
       - match: \]
-        scope: punctuation.definition.vector.end.edn
-        pop: true
+        scope: punctuation.brackets.end.edn
+        pop:   true
+      - include: main
+    - match: '#?\{'
+      scope: punctuation.brackets.begin.edn
+      push:
+      - meta_content_scope: meta.brackets.inner
+      - match: \}
+        scope: punctuation.brackets.end.edn
+        pop:   true
       - include: main
 
-  map:
-    - match: '\{'
-      scope: punctuation.definition.map.begin.edn
-      push:
-      - match: \}
-        scope: punctuation.definition.map.end.edn
-        pop: true
-      - include: main
-
-  set:
-    - match: '#\{'
-      scope: punctuation.definition.set.begin.edn
-      push:
-      - match: \}
-        scope: punctuation.definition.set.end.edn
-        pop: true
-      - include: main
+  stray-brackets:
+    - match: '[\]\)\}]'
+      scope: invalid.illegal.stray-bracket-end

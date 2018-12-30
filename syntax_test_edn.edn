@@ -131,7 +131,7 @@ string"
 ;                ^^ source.symbol.edn
 ;                   ^^ source.symbol.edn
 ;                      ^^^^ source.symbol.edn
-  a/b a1/b2 абв/где abc.def/uvw.xyz
+  a/b a1/b2 абв/где abc.def/uvw.xyz clojure.core//
 ; ^^^ source.symbol.edn
 ;  ^  punctuation.definition.symbol.namespace.edn
 ;     ^^^^^ source.symbol.edn
@@ -140,6 +140,8 @@ string"
 ;              ^ punctuation.definition.symbol.namespace.edn
 ;                   ^^^^^^^^^^^^^^^ source.symbol.edn
 ;                          ^ punctuation.definition.symbol.namespace.edn
+;                                   ^^^^^^^^^^^^^^ source.symbol.edn
+;                                               ^ punctuation.definition.symbol.namespace.edn
 ; NOT SYMBOLS
   a/ /b 1a -1a +1a .1a 'a
 ; ^^^^^^^^^^^^^^^^^^^^^^^ -source.symbol.edn
@@ -300,21 +302,21 @@ string"
 ;  ^ -punctuation
 ;   ^ punctuation.definition.string.end.edn
   ( )
-; ^ punctuation.definition.list.begin.edn
-;  ^ -punctuation
-;   ^ punctuation.definition.list.end.edn
+; ^ punctuation.brackets.begin.edn
+;  ^ meta.brackets.inner -punctuation
+;   ^ punctuation.brackets.end.edn
   [ ]
-; ^ punctuation.definition.vector.begin.edn
-;  ^ -punctuation
-;   ^ punctuation.definition.vector.end.edn
+; ^ punctuation.brackets.begin.edn
+;  ^ meta.brackets.inner -punctuation
+;   ^ punctuation.brackets.end.edn
   { }
-; ^ punctuation.definition.map.begin.edn
-;  ^ -punctuation
-;   ^ punctuation.definition.map.end.edn
+; ^ punctuation.brackets.begin.edn
+;  ^ meta.brackets.inner -punctuation
+;   ^ punctuation.brackets.end.edn
   #{ }
-; ^^ punctuation.definition.set.begin.edn
-;   ^ -punctuation
-;    ^ punctuation.definition.set.end.edn
+; ^^ punctuation.brackets.begin.edn
+;   ^ meta.brackets.inner -punctuation
+;    ^ punctuation.brackets.end.edn
   ; ...
 ; ^ punctuation.definition.comment.edn
 ;  ^ -punctuation

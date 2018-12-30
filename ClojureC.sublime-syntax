@@ -1,0 +1,187 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/3/syntax.html
+name: ClojureC
+file_extensions: [clj, cljs, cljc, cljx, boot]
+scope: source.clojurec
+variables:
+  wsb:          '(?<=^|[\s,()\[\]{}~''`"^@]|#_|~@)'
+  wse:           '(?=$|[\s,()\[\]{}";])'
+  nwse:              '[^\s,()\[\]{}";]'
+  hd:           '[0-9a-fA-F]'
+  sym_head:     '[\p{Alpha}*!_?$%&=<>]'
+  sym_head_lax: '[\p{Alpha}*!_?$%&=<>''\-+.#:]'
+  sym_body:     '[\p{Alpha}*!_?$%&=<>''\-+.#:0-9]'
+  ns_symbol:    '(?:[\-+.]|[\-+.]{{sym_head_lax}}{{sym_body}}*|{{sym_head}}{{sym_body}}*)'
+  symbol:       '(?:/|{{ns_symbol}})'
+  kw_head:      '[\p{Alpha}*!_?$%&=<>''\-+.#0-9]'
+  kw_body:      '[\p{Alpha}*!_?$%&=<>''\-+.#0-9:]'
+  keyword:      '{{kw_head}}{{kw_body}}*'
+contexts:
+  main:
+    - include: forms
+    - include: stray-brackets
+
+  forms:
+    - include: defs
+    - include: metadata
+    - include: string
+    - include: character
+    - include: comment
+    - include: keyword
+    - include: constant
+    - include: symbol
+    - include: integer
+    - include: float
+    - include: ratio
+    - include: tag
+    - include: brackets
+    - match: ','
+      scope: punctuation.definition.comma.clojure 
+
+  metadata:
+    - match: '\^\s*'
+      scope: punctuation.definition.metadata.begin.clojure
+      push:
+        - meta_scope: meta.metadata.clojure
+        - include: forms
+        - match: ''
+          pop: true
+
+  defs:
+    - match: '(\()(def{{symbol}}*|{{ns_symbol}}(/)def{{symbol}}*|ns)(?=\s|\))'
+      captures:
+        1: punctuation.brackets.begin.clojure
+        2: meta.brackets.inner
+        3: punctuation.definition.symbol.namespace.clojure
+      push:
+        - meta_content_scope: meta.brackets.inner
+        - meta_scope: meta.definition.clojure
+        - match: '{{wsb}}(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
+          scope: source.symbol.clojure entity.name.clojure
+          captures:
+            1: punctuation.definition.symbol.namespace.clojure
+          set:
+            - meta_content_scope: meta.brackets.inner meta.definition.clojure
+            - include: forms
+            - match: '\)'
+              scope: meta.definition.clojure punctuation.brackets.end.clojure
+              pop: true
+            - include: stray-brackets
+        - match: '\)'
+          scope: punctuation.brackets.end.clojure
+          pop: true
+        - include: forms
+        - include: stray-brackets
+
+  constant:
+    - match: '{{wsb}}(nil|true|false){{wse}}'
+      scope: constant.language.clojure
+
+  string:
+    - match: '"'
+      scope: punctuation.definition.string.begin.clojure
+      push:
+      - meta_scope: string.quoted.double.clojure
+      - match: '(\\)(u[0-9a-fA-F]{4}|b|t|n|f|r|"|''|\\|[0-3]?[0-7]{1,2})|((\\).)'
+        scope: constant.character.escape.clojure
+        captures:
+          1: punctuation.definition.character.escape.begin.clojure 
+          3: invalid.illegal.escape.string.clojure
+          4: punctuation.definition.character.escape.begin.clojure
+      - match: '"'
+        scope: punctuation.definition.string.end.clojure
+        pop: true
+
+  character:
+    - match: '{{wsb}}((\\)(u[0-9a-fA-F]{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s]){{wse}}|((\\){{nwse}}*))'
+      scope: constant.character.clojure
+      captures:
+        2: punctuation.definition.character.begin.clojure
+        4: invalid.illegal.character.clojure
+        5: punctuation.definition.character.begin.clojure
+        
+  comment: # TODO Clojure (comment)
+    - match: '(;+).*$'
+      scope: comment.line.semicolon.clojure
+      captures:
+        1: punctuation.definition.comment.clojure
+    - match: '#_'
+      scope: comment.block.clojure punctuation.definition.comment.clojure
+
+  symbol:
+    - match: '{{wsb}}(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
+      scope: source.symbol.clojure
+      captures:
+        1: punctuation.definition.symbol.namespace.clojure
+
+  keyword:
+    - match: '{{wsb}}(::?){{keyword}}(?:(/){{keyword}})?{{wse}}'
+      scope: constant.keyword.clojure
+      captures:
+        1: punctuation.definition.keyword.begin.clojure
+        2: punctuation.definition.keyword.namespace.clojure
+
+  integer:
+    - match: '{{wsb}}[+-]?(?:0|[1-9][0-9]*)(N)?{{wse}}'
+      scope: constant.numeric.integer.clojure
+      captures:
+        1: punctuation.definition.integer.precision.clojure
+
+  float:
+    - match: '{{wsb}}[+-]?(?:0|[1-9][0-9]*)(?:(M)|\.[0-9]*(M)?|[eE][+-]?[0-9]+(M)?|\.[0-9]*[eE][+-]?[0-9]+(M)?){{wse}}'
+      scope: constant.numeric.float.clojure
+      captures:
+        1: punctuation.definition.float.precision.clojure
+        2: punctuation.definition.float.precision.clojure
+        3: punctuation.definition.float.precision.clojure
+        4: punctuation.definition.float.precision.clojure
+    - match: '{{wsb}}(##Inf|##-Inf|##NaN){{wse}}'
+      scope: constant.numeric.float.clojure
+
+  ratio:
+    - match: '{{wsb}}[+-]?(0|[1-9][0-9]*)/[1-9][0-9]*{{wse}}'
+      scope: constant.numeric.ratio.clojure
+
+  tag:
+    - match: '{{wsb}}(#inst\s*"\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?"|(#inst\s*"[^"]*")){{wse}}'
+      scope: constant.other.instant.clojure
+      captures:
+        2: invalid.illegal.instant.clojure
+    - match: '{{wsb}}(#uuid\s*"{{hd}}{8}-{{hd}}{4}-{{hd}}{4}-{{hd}}{4}-{{hd}}{12}"|(#uuid\s*"[^"]*")){{wse}}'
+      scope: constant.other.uuid.clojure
+      captures:
+        2: invalid.illegal.uuid.clojure
+    - match: '{{wsb}}#(?![_#{])(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
+      scope: storage.type.tag.clojure
+
+  brackets:
+    - match: '#?\('
+      scope: punctuation.brackets.begin.clojure
+      push:
+      - meta_content_scope: meta.brackets.inner
+      - match: \)
+        scope: punctuation.brackets.end.clojure
+        pop:   true
+      - include: main
+    - match: \[
+      scope: punctuation.brackets.begin.clojure
+      push:
+      - meta_content_scope: meta.brackets.inner
+      - match: \]
+        scope: punctuation.brackets.end.clojure
+        pop:   true
+      - include: main
+    - match: '#?\{'
+      scope: punctuation.brackets.begin.clojure
+      push:
+      - meta_content_scope: meta.brackets.inner
+      - match: \}
+        scope: punctuation.brackets.end.clojure
+        pop:   true
+      - include: main
+
+  stray-brackets:
+    - match: '[\]\)\}]'
+      scope: invalid.illegal.stray-bracket-end
+
