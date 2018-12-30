@@ -3,12 +3,11 @@
 
 ; SIMPLE DEFN
   (defn fname [arg arg2] body)
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.definition
-;                             ^ -meta.definition
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.definition & meta.parens
+;                             ^ -meta.definition -meta.parens
 ;       ^^^^^ source.symbol entity.name 
-; ^ punctuation.brackets.begin - meta.brackets.inner
-;  ^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.brackets.inner
-;                            ^ punctuation.brackets.end - meta.brackets.inner
+; ^ punctuation.section.parens.begin
+;                            ^ punctuation.section.parens.end
 
 
 ; EVERYTHING
@@ -47,25 +46,25 @@
 
 ; NAMESPACED DEF
   (rum/defcs x 1)
-; ^^^^^^^^^^^^^^^ meta.definition
+; ^^^^^^^^^^^^^^^ meta.definition & meta.parens
 ;            ^ entity.name
-; ^ punctuation.brackets.begin - meta.brackets.inner
-;  ^^^^^^^^^^^^^ meta.brackets.inner
+; ^ punctuation.section.parens.begin
 ;     ^ punctuation.definition.symbol.namespace.clojure
-;               ^ punctuation.brackets.end - meta.brackets.inner
+;               ^ punctuation.section.parens.end
 
 
 ; DEF OF NAMESPACED SYMBOL
   (defmethod clojure.test/report :error [m])
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.definition
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.definition & meta.parens
 ;            ^^^^^^^^^^^^^^^^^^^ entity.name
-; ^ punctuation.brackets.begin - meta.brackets.inner
-;  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.brackets.inner
+; ^ punctuation.section.parens.begin
 ;                        ^ punctuation.definition.symbol.namespace.clojure
-;                                          ^ punctuation.brackets.end - meta.brackets.inner
+;                                          ^ punctuation.section.parens.end
 
 
 ; NON-TOP DEF
-  ?#(:clj (def x 1))
-;         ^^^^^^^^^ meta.definition
+  #?(:clj (def x 1))
+;         ^^^^^^^^^ meta.definition & meta.parens
 ;              ^ entity.name
+;         ^ punctuation.section.parens.begin
+;                 ^ punctuation.section.parens.end

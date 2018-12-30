@@ -78,10 +78,10 @@ contexts:
 
   keyword:
     - match: '{{wsb}}(:){{keyword}}(?:(/){{keyword}})?{{wse}}' # Clojure: ::keywords
-      scope: constant.keyword.edn
+      scope: constant.other.keyword.edn
       captures:
-        1: punctuation.definition.keyword.begin.edn
-        2: punctuation.definition.keyword.namespace.edn
+        1: punctuation.definition.constant.begin.edn
+        2: punctuation.definition.constant.namespace.edn
 
   integer:
     - match: '{{wsb}}[+-]?(?:0|[1-9][0-9]*)(N)?{{wse}}'
@@ -118,27 +118,27 @@ contexts:
 
   brackets:
     - match: '#?\('
-      scope: punctuation.brackets.begin.edn
+      scope: punctuation.section.parens.begin.edn
       push:
-      - meta_content_scope: meta.brackets.inner
+      - meta_scope: meta.parens.edn
       - match: \)
-        scope: punctuation.brackets.end.edn
+        scope: punctuation.section.parens.end.edn
         pop:   true
       - include: main
     - match: \[
-      scope: punctuation.brackets.begin.edn
+      scope: punctuation.section.brackets.begin.edn
       push:
-      - meta_content_scope: meta.brackets.inner
+      - meta_scope: meta.brackets.edn
       - match: \]
-        scope: punctuation.brackets.end.edn
+        scope: punctuation.section.brackets.end.edn
         pop:   true
       - include: main
     - match: '#?\{'
-      scope: punctuation.brackets.begin.edn
+      scope: punctuation.section.braces.begin.edn
       push:
-      - meta_content_scope: meta.brackets.inner
+      - meta_scope: meta.braces.edn
       - match: \}
-        scope: punctuation.brackets.end.edn
+        scope: punctuation.section.braces.end.edn
         pop:   true
       - include: main
 

@@ -49,27 +49,25 @@ contexts:
           pop: true
 
   defs:
-    - match: '(\()(def{{symbol}}*|{{ns_symbol}}(/)def{{symbol}}*|ns)(?=\s|\))'
+    - match: '(\()(?:def{{symbol}}*|{{ns_symbol}}(/)def{{symbol}}*|ns)(?=\s|\))'
       captures:
-        1: punctuation.brackets.begin.clojure
-        2: meta.brackets.inner
-        3: punctuation.definition.symbol.namespace.clojure
+        1: punctuation.section.parens.begin.clojure
+        2: punctuation.definition.symbol.namespace.clojure
       push:
-        - meta_content_scope: meta.brackets.inner
-        - meta_scope: meta.definition.clojure
+        - meta_scope: meta.parens meta.definition.clojure
         - match: '{{wsb}}(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
           scope: source.symbol.clojure entity.name.clojure
           captures:
             1: punctuation.definition.symbol.namespace.clojure
           set:
-            - meta_content_scope: meta.brackets.inner meta.definition.clojure
+            - meta_content_scope: meta.parens meta.definition.clojure
             - include: forms
             - match: '\)'
-              scope: meta.definition.clojure punctuation.brackets.end.clojure
+              scope: meta.parens meta.definition.clojure punctuation.section.parens.end.clojure
               pop: true
             - include: stray-brackets
         - match: '\)'
-          scope: punctuation.brackets.end.clojure
+          scope: punctuation.section.parens.begin.clojure
           pop: true
         - include: forms
         - include: stray-brackets
@@ -117,10 +115,10 @@ contexts:
 
   keyword:
     - match: '{{wsb}}(::?){{keyword}}(?:(/){{keyword}})?{{wse}}'
-      scope: constant.keyword.clojure
+      scope: constant.other.keyword.clojure
       captures:
-        1: punctuation.definition.keyword.begin.clojure
-        2: punctuation.definition.keyword.namespace.clojure
+        1: punctuation.definition.constant.begin.clojure
+        2: punctuation.definition.constant.namespace.clojure
 
   integer:
     - match: '{{wsb}}[+-]?(?:0|[1-9][0-9]*)(N)?{{wse}}'
@@ -157,27 +155,27 @@ contexts:
 
   brackets:
     - match: '#?\('
-      scope: punctuation.brackets.begin.clojure
+      scope: punctuation.section.parens.begin.clojure
       push:
-      - meta_content_scope: meta.brackets.inner
+      - meta_scope: meta.parens.clojure
       - match: \)
-        scope: punctuation.brackets.end.clojure
+        scope: punctuation.section.parens.end.clojure
         pop:   true
       - include: main
     - match: \[
-      scope: punctuation.brackets.begin.clojure
+      scope: punctuation.section.brackets.begin.clojure
       push:
-      - meta_content_scope: meta.brackets.inner
+      - meta_scope: meta.brackets.clojure
       - match: \]
-        scope: punctuation.brackets.end.clojure
+        scope: punctuation.section.brackets.end.clojure
         pop:   true
       - include: main
     - match: '#?\{'
-      scope: punctuation.brackets.begin.clojure
+      scope: punctuation.section.braces.begin.clojure
       push:
-      - meta_content_scope: meta.brackets.inner
+      - meta_scope: meta.braces.clojure
       - match: \}
-        scope: punctuation.brackets.end.clojure
+        scope: punctuation.section.braces.end.clojure
         pop:   true
       - include: main
 
