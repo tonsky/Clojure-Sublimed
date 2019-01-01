@@ -51,6 +51,10 @@ Open `syntax_specimen_edn.edn` and see if it highlights everything it should and
 
 ## CHANGES
 
+### Jan 1, 2019
+
+- Syntax definition for Clojure regexps.
+
 ### Dec 30, 2018
 
 - Supported namespaced `/` symbol.

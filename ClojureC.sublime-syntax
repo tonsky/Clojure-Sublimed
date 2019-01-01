@@ -8,7 +8,6 @@ variables:
   wsb:          '(?<=^|[\s,()\[\]{}~''`"^@]|#_|~@)'
   wse:           '(?=$|[\s,()\[\]{}";])'
   nwse:              '[^\s,()\[\]{}";]'
-  hd:           '[0-9a-fA-F]'
   sym_head:     '[\p{Alpha}*!_?$%&=<>]'
   sym_head_lax: '[\p{Alpha}*!_?$%&=<>''\-+.#:]'
   sym_body:     '[\p{Alpha}*!_?$%&=<>''\-+.#:0-9]'
@@ -17,6 +16,7 @@ variables:
   kw_head:      '[\p{Alpha}*!_?$%&=<>''\-+.#0-9]'
   kw_body:      '[\p{Alpha}*!_?$%&=<>''\-+.#0-9:]'
   keyword:      '{{kw_head}}{{kw_body}}*'
+  regexp_name:  '[a-zA-Z][a-zA-Z0-9]*'
 contexts:
   main:
     - include: forms
@@ -25,6 +25,7 @@ contexts:
   forms:
     - include: defs
     - include: metadata
+    - include: regexp
     - include: string
     - include: character
     - include: comment
@@ -75,13 +76,79 @@ contexts:
   constant:
     - match: '{{wsb}}(nil|true|false){{wse}}'
       scope: constant.language.clojure
+    
+  regexp_quote:
+    - match: '\\Q'
+      scope: punctuation.section.quotation.begin.clojure
+      push:
+        - meta_content_scope: constant.character.escape.clojure
+        - match: '\\"'
+        - match: '(?=")'
+          pop:   true
+        - match: '\\E'
+          scope: punctuation.section.quotation.end.clojure
+          pop: true
+
+  regexp_shared:
+    - match: '(\\)(\\|0[0-3]?[0-7]{1,2}|x\h{2}|u\h{4}|x\{1?\h{1,5}\}|\N\{[a-zA-Z0-9\- ]+\}|[tnrfae]|c[A-Z]|[dDhHsSvVwW]|p\{[a-zA-Z]+\}|b\{g\}|[bBAGZz]|[RX]|[0-9]+|k<{{regexp_name}}>|[^a-zA-Z0-9])|((\\).)'
+      scope: constant.character.escape.clojure
+      captures:
+          1: punctuation.definition.character.escape.begin.clojure 
+          3: invalid.illegal.escape.regexp.clojure
+          4: punctuation.definition.character.escape.begin.clojure
+    - match: '"'
+      scope: punctuation.definition.string.end.clojure
+      pop: true
+    - match: '(\[)(\^)?(-)?'
+      captures:
+        1: punctuation.section.brackets.begin.clojure
+        2: keyword.operator.negation.regexp.clojure
+      push:
+      - match: '(?=")'
+        pop:   true
+      - match: '\]'
+        scope: punctuation.section.brackets.end.clojure
+        pop: true
+      - match: '-(?!\])'
+        scope: keyword.operator.range.regexp.clojure
+      - match: '&&'
+        scope: keyword.operator.intersection.regexp.clojure
+      - include: regexp_shared
+    - match: '(?:[?*+]|\{\d+(?:,(?:\d+)?)?\})[?+]?'
+      scope: keyword.operator.quantifier.regexp.clojure
+
+  regexp_group:
+    - include: regexp_quote
+    - include: regexp_shared
+    - match: '\|'
+      scope: keyword.operator.union.regexp.clojure
+    - match: '(\()(\?(<{{regexp_name}}>|:|=|!|<=|<!|>|[idmsux]*(-[idmsux]+)?:|[idmsuxU]*(-[idmsuxU]+)?(?!:)))?'
+      captures:
+        1: punctuation.section.parens.begin.clojure
+        2: keyword.operator.special.regexp.clojure
+      push:
+      - match: '(?=")'
+        pop:   true
+      - match: '\)'
+        scope: punctuation.section.parens.end.clojure
+        pop: true
+      - include: regexp_group
+    - match: '[\)]'
+      scope: invalid.illegal.stray-bracket-end
+
+  regexp:
+    - match: '{{wsb}}#"'
+      scope: punctuation.definition.string.begin.clojure
+      push:
+      - meta_scope: string.regexp.clojure
+      - include: regexp_group
 
   string:
-    - match: '"'
+    - match: '{{wsb}}"'
       scope: punctuation.definition.string.begin.clojure
       push:
       - meta_scope: string.quoted.double.clojure
-      - match: '(\\)(u[0-9a-fA-F]{4}|b|t|n|f|r|"|''|\\|[0-3]?[0-7]{1,2})|((\\).)'
+      - match: '(\\)(u\h{4}|b|t|n|f|r|"|''|\\|[0-3]?[0-7]{1,2})|((\\).)'
         scope: constant.character.escape.clojure
         captures:
           1: punctuation.definition.character.escape.begin.clojure 
@@ -92,7 +159,7 @@ contexts:
         pop: true
 
   character:
-    - match: '{{wsb}}((\\)(u[0-9a-fA-F]{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s]){{wse}}|((\\){{nwse}}*))'
+    - match: '{{wsb}}((\\)(u\h{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s]){{wse}}|((\\){{nwse}}*))'
       scope: constant.character.clojure
       captures:
         2: punctuation.definition.character.begin.clojure
@@ -146,7 +213,7 @@ contexts:
       scope: constant.other.instant.clojure
       captures:
         2: invalid.illegal.instant.clojure
-    - match: '{{wsb}}(#uuid\s*"{{hd}}{8}-{{hd}}{4}-{{hd}}{4}-{{hd}}{4}-{{hd}}{12}"|(#uuid\s*"[^"]*")){{wse}}'
+    - match: '{{wsb}}(#uuid\s*"\h{8}-\h{4}-\h{4}-\h{4}-\h{12}"|(#uuid\s*"[^"]*")){{wse}}'
       scope: constant.other.uuid.clojure
       captures:
         2: invalid.illegal.uuid.clojure
