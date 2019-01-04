@@ -1,6 +1,104 @@
 ; SYNTAX TEST "Packages/sublime-clojure/ClojureC.sublime-syntax"
 
 
+; VAR QUOTE
+  #'map
+; ^ keyword.operator.var
+  #' , map
+; ^^ keyword.operator.var
+;   ^^^^^^ - keyword.operator.var
+;    ^ punctuation.definition.comma
+
+
+; DEREF
+  @*atom
+; ^ keyword.operator.deref
+  @ , *atom
+; ^ keyword.operator.deref
+;  ^^^^^^^^ - keyword.operator.deref
+;   ^ punctuation.definition.comma
+
+
+; READER CONDITIONALS
+  #?(:clj 1 :cljs 2)
+; ^^^ punctuation.section.parens.begin
+; ^^^^^^^^^^^^^^^^^^ meta.parens
+;                  ^ punctuation.section.parens.end
+;                   ^ - punctuation - meta.section
+  #?@(:clj [3 4] :cljs [5 6])
+; ^^^^ punctuation.section.parens.begin
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.parens
+;                           ^ punctuation.section.parens.end
+;                            ^ - punctuation - meta.section
+
+
+; QUOTE
+  '[datascript :as ds] []
+; ^ keyword.operator.quote
+; ^^^^^^^^^^^^^^^^^^^^ meta.quoted
+;                     ^^^ -meta.quoted
+  'datascript.core []
+; ^ keyword.operator.quote
+; ^^^^^^^^^^^^^^^^ meta.quoted
+;                 ^^^ -meta.quoted
+  ' , datascript.core []
+; ^ keyword.operator.quote
+;  ^^^^^^^^^^^^^^^^^^ - keyword.operator
+; ^^^^^^^^^^^^^^^^^^^ meta.quoted
+;   ^ punctuation.definition.comma
+
+
+; SYNTAX QUOTE, UNQUOTE, UNQUOTE SPLICING
+  `(let [x# ~x] ~@(do `(...))) []
+; ^ keyword.operator.quote.syntax
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.quoted.syntax
+;                             ^^^ - meta.quoted
+;           ^ keyword.operator.unquote - invalid
+;           ^^ meta.quoted.syntax meta.unquoted
+;               ^^ keyword.operator.unquote - invalid
+;               ^^^^^^^^^^^^^ meta.quoted.syntax meta.unquoted
+;                     ^^^^^^ meta.quoted.syntax meta.unquoted meta.quoted.syntax
+  ` , (~ , x ~@ , xs) []
+; ^^^^^^^^^^^^^^^^^^^ meta.quoted.syntax
+;                    ^^^ - meta.quoted.syntax
+; ^ keyword.operator.quote.syntax
+;  ^^^^^^^^^^^^^^^^^^^^^ - keyword.operator.quote.syntax
+;   ^ punctuation.definition.comma
+;      ^^^^ meta.unquoted
+;      ^ keyword.operator.unquote
+;       ^^^ - keyword.operator.unquote
+;        ^ punctuation.definition.comma
+;            ^^^^^^^ meta.unquoted
+;            ^^ keyword.operator.unquote
+;              ^^^^^ - keyword.operator.unquote
+;               ^ punctuation.definition.comma
+
+
+; METADATA
+  ^{:a 1 :b 2} ^String ^"String" ^:dynamic x
+; ^ punctuation.definition.metadata
+; ^^^^^^^^^^^^ meta.metadata
+;             ^ - meta.metadata
+;              ^ punctuation.definition.metadata
+;              ^^^^^^^ meta.metadata
+;                     ^ - meta.metadata
+;                      ^ punctuation.definition.metadata
+;                      ^^^^^^^^^ meta.metadata
+;                               ^ - meta.metadata
+;                                ^ punctuation.definition.metadata
+;                                 ^^^^^^^^ meta.metadata
+;                                         ^ - meta.metadata
+  ^ , :dynamic x
+; ^^^^^^^^^^^^ meta.metadata
+;             ^^ - meta.metadata
+; ^ punctuation.definition.metadata
+;  ^^^^^^^^^^^^^ - punctuation.definition.metadata
+;   ^ punctuation.definition.comma
+  ^123 x  ^[:dynamic true] x
+;  ^^^ -meta.metadata
+;          ^^^^^^^^^^^^^^^ -meta.metadata
+
+
 ; REGEXPS
   #""
 ; ^^^ string.regexp
@@ -13,52 +111,52 @@
 ;      ^ punctuation.definition.string.end
 ;       ^ - string.regexp
   #"\\ \07 \077 \0377 \xFF \uFFFF \x{0} \x{FFFFF} \x{10FFFF} \N{white smiling face}"
-;   ^^ constant.character.escape.clojure
-;      ^^^ constant.character.escape.clojure
-;          ^^^^ constant.character.escape.clojure
-;               ^^^^^ constant.character.escape.clojure
-;                     ^^^^ constant.character.escape.clojure
-;                          ^^^^^^ constant.character.escape.clojure
-;                                 ^^^^^ constant.character.escape.clojure
-;                                       ^^^^^^^^^ constant.character.escape.clojure
-;                                                 ^^^^^^^^^^ constant.character.escape.clojure
-;                                                            ^^^^^^^^^^^^^^^^^^^^^^ constant.character.escape.clojure
+;   ^^ constant.character.escape
+;      ^^^ constant.character.escape
+;          ^^^^ constant.character.escape
+;               ^^^^^ constant.character.escape
+;                     ^^^^ constant.character.escape
+;                          ^^^^^^ constant.character.escape
+;                                 ^^^^^ constant.character.escape
+;                                       ^^^^^^^^^ constant.character.escape
+;                                                 ^^^^^^^^^^ constant.character.escape
+;                                                            ^^^^^^^^^^^^^^^^^^^^^^ constant.character.escape
   #"\t \n \r \f \a \e \cC \d \D \h \H \s \S \v \V \w \W"
-;   ^^ constant.character.escape.clojure
-;      ^^ constant.character.escape.clojure
-;         ^^ constant.character.escape.clojure
-;            ^^ constant.character.escape.clojure
-;               ^^ constant.character.escape.clojure
-;                  ^^ constant.character.escape.clojure
-;                     ^^^ constant.character.escape.clojure
-;                         ^^ constant.character.escape.clojure
-;                            ^^ constant.character.escape.clojure
-;                               ^^ constant.character.escape.clojure
-;                                  ^^ constant.character.escape.clojure
-;                                     ^^ constant.character.escape.clojure
-;                                        ^^ constant.character.escape.clojure
-;                                           ^^ constant.character.escape.clojure
-;                                              ^^ constant.character.escape.clojure
-;                                                 ^^ constant.character.escape.clojure
-;                                                    ^^ constant.character.escape.clojure
+;   ^^ constant.character.escape
+;      ^^ constant.character.escape
+;         ^^ constant.character.escape
+;            ^^ constant.character.escape
+;               ^^ constant.character.escape
+;                  ^^ constant.character.escape
+;                     ^^^ constant.character.escape
+;                         ^^ constant.character.escape
+;                            ^^ constant.character.escape
+;                               ^^ constant.character.escape
+;                                  ^^ constant.character.escape
+;                                     ^^ constant.character.escape
+;                                        ^^ constant.character.escape
+;                                           ^^ constant.character.escape
+;                                              ^^ constant.character.escape
+;                                                 ^^ constant.character.escape
+;                                                    ^^ constant.character.escape
   #"\p{IsLatin} \p{L} \b \b{g} \B \A \G \Z \z \R \X \0 \99 \k<gr3> \( \} \""
-;   ^^^^^^^^^^^ constant.character.escape.clojure
-;               ^^^^^ constant.character.escape.clojure
-;                     ^^ constant.character.escape.clojure
-;                        ^^^^^ constant.character.escape.clojure
-;                              ^^ constant.character.escape.clojure
-;                                 ^^ constant.character.escape.clojure
-;                                    ^^ constant.character.escape.clojure
-;                                       ^^ constant.character.escape.clojure
-;                                          ^^ constant.character.escape.clojure
-;                                             ^^ constant.character.escape.clojure
-;                                                ^^ constant.character.escape.clojure
-;                                                   ^^ constant.character.escape.clojure
-;                                                      ^^^ constant.character.escape.clojure
-;                                                          ^^^^^^^ constant.character.escape.clojure
-;                                                                  ^^ constant.character.escape.clojure
-;                                                                     ^^ constant.character.escape.clojure
-;                                                                        ^^ constant.character.escape.clojure
+;   ^^^^^^^^^^^ constant.character.escape
+;               ^^^^^ constant.character.escape
+;                     ^^ constant.character.escape
+;                        ^^^^^ constant.character.escape
+;                              ^^ constant.character.escape
+;                                 ^^ constant.character.escape
+;                                    ^^ constant.character.escape
+;                                       ^^ constant.character.escape
+;                                          ^^ constant.character.escape
+;                                             ^^ constant.character.escape
+;                                                ^^ constant.character.escape
+;                                                   ^^ constant.character.escape
+;                                                      ^^^ constant.character.escape
+;                                                          ^^^^^^^ constant.character.escape
+;                                                                  ^^ constant.character.escape
+;                                                                     ^^ constant.character.escape
+;                                                                        ^^ constant.character.escape
   #"\y \x \uABC \p{Is Latin} \k<1gr> "
 ;   ^^ invalid.illegal.escape.regexp
 ;      ^^ invalid.illegal.escape.regexp
@@ -124,12 +222,12 @@
   #"(abc) \Q (a|b) [^DE] )] \" \E (abc)"
 ;       ^ punctuation.section.parens.end - constant.character.escape
 ;         ^^ punctuation.section.quotation.begin
-;           ^^^^^^^^^^^^^^^^^^^ constant.character.escape.clojure - punctuation - keyword - invalid
+;           ^^^^^^^^^^^^^^^^^^^ constant.character.escape - punctuation - keyword - invalid
 ;                              ^^ punctuation.section.quotation.end
 ;                                 ^ punctuation.section.parens.begin - constant.character.escape
   #"\Q ABC" #"(" #"["
 ; ^^^^^^^^^ string.regexp
-;     ^^^^ constant.character.escape.clojure
+;     ^^^^ constant.character.escape
 ;         ^ punctuation.definition.string.end - constant.character.escape
 ;          ^ - string.regexp
 ;           ^^^^ string.regexp
@@ -186,7 +284,7 @@
 ; ^^^^^^^^^^^^^^^ meta.definition & meta.parens
 ;            ^ entity.name
 ; ^ punctuation.section.parens.begin
-;     ^ punctuation.definition.symbol.namespace.clojure
+;     ^ punctuation.definition.symbol.namespace
 ;               ^ punctuation.section.parens.end
 
 
@@ -195,7 +293,7 @@
 ; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.definition & meta.parens
 ;            ^^^^^^^^^^^^^^^^^^^ entity.name
 ; ^ punctuation.section.parens.begin
-;                        ^ punctuation.definition.symbol.namespace.clojure
+;                        ^ punctuation.definition.symbol.namespace
 ;                                          ^ punctuation.section.parens.end
 
 
@@ -205,3 +303,11 @@
 ;              ^ entity.name
 ;         ^ punctuation.section.parens.begin
 ;                 ^ punctuation.section.parens.end
+
+
+; ANONYMOUS FN
+  #(+ %1 %2)
+; ^^^^^^^^^^ meta.function & meta.parens
+;           ^^ - meta.function
+; ^^ punctuation.section.parens.begin
+;          ^ punctuation.section.parens.end

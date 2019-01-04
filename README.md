@@ -1,4 +1,4 @@
-# Better EDN syntax for SublimeText 3
+# Better Clojure and EDN syntaxes for SublimeText 3
 
 ## Why another syntax?
 
@@ -9,24 +9,35 @@ a'    ;; is a valid symbol
 /     ;; also a valid symbol
 :1    ;; is a valid keyword
 :a:b  ;; also a valid keyword
+:абв  ;; unicode keyword
 \o377 ;; a valid character
 100N  ;; bigint 
 01/2  ;; invalid ratio
-#datascript/DB {} ;; custom reader tag with a namespace
+#datascript/DB {}   ;; custom reader tag with a namespace
+^:kw ^"String" sym  ;; more than one metadata, non-map metadata
+(rum/defc label []) ;; custom def form with a namespace
+@ , *atom           ;; a space and a comma between deref and a symbol
 ```
 
-Want to put your parser to test? Check out [syntax_specimen_edn.edn](./syntax_specimen_edn.edn).
+<img src="https://s.tonsky.me/imgs/sublime_clojure.png">
 
-Sublime Text 3 also extended syntax definitions with stacks. With stacks it’s now possible to correctly highlight unbalanced brackets efficiently.
+Want to put your parser to test? Check out [syntax_test_edn.edn](./syntax_test_edn.edn) and [syntax_test_clojure.cljc](./syntax_test_clojure.cljc).
+
+Sublime Text 3 also extended syntax definitions with stacks. It’s now possible to highlight unbalanced brackets efficiently.
 
 Third reason is that EDN is a limited subset of Clojure. Many things allowed in Clojure are not allowed in EDN (anonymous functions, metadata, double-colon keywords, namespaced maps, derefs, quotes etc). So I decided EDN deserves its own grammar, same way JSON is separate from JavaScript in ST.
 
 ## Highlights
 
-- Pedantic as per [EDN spec](https://github.com/edn-format/edn).
-- Strings, escape sequences, characters, comments, symbols, keywords, integers, floats, ratios, constants, instants, uuids and custom reader tags.
-- Highlights unbalanced brackets and incorrect escape sequences.
+- Pedantic as per [EDN spec](https://github.com/edn-format/edn) and [Clojure Reader](https://clojure.org/reference/reader).
+- Rigorously tested.
+- Detects unbalanced brackets and incorrect escape sequences.
+- Punctuation and validation _inside_ regexps. 
+- Quoted and unquoted regions are marked for highlighting.
+- Semantically correct tokenization, perfect for fonts with ligatures.
 - Unicode-friendly (supports unicode letters in symbols/keywords).
+- EDN: Strings, escape sequences, characters, comments, symbols, keywords, integers, floats, ratios, constants, instants, uuids and custom reader tags.
+- Clojure: EDN + regular expressions, custom def forms, reader conditionals, quotes and syntax quotes, metadata.
 
 ## Installation
 
@@ -37,13 +48,7 @@ ln -s `pwd`/sublime-clojure ~/Library/Application Support/Sublime Text 3/Package
 
 ## Testing
 
-### Automated
-
-Open `syntax_test_edn.edn` and run `Build`.
-
-### Manual
-
-Open `syntax_specimen_edn.edn` and see if it highlights everything it should and doesn’t highlight anything it shouldn’t.
+Open `syntax_test_edn.edn` or `syntax_test_clojure.cljc` and run `Build`.
 
 ## License
 
@@ -51,9 +56,13 @@ Open `syntax_specimen_edn.edn` and see if it highlights everything it should and
 
 ## CHANGES
 
+### Jan 3, 2019
+
+- Clojure syntax: quotes, reader conditionals, operators, better whitespace handling.
+
 ### Jan 1, 2019
 
-- Syntax definition for Clojure regexps.
+- Clojure syntax: regexps.
 
 ### Dec 30, 2018
 

@@ -5,7 +5,8 @@ name: ClojureC
 file_extensions: [clj, cljs, cljc, cljx, boot]
 scope: source.clojurec
 variables:
-  wsb:          '(?<=^|[\s,()\[\]{}~''`"^@]|#_|~@)'
+  ws:           '(?:\s|(,))*'
+  wsb:          '(?<=^|[\s,()\[\]{}~''`"^@]|#_)'
   wse:           '(?=$|[\s,()\[\]{}";])'
   nwse:              '[^\s,()\[\]{}";]'
   sym_head:     '[\p{Alpha}*!_?$%&=<>]'
@@ -23,7 +24,13 @@ contexts:
     - include: stray-brackets
 
   forms:
+    - include: var_quote
+    - include: deref
+    - include: reader_conditionals
+    - include: syntax_quote
+    - include: quote
     - include: defs
+    - include: anonymous_fn
     - include: metadata
     - include: regexp
     - include: string
@@ -36,16 +43,80 @@ contexts:
     - include: float
     - include: ratio
     - include: tag
-    - include: brackets
+    - include: list
+    - include: vector
+    - include: map
+    - include: set
     - match: ','
       scope: punctuation.definition.comma.clojure 
 
+  var_quote:
+    - match: '(#''){{ws}}'
+      captures:
+        1: keyword.operator.var.clojure
+        2: punctuation.definition.comma.clojure
+
+  deref:
+    - match: '(@){{ws}}'
+      captures:
+        1: keyword.operator.deref.clojure
+        2: punctuation.definition.comma.clojure
+
+
+  reader_conditionals:
+    - match: '#\?@?{{ws}}\('
+      scope: punctuation.section.parens.begin.clojure
+      captures:
+        1: punctuation.definition.comma.clojure
+      push:
+        - meta_scope: meta.parens
+        - match: '\)'
+          scope: punctuation.section.parens.end.clojure
+          pop:   true
+        - include: forms
+
+  quote:
+    - match: '(''){{ws}}'
+      captures:
+        1: keyword.operator.quote.clojure
+        2: punctuation.definition.comma.clojure
+      push:
+        - meta_scope: meta.quoted.clojure
+        - include: forms
+        - match: ''
+          pop: true
+
+  syntax_quote:
+    - match: '(~@?){{ws}}'
+      captures: 
+        1: keyword.operator.unquote.clojure
+        2: punctuation.definition.comma.clojure
+      push:
+        - meta_scope: meta.unquoted.clojure
+        - include: forms
+        - match: ''
+          pop: true
+    - match: '(`){{ws}}'
+      captures:
+        1: keyword.operator.quote.syntax.clojure
+        2: punctuation.definition.comma.clojure
+      push:
+        - meta_scope: meta.quoted.syntax.clojure
+        - include: forms
+        - match: ''
+          pop: true
+
   metadata:
-    - match: '\^\s*'
-      scope: punctuation.definition.metadata.begin.clojure
+    - match: '(\^){{ws}}'
+      captures:
+        1: punctuation.definition.metadata.begin.clojure
+        2: punctuation.definition.comma.clojure
       push:
         - meta_scope: meta.metadata.clojure
-        - include: forms
+        - include: map
+        - include: keyword
+        - include: symbol
+        - include: string
         - match: ''
           pop: true
 
@@ -72,6 +143,16 @@ contexts:
           pop: true
         - include: forms
         - include: stray-brackets
+
+  anonymous_fn:
+    - match: '#\('
+      scope: punctuation.section.parens.begin.clojure
+      push:
+      - meta_scope: meta.parens.clojure meta.function.clojure
+      - match: \)
+        scope: punctuation.section.parens.end.clojure
+        pop:   true
+      - include: main
 
   constant:
     - match: '{{wsb}}(nil|true|false){{wse}}'
@@ -220,8 +301,8 @@ contexts:
     - match: '{{wsb}}#(?![_#{])(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
       scope: storage.type.tag.clojure
 
-  brackets:
-    - match: '#?\('
+  list:
+    - match: '\('
       scope: punctuation.section.parens.begin.clojure
       push:
       - meta_scope: meta.parens.clojure
@@ -229,6 +310,8 @@ contexts:
         scope: punctuation.section.parens.end.clojure
         pop:   true
       - include: main
+
+  vector:
     - match: \[
       scope: punctuation.section.brackets.begin.clojure
       push:
@@ -237,7 +320,19 @@ contexts:
         scope: punctuation.section.brackets.end.clojure
         pop:   true
       - include: main
-    - match: '#?\{'
+
+  map:
+    - match: '\{'
+      scope: punctuation.section.braces.begin.clojure
+      push:
+      - meta_scope: meta.braces.clojure
+      - match: \}
+        scope: punctuation.section.braces.end.clojure
+        pop:   true
+      - include: main
+
+  set:
+    - match: '#\{'
       scope: punctuation.section.braces.begin.clojure
       push:
       - meta_scope: meta.braces.clojure

@@ -4,20 +4,20 @@
 [ ] defn -> entity.name.function
 [v] rest -> entity.name.*
 
-[ ] Reader conditionals `#?()`m `#?@()`
-
-[v] Regexps `#""`
-[ ] Lambdas `#()`
-[ ] Quotes `'` `&` `\``
-[ ] Splices `~` `~@`
-[ ] Vars `#'`
-[ ] derefs `@`
+[v] Reader conditionals `#?()` `#?@()`
+[v] Regexps `#"..."`
+[v] Lambdas `#(...)`
+[v] Quotes `'` `&` `\``
+[v] Splices `~` `~@`
+[v] Vars `#'`
+[v] derefs `@`
 [ ] accessors `.`, `.-` punctuation.accessor
 
 [ ] Variables? variable.other, variable.language (`&env`, `&form`), variable.parameter, variable.other.member
 [ ] Fn invocations: variable.function
 [ ] Mark as constant everything escaped?
 [ ] Do not match symbols?
+[v] Limit data types of metadata (symbol/string/map/keyword)
 
 # REPL
 
