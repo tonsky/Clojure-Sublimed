@@ -19,7 +19,7 @@ a'    ;; is a valid symbol
 @ , *atom           ;; a space and a comma between deref and a symbol
 ```
 
-<img src="https://s.tonsky.me/imgs/sublime_clojure.png">
+<img src="https://s.tonsky.me/imgs/sublimeclojure.png">
 
 Want to put your parser to test? Check out [syntax_test_edn.edn](./syntax_test_edn.edn) and [syntax_test_clojure.cljc](./syntax_test_clojure.cljc).
 
@@ -45,6 +45,8 @@ Third reason is that EDN is a limited subset of Clojure. Many things allowed in 
 git clone https://github.com/tonsky/sublime-clojure.git
 ln -s `pwd`/sublime-clojure ~/Library/Application Support/Sublime Text 3/Packages/
 ```
+
+If needed, assign new syntax via `View → Syntax → Open all with current extension as... → sublime-clojure → ClojureC / EDN`.
 
 ## Testing
 
