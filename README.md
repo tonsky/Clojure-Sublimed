@@ -43,7 +43,7 @@ Third reason is that EDN is a limited subset of Clojure. Many things allowed in 
 
 ```
 git clone https://github.com/tonsky/sublime-clojure.git
-ln -s `pwd`/sublime-clojure ~/Library/Application Support/Sublime Text 3/Packages/
+ln -s `pwd`/sublime-clojure ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/
 ```
 
 If needed, assign new syntax via `View → Syntax → Open all with current extension as... → sublime-clojure → ClojureC / EDN`.
