@@ -54,7 +54,7 @@ Open `syntax_test_edn.edn` or `syntax_test_clojure.cljc` and run `Build`.
 
 ## Using with SublimeREPL
 
-You can get sublime-clojure working together with SublimeREPL. [Instructions|https://github.com/tonsky/sublime-clojure/issues/2]
+You can get sublime-clojure working together with SublimeREPL. [Instructions](https://github.com/tonsky/sublime-clojure/issues/2).
 
 ## License
 
