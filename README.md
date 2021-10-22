@@ -9,7 +9,7 @@ This package provides Clojure support for Sublime Text and includes:
 
 Unfortunately, Clojure syntax that is shipped with Sublime Text handles many edge cases badly:
 
-![](./screenshots/syntaxes.png)
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/syntaxes.png" width="560" height="353" alt="Syntaxes">
 
 Unlike default Clojure syntax, this package is:
 
@@ -68,7 +68,7 @@ Differences from [Tutkain](https://tutkain.flowthing.me/):
 
 ## Installation
 
-Intall package:
+Install package:
 
 - `Package Control: Install Package` → `Sublime Clojure`
 
@@ -88,37 +88,45 @@ From here you have three options:
 
 `Sublime Clojure REPL: Evaluate Selection` evaluates selected text (`Cmd + Enter` in macOS):
 
-![](./screenshots/eval_selection.png)
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_selection.png" width="308" height="52" alt="Evaluate Selection">
 
 `Sublime Clojure REPL: Evaluate Topmost Form` evaluates topmost form around your cursor position (also `Cmd + Enter` in macOS):
 
-![](./screenshots/eval_topmost.png)
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_topmost.png" width="286" height="57" alt="Evaluate Topmost">
 
 `Sublime Clojure REPL: Evaluate Buffer` will evaluate the entire file (`Cmd + Shift + Enter` in macOS):
 
-![](./screenshots/eval_buffer.png)
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_buffer.png" width="417" height="204" alt="Evaluate Selection">
 
 You don’t have to wait for one form to finish evaluating to evaluate something else. Multiple things can be executed in parallel:
 
-![](./screenshots/eval_parallel.png)
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_parallel.png" width="364" height="243" alt="Evaluate Selection">
 
 If your evaluation failed, put your cursor inside failed region and run `Sublime Clojure REPL: Toggle Stacktrace` (`Ctrl + E` in macOS):
 
-![](./screenshots/toggle_stacktrace.png)
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/toggle_stacktrace.png" width="594" height="165" alt="Evaluate Selection">
 
 If your evaluation runs too long and you want to interrupt it, run `Sublime Clojure REPL: Interrupt Pending Evaluations`  (`Ctrl + C` in macOS):
 
-![](./screenshots/interrupt.png)
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/interrupt.png" width="593" height="146" alt="Evaluate Selection">
 
 If you want to clear evaluation results, run `Sublime Clojure REPL: Clear Evaluation Results` (`Ctrl + L` in macOS).
 
 Finally, run `Sublime Clojure REPL: Lookup Symbol` when over a symbol to see its documentation (`Ctrl + D` in macOS):
 
-![](./screenshots/lookup.png)
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/lookup.png" width="593" height="143" alt="Evaluate Selection">
 
 ## License
 
 [MIT License](./LICENSE.txt)
+
+## See also
+
+[Writer Color Scheme](https://github.com/tonsky/sublime-scheme-writer): A color scheme optimized for long-form writing.
+
+[Alabaster Color Scheme](https://github.com/tonsky/sublime-scheme-alabaster): Minimal color scheme for coding.
+
+[Sublime Profiles](https://github.com/tonsky/sublime-profiles): Profile switcher.
 
 ## Credits
 
