@@ -36,16 +36,16 @@ Principles:
 
 Features:
 
-- evaluate code,
-- display evaluation results inline.
-- display stack traces inline,
-- interrupt evaluation,
-- eval multiple forms at once (parallel evaluation),
-- lookup symbol info.
+- [x] evaluate code,
+- [x] display evaluation results inline.
+- [x] display stack traces inline,
+- [x] interrupt evaluation,
+- [x] eval multiple forms at once (parallel evaluation),
+- [x] lookup symbol info.
 
 We intentionally excluded following features:
 
-- Autocomplete. Static analysis is much simpler and much more reliable than requiring an always-live connection to the working app.
+- [ ] Autocomplete. Static analysis is much simpler and much more reliable than requiring an always-live connection to the working app.
 
 Why nREPL and not Socket Server REPL/pREPL/unREPL?
 
