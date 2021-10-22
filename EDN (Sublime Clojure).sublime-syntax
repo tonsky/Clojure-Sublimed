@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 # http://www.sublimetext.com/docs/3/syntax.html
-name: EDN
+name: EDN (Sublime Clojure)
 file_extensions:
   - edn
 scope: source.edn

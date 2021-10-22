@@ -2,7 +2,7 @@
 <plist version="1.0">
 <dict>
 	<key>name</key>
-	<string>ClojureC Symbols</string>
+	<string>Clojure (Sublime Clojure) Symbols</string>
 	<key>scope</key>
 	<string>entity.name.clojure</string>
 	<key>settings</key>
