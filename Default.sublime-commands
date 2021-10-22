@@ -1,0 +1,42 @@
+[
+    {
+        "caption": "Clojure REPL: Connect",
+        "command": "connect"
+    },
+    {
+        "caption": "Clojure REPL: Disconnect",
+        "command": "disconnect"
+    },
+    {
+        "caption": "Clojure REPL: Reconnect",
+        "command": "reconnect"
+    },
+    {
+        "caption": "Clojure REPL: Evaluate Selection",
+        "command": "eval_selection"
+    },
+    {
+        "caption": "Clojure REPL: Evaluate Topmost Form",
+        "command": "eval_topmost_form"
+    },
+    {
+        "caption": "Clojure REPL: Evaluate Buffer",
+        "command": "eval_buffer"
+    },
+    {
+        "caption": "Clojure REPL: Clear Evaluation Results",
+        "command": "clear_evals"
+    },
+    {
+        "caption": "Clojure REPL: Interrupt Pending Evaluations",
+        "command": "interrupt_eval"
+    },
+    {
+        "caption": "Clojure REPL: Lookup Symbol",
+        "command": "lookup_symbol"
+    },
+    {
+        "caption": "Clojure REPL: Toggle Stacktrace",
+        "command": "toggle_trace"
+    },
+]

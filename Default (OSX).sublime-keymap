@@ -1,0 +1,30 @@
+[{"keys": ["super+enter"],
+  "command": "eval_selection",
+  "context": [{"key": "selection_empty", "operator": "equal", "operand": false},
+              {"key": "selector", "operator": "equal", "operand": "source.clojure", "match_all": true}]},
+
+ {"keys": ["super+enter"],
+  "command": "eval_topmost_form",
+  "context": [{"key": "selection_empty", "operator": "equal", "operand": true},
+              {"key": "selector", "operator": "equal", "operand": "source.clojure", "match_all": true}]},
+
+ {"keys": ["super+shift+enter"],
+  "command": "eval_buffer",
+  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+
+ {"keys": ["ctrl+l"],
+  "command": "clear_evals",
+  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+
+ {"keys": ["ctrl+c"],
+  "command": "interrupt_eval",
+  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+ 
+ {"keys": ["ctrl+d"],
+  "command": "lookup_symbol",
+  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+
+ {"keys": ["ctrl+e"],
+  "command": "toggle_trace",
+  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+]

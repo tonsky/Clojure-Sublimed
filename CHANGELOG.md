@@ -1,6 +1,7 @@
 ### October 22, 2021
 
 - Renamed syntaxes to `Clojure (Sublime Clojure)` and `EDN (Sublime Clojure)`
+- Added nREPL client
 
 ### Jan 3, 2019
 
