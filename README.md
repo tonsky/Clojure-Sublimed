@@ -9,7 +9,7 @@ This package provides Clojure support for Sublime Text and includes:
 
 Unfortunately, Clojure syntax that is shipped with Sublime Text handles many edge cases badly:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/syntaxes.png" width="560" height="353" alt="Syntaxes">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/syntaxes.png" width="806" height="299" alt="Syntaxes">
 
 Unlike default Clojure syntax, this package is:
 
