@@ -88,33 +88,33 @@ From here you have three options:
 
 `Sublime Clojure REPL: Evaluate Selection` evaluates selected text (`Cmd + Enter` in macOS):
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_selection.png" width="308" height="52" alt="Evaluate Selection">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_selection.png" width="283" height="58" alt="Evaluate Selection">
 
 `Sublime Clojure REPL: Evaluate Topmost Form` evaluates topmost form around your cursor position (also `Cmd + Enter` in macOS):
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_topmost.png" width="286" height="57" alt="Evaluate Topmost">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_topmost.png" width="285" height="55" alt="Evaluate Topmost">
 
 `Sublime Clojure REPL: Evaluate Buffer` will evaluate the entire file (`Cmd + Shift + Enter` in macOS):
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_buffer.png" width="417" height="204" alt="Evaluate Selection">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_buffer.png" width="416" height="211" alt="Evaluate Buffer">
 
 You don’t have to wait for one form to finish evaluating to evaluate something else. Multiple things can be executed in parallel:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_parallel.png" width="364" height="243" alt="Evaluate Selection">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_parallel.png" width="416" height="137" alt="Evaluate in Parallel">
 
 If your evaluation failed, put your cursor inside failed region and run `Sublime Clojure REPL: Toggle Stacktrace` (`Ctrl + E` in macOS):
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/toggle_stacktrace.png" width="594" height="165" alt="Evaluate Selection">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/toggle_stacktrace.png" width="594" height="165" alt="Toggle Stacktrace">
 
 If your evaluation runs too long and you want to interrupt it, run `Sublime Clojure REPL: Interrupt Pending Evaluations`  (`Ctrl + C` in macOS):
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/interrupt.png" width="593" height="146" alt="Evaluate Selection">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/interrupt.png" width="587" height="39" alt="Interrupt">
 
 If you want to clear evaluation results, run `Sublime Clojure REPL: Clear Evaluation Results` (`Ctrl + L` in macOS).
 
 Finally, run `Sublime Clojure REPL: Lookup Symbol` when over a symbol to see its documentation (`Ctrl + D` in macOS):
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/lookup.png" width="593" height="143" alt="Evaluate Selection">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/lookup.png" width="593" height="143" alt="Lookup Symbol">
 
 ## License
 
