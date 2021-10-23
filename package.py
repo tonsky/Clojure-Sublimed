@@ -1,17 +1,18 @@
 import html, json, os, re, socket, sublime, sublime_plugin, threading
 from collections import defaultdict
 from .src import bencode
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 ns = 'sublime-clojure'
 package = 'Sublime Clojure'
 
 def settings():
-    return sublime.load_settings("Sublime Clojure.sublime-settings")
+    return sublime.load_settings(f"{package}.sublime-settings")
 
 class Eval:
     # class
     next_id:   int = 10
+    colors:    Dict[str, Tuple[str, str]] = {}
 
     # instance
     id:        int
@@ -26,27 +27,31 @@ class Eval:
     def __init__(self, view, region, status, value):
         self.id = Eval.next_id
         self.view = view
-        self.status = status
         self.code = view.substr(region)
         self.session = None
         self.msg = None
         self.trace = None
         self.trace_key = None
-
         Eval.next_id += 1
-        scope, color = self.scope_color()
-        view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL, [value], color)
+        self.update(status, value, region)
 
     def value_key(self):
         return f"{ns}.eval-{self.id}"
 
     def scope_color(self):
-        if "success" == self.status:
-            return ("region.greenish", '#7CCE9B')
-        elif "exception" == self.status:
-            return ("region.redish", '#DD1730')
-        else:
-            return ("region.bluish", '#7C9BCE')
+        if not Eval.colors:
+            default = self.view.style_for_scope("source")
+            def try_scopes(*scopes):
+                for scope in scopes:
+                    colors = self.view.style_for_scope(scope)
+                    if colors != default:
+                        return (scope, colors["foreground"])
+            Eval.colors["success"]   = try_scopes("region.eval.success",   "region.greenish")
+            Eval.colors["exception"] = try_scopes("region.eval.exception", "region.redish")
+            Eval.colors["clone"]     = try_scopes("region.eval.clone",     "region.eval.pending", "region.bluish")
+            Eval.colors["eval"]      = try_scopes("region.eval.eval",      "region.eval.pending", "region.bluish")
+            Eval.colors["interrupt"] = try_scopes("region.eval.interrupt", "region.eval.pending", "region.bluish")
+        return Eval.colors[self.status]
 
     def region(self):
         regions = self.view.get_regions(self.value_key())
@@ -70,7 +75,7 @@ class Eval:
                 top = settings.get('line_padding_top', 0)
                 bottom = settings.get('line_padding_bottom', 0)
                 body = f"""<style>
-                    body {{ background-color: #F7D3D5; padding-top: {top}px; padding-bottom: {bottom}px; }}
+                    body {{ background-color: color(var(--background) blend(#C33 75%)); padding-top: {top}px; padding-bottom: {bottom}px; }}
                     p {{ margin: 0; padding-top: {top}px; padding-bottom: {bottom}px; }}
                 </style>"""
                 for line in html.escape(self.trace).split("\n"):
@@ -412,7 +417,6 @@ class SocketIO:
     def read(self, n):
         if not self.buffer or self.pos >= len(self.buffer):
             self.buffer = self.socket.recv(4096)
-            # print("<<<", self.buffer.decode())
             self.pos = 0
         begin = self.pos
         end = min(begin + n, len(self.buffer))
@@ -536,8 +540,10 @@ class ReconnectCommand(sublime_plugin.ApplicationCommand):
 
 def plugin_loaded():
     connect('localhost', 5555) # FIXME
+    preferences = sublime.load_settings("Preferences.sublime-settings")
+    preferences.add_on_change(ns, lambda: Eval.colors.clear())
 
 def plugin_unloaded():
     conn.disconnect()
-
-
+    preferences = sublime.load_settings("Preferences.sublime-settings")
+    preferences.clear_on_change(ns)
