@@ -97,7 +97,10 @@ class Connection:
         if sublime.active_window():
             view = sublime.active_window().active_view()
             if view:
-                view.set_status(ns, self.status)
+                if self.status:
+                    view.set_status(ns, self.status)
+                else:
+                    view.erase_status(ns)
 
     def send(self, msg):
         print(">>>", msg)
@@ -107,7 +110,7 @@ class Connection:
         self.socket = None
         self.reader = None
         self.session = None
-        self.set_status('🌑 Offline')
+        self.set_status(None)
         for id, eval in self.evals.items():
             eval.erase()
         self.evals.clear()
