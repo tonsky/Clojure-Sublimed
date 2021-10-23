@@ -2,7 +2,7 @@
 import os, subprocess
 
 if __name__ == '__main__':
-  os.chdir(os.path.dirname(__file__))
+  os.chdir(os.path.dirname(__file__) + "/..")
   subprocess.check_call(['clojure',
     '-X', 'clojure.core.server/start-server',
     ':name', 'prerpl',

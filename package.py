@@ -6,6 +6,9 @@ from typing import Any, Dict
 ns = 'sublime-clojure'
 package = 'Sublime Clojure'
 
+def settings():
+    return sublime.load_settings("Sublime Clojure.sublime-settings")
+
 class Eval:
     # class
     next_id:   int = 10
@@ -103,7 +106,8 @@ class Connection:
                     view.erase_status(ns)
 
     def send(self, msg):
-        print(">>>", msg)
+        if settings().get("debug"):
+            print("SND", msg)
         self.socket.sendall(bencode.encode(msg).encode())
 
     def reset(self):
@@ -275,7 +279,6 @@ class ClearEvalsCommand(sublime_plugin.TextCommand):
 
 class InterruptEvalCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        print("evals", conn.evals)
         for eval in conn.evals.values():
             if eval.status == "eval":
                 conn.send({"op":           "interrupt",
@@ -447,7 +450,8 @@ def handle_done(msg):
             conn.erase_eval(eval)
 
 def handle_msg(msg):
-    print("<<<", msg)
+    if settings().get("debug"):
+        print("RCV", msg)
 
     for key in msg.get('nrepl.middleware.print/truncated-keys', []):
         msg[key] += '...'
@@ -478,9 +482,10 @@ def connect(host, port):
         conn.reader = threading.Thread(daemon=True, target=read_loop)
         conn.reader.start()
     except Exception as e:
-        print(e)
         conn.socket = None
-        conn.set_status(f"🌑 {host}:{port}")
+        conn.set_status(None)
+        if sublime.active_window():
+            sublime.active_window().status_message(f"Failed to connect to {host}:{port}")
 
 class HostPortInputHandler(sublime_plugin.TextInputHandler):
     def placeholder(self):

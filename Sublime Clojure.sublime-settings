@@ -1,0 +1,4 @@
+{
+  // Enable debug logging in Sublime Text console
+  "debug": false,
+}
