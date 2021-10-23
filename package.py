@@ -1,4 +1,4 @@
-import html, json, os, re, socket, sublime, sublime_plugin, threading
+import html, json, os, re, socket, sublime, sublime_plugin, threading, time
 from collections import defaultdict
 from .src import bencode
 from typing import Any, Dict, Tuple
@@ -32,6 +32,7 @@ class Eval:
         self.msg = None
         self.trace = None
         self.trace_key = None
+        self.start_time = None
         Eval.next_id += 1
         self.update(status, value, region)
 
@@ -63,7 +64,16 @@ class Eval:
         region = region or self.region()
         if region:
             scope, color = self.scope_color()
-            self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL, [value], color)            
+            if settings().get("elapsed_threshold_ms") and self.start_time:
+                elapsed = time.perf_counter() - self.start_time
+                if elapsed * 1000 >= settings().get("elapsed_threshold_ms"):
+                    if elapsed >= 10:
+                        value = f"({'{:,.0f}'.format(elapsed)} sec) {value}"
+                    elif elapsed >= 1:
+                        value = f"({'{:.1f}'.format(elapsed)} sec) {value}"
+                    elif elapsed >= 0.1:
+                        value = f"({'{:.0f}'.format(elapsed * 1000)} ms) {value}"
+            self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL, [value], color)
 
     def toggle_trace(self):
         if self.trace:
@@ -148,6 +158,7 @@ def handle_new_session(msg):
         eval = conn.evals[msg["id"]]
         eval.session = msg["new-session"]
         eval.msg["session"] = msg["new-session"]
+        eval.start_time = time.perf_counter()
         conn.send(eval.msg)
         eval.update("eval", "Evaluating...")
         return True

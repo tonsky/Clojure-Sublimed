@@ -1,4 +1,8 @@
 {
   // Enable debug logging in Sublime Text console
   "debug": false,
+
+  // If evaluation takes longer than this, print elapsed time
+  // Set to null to disable
+  "elapsed_threshold_ms": 100
 }

@@ -41,7 +41,8 @@ Features:
 - [x] display stack traces inline,
 - [x] interrupt evaluation,
 - [x] eval multiple forms at once (parallel evaluation),
-- [x] lookup symbol info.
+- [x] lookup symbol info,
+- [x] show evaluation time.
 
 We intentionally excluded following features:
 
@@ -101,6 +102,10 @@ From here you have three options:
 You don’t have to wait for one form to finish evaluating to evaluate something else. Multiple things can be executed in parallel:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_parallel.png" width="416" height="137" alt="Evaluate in Parallel">
+
+By default, Sublime Clojure will also print evaluation time if it took more than 100 ms:
+
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_elapsed.png" width="453" height="134" alt="Elapsed time">
 
 If your evaluation failed, put your cursor inside failed region and run `Clojure REPL: Toggle Stacktrace` (`Ctrl + E` in macOS):
 

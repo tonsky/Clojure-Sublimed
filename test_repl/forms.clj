@@ -7,6 +7,9 @@
 
 ; delayed eval
 (do (Thread/sleep 1000) :done)
+(do (Thread/sleep 900) :done)
+(do (Thread/sleep 490) :done)
+(do (Thread/sleep 90) :done)
 
 ; infinite sequence
 (range) 
