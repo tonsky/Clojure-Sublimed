@@ -4,10 +4,17 @@ from .src import bencode
 from typing import Any, Dict, Tuple
 
 ns = 'sublime-clojure'
-package = 'Sublime Clojure'
+
+package_path = os.path.dirname(os.path.abspath(__file__))
+if os.path.isfile(package_path):
+    # Package is a .sublime-package so get its filename
+    package, _ = os.path.splitext(os.path.basename(package_path))
+elif os.path.isdir(package_path):
+    # Package is a directory, so get its basename
+    package = os.path.basename(package_path)
 
 def settings():
-    return sublime.load_settings(f"{package}.sublime-settings")
+    return sublime.load_settings("Sublime Clojure.sublime-settings")
 
 class Eval:
     # class

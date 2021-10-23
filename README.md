@@ -69,7 +69,14 @@ Differences from [Tutkain](https://tutkain.flowthing.me/):
 
 ## Installation
 
-Install package:
+Install package from source:
+
+```bash
+git clone https://github.com/tonsky/sublime-clojure.git
+ln -s `pwd`/sublime-clojure ~/Library/Application\ Support/Sublime\ Text/Packages/Sublime\ Clojure
+```
+
+Or from Package Control (coming later):
 
 - `Package Control: Install Package` → `Sublime Clojure`
 
