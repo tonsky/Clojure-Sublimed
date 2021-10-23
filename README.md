@@ -2,8 +2,8 @@
 
 This package provides Clojure support for Sublime Text and includes:
 
-- Clojure and EDN syntax grammars
-- Clojure nREPL client
+- Clojure and EDN syntax grammars (Sublime Text 3 or later)
+- Clojure nREPL client (version 4075 or later)
 
 ## Clojure syntax
 
@@ -115,6 +115,8 @@ If you want to clear evaluation results, run `Clojure REPL: Clear Evaluation Res
 Finally, run `Clojure REPL: Lookup Symbol` when over a symbol to see its documentation (`Ctrl + D` in macOS):
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/lookup.png" width="593" height="143" alt="Lookup Symbol">
+
+To edit settings, run `Preferences: Sublime Clojure Settings` command.
 
 ## License
 

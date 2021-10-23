@@ -39,4 +39,12 @@
         "caption": "Clojure REPL: Toggle Stacktrace",
         "command": "toggle_trace"
     },
+    {
+        "caption": "Preferences: Sublime Clojure Settings",
+        "command": "edit_settings",
+        "args": {
+            "base_file": "${packages}/Sublime Clojure/Sublime Clojure.sublime-settings",
+            "default": "// Sublime Clojure Settings - User\n{\n\t$0\n}\n"
+        }
+    }
 ]
