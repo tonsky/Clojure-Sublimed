@@ -1,7 +1,7 @@
 [
     {
         "caption": "Clojure REPL: Connect",
-        "command": "sublime_clojure_sublime_clojure_connect"
+        "command": "sublime_clojure_connect"
     },
     {
         "caption": "Clojure REPL: Disconnect",
@@ -13,7 +13,7 @@
     },
     {
         "caption": "Clojure REPL: Evaluate",
-        "command": "sublime_clojure_eval_selection"
+        "command": "sublime_clojure_eval"
     },
     {
         "caption": "Clojure REPL: Evaluate Buffer",

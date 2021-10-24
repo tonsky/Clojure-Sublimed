@@ -575,8 +575,8 @@ class SublimeClojureHostPortInputHandler(sublime_plugin.TextInputHandler):
         return 0 <= port and port <= 65536
 
 class SublimeClojureConnectCommand(sublime_plugin.ApplicationCommand):
-    def run(self, host_port):
-        host, port = host_port.strip().split(':')
+    def run(self, sublime_clojure_host_port):
+        host, port = sublime_clojure_host_port.strip().split(':')
         port = int(port)
         connect(host, port)
 
