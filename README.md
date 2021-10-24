@@ -122,7 +122,11 @@ If your evaluation runs too long and you want to interrupt it, run `Clojure REPL
 
 If your evaluation failed, put your cursor inside failed region and run `Clojure REPL: Toggle Stacktrace`:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/toggle_stacktrace.png" width="594" height="165" alt="Toggle Stacktrace">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/toggle_stacktrace.png" width="553" height="146" alt="Toggle Stacktrace">
+
+Sublime Clojure will display stacktraces in a Clojure-friendly way. Compare with the default REPL:
+
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/stacktraces.png" width="806" height="390" alt="Stacktraces">
 
 To show symbol info, run `Clojure REPL: Toggle Symbol Info`:
 
@@ -140,10 +144,10 @@ To edit settings, run `Preferences: Sublime Clojure Settings` command.
 Command                       | macOS                            | Windows/Linux                                   | Mnemonic
 ------------------------------|----------------------------------|-------------------------------------------------| -----------------------
 Evaluate                      | <kbd>Ctrl</kbd> <kbd>Enter</kbd> | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Enter</kbd> |
-Evaluate Buffer               | <kbd>Ctrl</kbd> <kbd>B</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>B</kbd>     | <kbd>B</kbd>uffer
-Interrupt Pending Evaluations | <kbd>Ctrl</kbd> <kbd>C</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>C</kbd>     | <kbd>C</kbd>ancel
-Toggle Info                   | <kbd>Ctrl</kbd> <kbd>I</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>I</kbd>     | <kbd>I</kbd>nfo
-Clear Evaluation Results      | <kbd>Ctrl</kbd> <kbd>L</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>L</kbd>     | C<kbd>l</kbd>ear
+Evaluate Buffer               | <kbd>Ctrl</kbd> <kbd>B</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>B</kbd>     | [B]uffer
+Interrupt Pending Evaluations | <kbd>Ctrl</kbd> <kbd>C</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>C</kbd>     | [C]ancel
+Toggle Info                   | <kbd>Ctrl</kbd> <kbd>I</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>I</kbd>     | [I]nfo
+Clear Evaluation Results      | <kbd>Ctrl</kbd> <kbd>L</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>L</kbd>     | c[L]ear
 
 To change key bindings, run `Preferences: Sublime Clojure Key Bindings` command.
 

@@ -9,9 +9,15 @@
 (defn h []
   (g))
 
+(h)
+
 (meta #'h)
 
-(h)
+(try
+  (h)
+  (catch Exception e
+    (with-out-str
+      (.printStackTrace e))))
 
 (defn -main [& args]
   (h))
