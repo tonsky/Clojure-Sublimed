@@ -96,11 +96,11 @@ Important! Make sure you switched your syntax to `Clojure (Sublime Clojure)`.
 
 From here you have three options:
 
-`Clojure REPL: Evaluate Topmost Form` evaluates topmost form around your cursor:
+`Clojure REPL: Evaluate` without selection evaluates topmost form around your cursor:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_topmost.png" width="285" height="55" alt="Evaluate Topmost">
 
-`Clojure REPL: Evaluate Selection` evaluates selected text:
+`Clojure REPL: Evaluate` with selection evaluates selected text:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_selection.png" width="283" height="58" alt="Evaluate Selection">
 
@@ -136,8 +136,7 @@ To edit settings, run `Preferences: Sublime Clojure Settings` command.
 
 Command                       | macOS                            | Windows/Linux                                   | Mnemonic
 ------------------------------|----------------------------------|-------------------------------------------------| -----------------------
-Evaluate Topmost Form         | <kbd>Ctrl</kbd> <kbd>Enter</kbd> | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Enter</kbd> |
-Evaluate Selection            | <kbd>Ctrl</kbd> <kbd>Enter</kbd> | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Enter</kbd> |
+Evaluate                      | <kbd>Ctrl</kbd> <kbd>Enter</kbd> | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Enter</kbd> |
 Evaluate Buffer               | <kbd>Ctrl</kbd> <kbd>B</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>B</kbd>     | <kbd>B</kbd>uffer
 Toggle Stacktrace             | <kbd>Ctrl</kbd> <kbd>E</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>E</kbd>     | <kbd>E</kbd>xception
 Interrupt Pending Evaluations | <kbd>Ctrl</kbd> <kbd>C</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>C</kbd>     | <kbd>C</kbd>ancel

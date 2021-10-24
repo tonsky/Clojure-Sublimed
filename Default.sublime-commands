@@ -1,47 +1,43 @@
 [
     {
         "caption": "Clojure REPL: Connect",
-        "command": "connect"
+        "command": "sublime_clojure_sublime_clojure_connect"
     },
     {
         "caption": "Clojure REPL: Disconnect",
-        "command": "disconnect"
+        "command": "sublime_clojure_disconnect"
     },
     {
         "caption": "Clojure REPL: Reconnect",
-        "command": "reconnect"
+        "command": "sublime_clojure_reconnect"
     },
     {
-        "caption": "Clojure REPL: Evaluate Selection",
-        "command": "eval_selection"
-    },
-    {
-        "caption": "Clojure REPL: Evaluate Topmost Form",
-        "command": "eval_topmost_form"
+        "caption": "Clojure REPL: Evaluate",
+        "command": "sublime_clojure_eval_selection"
     },
     {
         "caption": "Clojure REPL: Evaluate Buffer",
-        "command": "eval_buffer"
+        "command": "sublime_clojure_eval_buffer"
     },
     {
         "caption": "Clojure REPL: Clear Evaluation Results",
-        "command": "clear_evals"
+        "command": "sublime_clojure_clear_evals"
     },
     {
         "caption": "Clojure REPL: Interrupt Pending Evaluations",
-        "command": "interrupt_eval"
+        "command": "sublime_clojure_interrupt_eval"
     },
     {
         "caption": "Clojure REPL: Lookup Symbol",
-        "command": "lookup_symbol"
+        "command": "sublime_clojure_lookup_symbol"
     },
     {
         "caption": "Clojure REPL: Toggle Stacktrace",
-        "command": "toggle_trace"
+        "command": "sublime_clojure_toggle_trace"
     },
     {
         "caption": "Preferences: Sublime Clojure Settings",
-        "command": "edit_settings",
+        "command": "sublime_clojure_edit_settings",
         "args": {
             "base_file": "${packages}/Sublime Clojure/Sublime Clojure.sublime-settings",
             "default": "// Sublime Clojure Settings - User\n{\n\t$0\n}\n"
@@ -49,7 +45,7 @@
     },
     {
         "caption": "Preferences: Sublime Clojure Key Bindings",
-        "command": "edit_settings",
+        "command": "sublime_clojure_edit_settings",
         "args": {
             "base_file": "${packages}/Sublime Clojure/Default (${platform}).sublime-keymap",
             "user_file": "${packages}/User/Default (${platform}).sublime-keymap"

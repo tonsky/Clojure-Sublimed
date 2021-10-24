@@ -1,15 +1,8 @@
 [
- // Evaluate Selection
+ // Evaluate
  {"keys": ["ctrl+alt+enter"],
-  "command": "sublime_clojure_eval_selection",
-  "context": [{"key": "selection_empty", "operator": "equal", "operand": false},
-              {"key": "selector", "operator": "equal", "operand": "source.clojure", "match_all": true}]},
-
- // Evaluate Topmost Form
- {"keys": ["ctrl+alt+enter"],
-  "command": "sublime_clojure_eval_topmost_form",
-  "context": [{"key": "selection_empty", "operator": "equal", "operand": true},
-              {"key": "selector", "operator": "equal", "operand": "source.clojure", "match_all": true}]},
+  "command": "sublime_clojure_eval",
+  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
  // Evaluate Buffer
  {"keys": ["ctrl+alt+b"],

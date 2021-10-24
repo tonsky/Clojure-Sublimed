@@ -318,28 +318,23 @@ def topmost_form(view, point):
                                           'source.clojure meta.parens.clojure punctuation.section.parens.end.clojure '})
     return region
 
-class SublimeClojureEvalTopmostFormCommand(sublime_plugin.TextCommand):
+class SublimeClojureEval(sublime_plugin.TextCommand):
     def run(self, edit):
-        point = self.view.sel()[0].begin()
-        region = topmost_form(self.view, point)
-        if region:
-            eval(self.view, region)
+        covered = []
+        for sel in self.view.sel():
+            if all([not sel.intersects(r) for r in covered]):
+                if sel.empty():
+                    region = topmost_form(self.view, sel.begin())
+                    if region:
+                        covered.append(region)
+                        eval(self.view, region)
+                else:
+                    covered.append(sel)
+                    eval(self.view, sel)
 
     def is_enabled(self):
         return conn.socket != None \
-            and conn.session != None \
-            and len(self.view.sel()) == 1
-
-class SublimeClojureEvalSelectionCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        region = self.view.sel()[0]
-        eval(self.view, region)
-        
-    def is_enabled(self):
-        return conn.socket != None \
-            and conn.session != None \
-            and len(self.view.sel()) == 1 \
-            and not self.view.sel()[0].empty()
+            and conn.session != None
 
 class SublimeClojureEvalBufferCommand(sublime_plugin.TextCommand):
     def run(self, edit):
