@@ -22,26 +22,26 @@ class Eval:
     colors:    Dict[str, Tuple[str, str]] = {}
 
     # instance
-    id:        int
-    view:      sublime.View
-    status:    str # "clone" | "eval" | "interrupt" | "success" | "exception"
-    code:      str
-    session:   str
-    msg:       Dict[str, Any]
-    trace:     str
-    trace_key: int
+    id:         int
+    view:       sublime.View
+    status:     str # "pending" | "interrupt" | "success" | "exception" | "lookup"
+    code:       str
+    session:    str
+    msg:        Dict[str, Any]
+    trace:      str
+    phantom_id: int
     
-    def __init__(self, view, region, status, value):
+    def __init__(self, view, region):
         self.id = Eval.next_id
         self.view = view
         self.code = view.substr(region)
         self.session = None
         self.msg = None
         self.trace = None
-        self.trace_key = None
+        self.phantom_id = None
         self.start_time = None
         Eval.next_id += 1
-        self.update(status, value, region)
+        self.update("pending", None, region)
 
     def value_key(self):
         return f"{ns}.eval-{self.id}"
@@ -54,11 +54,11 @@ class Eval:
                     colors = self.view.style_for_scope(scope)
                     if colors != default:
                         return (scope, colors["foreground"])
+            Eval.colors["pending"]   = try_scopes("region.eval.pending",   "region.bluish")
+            Eval.colors["interrupt"] = try_scopes("region.eval.interrupt", "region.eval.pending", "region.bluish")
             Eval.colors["success"]   = try_scopes("region.eval.success",   "region.greenish")
             Eval.colors["exception"] = try_scopes("region.eval.exception", "region.redish")
-            Eval.colors["clone"]     = try_scopes("region.eval.clone",     "region.eval.pending", "region.bluish")
-            Eval.colors["eval"]      = try_scopes("region.eval.eval",      "region.eval.pending", "region.bluish")
-            Eval.colors["interrupt"] = try_scopes("region.eval.interrupt", "region.eval.pending", "region.bluish")
+            Eval.colors["lookup"]    = try_scopes("region.eval.lookup",    "region.eval.pending",   "region.bluish")
         return Eval.colors[self.status]
 
     def region(self):
@@ -71,44 +71,50 @@ class Eval:
         region = region or self.region()
         if region:
             scope, color = self.scope_color()
-            threshold = settings().get("elapsed_threshold_ms")
-            if threshold != None and self.start_time and self.status in {"success", "exception"}:
-                elapsed = time.perf_counter() - self.start_time
-                if elapsed * 1000 >= threshold:
-                    if elapsed >= 10:
-                        value = f"({'{:,.0f}'.format(elapsed)} sec) {value}"
-                    elif elapsed >= 1:
-                        value = f"({'{:.1f}'.format(elapsed)} sec) {value}"
-                    elif elapsed >= 0.1:
-                        value = f"({'{:.0f}'.format(elapsed * 1000)} ms) {value}"
-                    else:
-                        value = f"({elapsed * 1000} ms) {value}"
-            self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL, [value], color)
+            if value:
+                threshold = settings().get("elapsed_threshold_ms")
+                if threshold != None and self.start_time and self.status in {"success", "exception"}:
+                    elapsed = time.perf_counter() - self.start_time
+                    if elapsed * 1000 >= threshold:
+                        if elapsed >= 10:
+                            value = f"({'{:,.0f}'.format(elapsed)} sec) {value}"
+                        elif elapsed >= 1:
+                            value = f"({'{:.1f}'.format(elapsed)} sec) {value}"
+                        elif elapsed >= 0.1:
+                            value = f"({'{:.0f}'.format(elapsed * 1000)} ms) {value}"
+                        else:
+                            value = f"({elapsed * 1000} ms) {value}"
+                self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL, [value], color)
+            else:
+                self.view.erase_regions(self.value_key())
+                self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL)
 
     def toggle_trace(self):
         if self.trace:
-            if self.trace_key:
-                self.view.erase_phantom_by_id(self.trace_key)
-                self.trace_key = None
+            if self.phantom_id:
+                self.view.erase_phantom_by_id(self.phantom_id)
+                self.phantom_id = None
             else:
-                settings = self.view.settings()
-                top = settings.get('line_padding_top', 0)
-                bottom = settings.get('line_padding_bottom', 0)
-                body = f"""<style>
-                    body {{ background-color: color(var(--background) blend(#C33 75%)); padding-top: {top}px; padding-bottom: {bottom}px; }}
-                    p {{ margin: 0; padding-top: {top}px; padding-bottom: {bottom}px; }}
+                body = f"""<body id='sublime-clojure'>
+                    { basic_styles(self.view) }
+                    .light body {{ background-color: hsl(0, 100%, 90%); }}
+                    .dark body  {{ background-color: hsl(0, 100%, 10%); }}
                 </style>"""
                 for line in html.escape(self.trace).split("\n"):
                     body += "<p>" + line.replace("\t", "&nbsp;&nbsp;") + "</p>"
+                body += "</body>"
                 region = self.region()
                 if region:
                     point = self.view.line(region.end()).begin()
-                    self.trace_key = self.view.add_phantom(self.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
+                    self.phantom_id = self.view.add_phantom(self.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
 
     def erase(self):
         self.view.erase_regions(self.value_key())
-        if self.trace_key:
-            self.view.erase_phantom_by_id(self.trace_key)
+        if self.phantom_id:
+            self.view.erase_phantom_by_id(self.phantom_id)
+
+def regions_touch(r1, r2):
+    return r1 != None and r2 != None and not r1.end() < r2.begin() and not r1.begin() > r2.end()
 
 class Connection:
     def __init__(self):
@@ -151,6 +157,11 @@ class Connection:
         eval.erase()
         del self.evals[eval.id]
 
+    def find_eval(self, view, region):
+        for eval in self.evals.values():
+            if eval.view == view and regions_touch(eval.region(), region):
+                return eval
+
     def erase_evals(self, predicate, view = None):
         for id, eval in list(self.evals.items()):
             if (view == None or view == eval.view) and predicate(eval):
@@ -161,6 +172,9 @@ class Connection:
             self.socket.close()
             self.reset()
 
+    def ready(self):
+        return bool(self.socket and self.session)
+
 conn = Connection()
 
 def handle_new_session(msg):
@@ -170,7 +184,7 @@ def handle_new_session(msg):
         eval.msg["session"] = msg["new-session"]
         eval.start_time = time.perf_counter()
         conn.send(eval.msg)
-        eval.update("eval", progress_thread.phase())
+        eval.update("pending", progress_thread.phase())
         return True
 
 def handle_value(msg):
@@ -242,16 +256,15 @@ class ProgressThread:
         while True:
             if not self.running:
                 break
+            time.sleep(self.interval / 1000.0)
             updated = False
             if sublime.active_window() and sublime.active_window().active_view():
                 view = sublime.active_window().active_view()
                 for eval in list(conn.evals.values()):
-                    if eval.view == view and eval.status in {"clone", "eval", "interrupt"}:
-                        prefix = "Interrupting " if eval.status == "interrupt" else ""
-                        eval.update(eval.status, prefix + self.phase())
+                    if eval.view == view and eval.status == "pending":
+                        eval.update(eval.status, self.phase())
                         updated = True
             if updated:
-                time.sleep(self.interval / 1000.0)
                 self.phase_idx = (self.phase_idx + 1) % len(self.phases)
             else:
                 with self.condition:
@@ -277,7 +290,7 @@ progress_thread = ProgressThread()
 def eval_msg(view, region, msg):
     extended_region = view.line(region)
     conn.erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
-    eval = Eval(view, region, "clone", progress_thread.phase())
+    eval = Eval(view, region)
     progress_thread.wake()
     eval.msg = {k: v for k, v in msg.items() if v}
     eval.msg["id"] = eval.id
@@ -333,8 +346,7 @@ class SublimeClojureEval(sublime_plugin.TextCommand):
                     eval(self.view, sel)
 
     def is_enabled(self):
-        return conn.socket != None \
-            and conn.session != None
+        return conn.ready()
 
 class SublimeClojureEvalBufferCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -348,25 +360,23 @@ class SublimeClojureEvalBufferCommand(sublime_plugin.TextCommand):
         eval_msg(view, region, msg)
         
     def is_enabled(self):
-        return conn.socket != None \
-            and conn.session != None
+        return conn.ready()
 
 class SublimeClojureClearEvalsCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        conn.erase_evals(lambda eval: eval.status in {"success", "exception"}, self.view)
+        conn.erase_evals(lambda eval: eval.status not in {"pending", "interrupt"}, self.view)
 
 class SublimeClojureInterruptEvalCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         for eval in conn.evals.values():
-            if eval.status == "eval":
+            if eval.status == "pending":
                 conn.send({"op":           "interrupt",
                            "session":      eval.session,
                            "interrupt-id": eval.id})
                 eval.update("interrupt", "Interrupting...")
 
     def is_enabled(self):
-        return conn.socket != None \
-            and conn.session != None
+        return conn.ready()
 
 class SublimeClojureToggleTraceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -380,96 +390,120 @@ class SublimeClojureToggleTraceCommand(sublime_plugin.TextCommand):
                     break
         
     def is_enabled(self):
-        return conn.socket != None \
-            and conn.session != None \
-            and len(self.view.sel()) == 1
+        return conn.ready() and len(self.view.sel()) == 1
 
-def format_lookup(info):
-    ns = info.get('ns')
-    name = info['name']
-    file = info.get('file')
-    arglists = info.get('arglists')
-    forms = info.get('forms')
-    doc = info.get('doc')
+def basic_styles(view):
+    settings = view.settings()
+    top = settings.get('line_padding_top', 0)
+    bottom = settings.get('line_padding_bottom', 0)
+    return f"""<style>
+        body {{ margin: 0 0 {top+bottom}px 0; padding: {bottom}px 1rem {top}px 1rem; }}
+        p {{ margin: 0; padding: {top}px 0 {bottom}px 0; }}
+    """
 
-    body = """<body>
-              <style>
-                body { padding: 0; margin: 0; }
-                a { text-decoration: none; }
-                p { margin: 0; padding: .25rem .5rem; }
-                .arglists { color: color(var(--foreground) alpha(0.5)); }
-              </style>"""
+def format_lookup(view, info):
+    settings = view.settings()
+    top = settings.get('line_padding_top', 0)
+    bottom = settings.get('line_padding_bottom', 0)
+    body = f"""<body id='sublime-clojure'>
+        {basic_styles(view)}
+        .dark body  {{ background-color: color(var(--background) blend(#FFF 90%)); }}
+        .light body {{ background-color: color(var(--background) blend(#000 95%)); }}
+        a           {{ text-decoration: none; }}
+        .arglists   {{ color: color(var(--foreground) alpha(0.5)); }}
+    </style>"""
 
-    body += "<p>"
-    if file:
-        body += f"<a href='{file}'>"
-    if ns:
-        body += html.escape(ns) + "/"
-    body += html.escape(name)
-    if file:
-        body += f"</a>"
-    body += "</p>"
+    if not info:
+        body += "<p>Not found</p>"
+    else:
+        ns = info.get('ns')
+        name = info['name']
+        file = info.get('file')
+        arglists = info.get('arglists')
+        forms = info.get('forms')
+        doc = info.get('doc')
 
-    if arglists:
-        body += f'<p class="arglists">{html.escape(arglists.strip("()"))}</p>'
-
-    if forms:
-        def format_form(form):
-            if isinstance(form, str):
-                return form
-            else:
-                return "(" + " ".join([format_form(x) for x in form]) + ")"
-        body += '<p class="arglists">'
-        body += html.escape(" ".join([format_form(form) for form in forms]))
+        body += "<p>"
+        if file:
+            body += f"<a href='{file}'>"
+        if ns:
+            body += html.escape(ns) + "/"
+        body += html.escape(name)
+        if file:
+            body += f"</a>"
         body += "</p>"
 
-    if doc:
-        body += "<p>" + html.escape(doc).replace("\n", "<br/>") + "</p>"
+        if arglists:
+            body += f'<p class="arglists">{html.escape(arglists.strip("()"))}</p>'
 
-    body += "</body>"
+        if forms:
+            def format_form(form):
+                if isinstance(form, str):
+                    return form
+                else:
+                    return "(" + " ".join([format_form(x) for x in form]) + ")"
+            body += '<p class="arglists">'
+            body += html.escape(" ".join([format_form(form) for form in forms]))
+            body += "</p>"
+
+        if doc:
+            body += "<p>" + "</p><p>".join(html.escape(doc).split("\n")) + "</p>"
+    body += "</div>"
     return body
 
 def handle_lookup(msg):
-    if "info" in msg:
-        view = sublime.active_window().active_view()
-        if msg["info"]:
-            view.show_popup(format_lookup(msg["info"]), max_width=1024)
-        else:
-            view.show_popup("Not found")
+    if "info" in msg and "id" in msg and msg["id"] in conn.evals:
+        eval = conn.evals[msg["id"]]
+        eval.update("lookup", None)
+        view = eval.view
+        body = format_lookup(view, msg["info"])
+        point = view.line(eval.region().end()).begin()
+        eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
+        return True
 
-class SublimeClojureLookupSymbolCommand(sublime_plugin.TextCommand):
+class SublimeClojureToggleSymbolCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        region = self.view.sel()[0]
-        if region.empty():
-            point = region.begin()
-            if view.match_selector(point, 'source.symbol.clojure'):
-                region = self.view.extract_scope(point)
-            elif point > 0 and view.match_selector(point - 1, 'source.symbol.clojure'):
-                region = self.view.extract_scope(point - 1)
-        if not region.empty():
-            conn.send({"op":      "lookup",
-                       "sym":     view.substr(region),
-                       "session": conn.session,
-                       "id":      Eval.next_id,
-                       "ns":      namespace(view, region.begin()) or 'user'})
-            Eval.next_id += 1
+        for sel in view.sel():
+            eval = conn.find_eval(view, sel)
+            if eval and eval.phantom_id:
+                conn.erase_eval(eval)
+            else:
+                region = sel
+                if region.empty():
+                    point = region.begin()
+                    if view.match_selector(point, 'source.symbol.clojure'):
+                        region = self.view.extract_scope(point)
+                    elif point > 0 and view.match_selector(point - 1, 'source.symbol.clojure'):
+                        region = self.view.extract_scope(point - 1)
+
+                if region:
+                    line = view.line(region)
+                    conn.erase_evals(lambda eval: eval.region() and eval.region().intersects(line), view)
+                    eval = Eval(view, region)
+                    progress_thread.wake()
+                    conn.add_eval(eval)
+                    conn.send({"op":      "lookup",
+                               "sym":     view.substr(region),
+                               "session": conn.session,
+                               "id":      eval.id,
+                               "ns":      namespace(view, region.begin()) or 'user'})
 
     def is_enabled(self):
-        if conn.socket == None or conn.session == None:
-            return False
+        return conn.ready()
+
+class SublimeClojureToggleInfoCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
         view = self.view
-        if len(view.sel()) > 1:
-            return False
-        region = view.sel()[0]
-        if not region.empty():
-            return True
-        point = region.begin()
-        if view.match_selector(point, 'source.symbol.clojure'):
-            return True
-        if point > 0 and view.match_selector(point - 1, 'source.symbol.clojure'):
-            return True
-        return False
+        for sel in view.sel():
+            eval = conn.find_eval(view, sel)
+            if eval and eval.status == "exception":
+                view.run_command("sublime_clojure_toggle_trace", {})
+            else:
+                view.run_command("sublime_clojure_toggle_symbol", {})
+
+    def is_enabled(self):
+        return conn.ready()
 
 class SocketIO:
     def __init__(self, socket):

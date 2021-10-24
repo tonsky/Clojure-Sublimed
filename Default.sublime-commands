@@ -20,24 +20,28 @@
         "command": "sublime_clojure_eval_buffer"
     },
     {
-        "caption": "Clojure REPL: Clear Evaluation Results",
-        "command": "sublime_clojure_clear_evals"
-    },
-    {
         "caption": "Clojure REPL: Interrupt Pending Evaluations",
         "command": "sublime_clojure_interrupt_eval"
-    },
-    {
-        "caption": "Clojure REPL: Lookup Symbol",
-        "command": "sublime_clojure_lookup_symbol"
     },
     {
         "caption": "Clojure REPL: Toggle Stacktrace",
         "command": "sublime_clojure_toggle_trace"
     },
     {
+        "caption": "Clojure REPL: Toggle Symbol Info",
+        "command": "sublime_clojure_toggle_symbol"
+    },
+    {
+        "caption": "Clojure REPL: Toggle Info",
+        "command": "sublime_clojure_toggle_info"
+    },
+    {
+        "caption": "Clojure REPL: Clear Evaluation Results",
+        "command": "sublime_clojure_clear_evals"
+    },
+    {
         "caption": "Preferences: Sublime Clojure Settings",
-        "command": "sublime_clojure_edit_settings",
+        "command": "edit_settings",
         "args": {
             "base_file": "${packages}/Sublime Clojure/Sublime Clojure.sublime-settings",
             "default": "// Sublime Clojure Settings - User\n{\n\t$0\n}\n"
@@ -45,7 +49,7 @@
     },
     {
         "caption": "Preferences: Sublime Clojure Key Bindings",
-        "command": "sublime_clojure_edit_settings",
+        "command": "edit_settings",
         "args": {
             "base_file": "${packages}/Sublime Clojure/Default (${platform}).sublime-keymap",
             "user_file": "${packages}/User/Default (${platform}).sublime-keymap"
