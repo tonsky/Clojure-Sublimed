@@ -318,7 +318,7 @@ def topmost_form(view, point):
                                           'source.clojure meta.parens.clojure punctuation.section.parens.end.clojure '})
     return region
 
-class EvalTopmostFormCommand(sublime_plugin.TextCommand):
+class SublimeClojureEvalTopmostFormCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         point = self.view.sel()[0].begin()
         region = topmost_form(self.view, point)
@@ -330,7 +330,7 @@ class EvalTopmostFormCommand(sublime_plugin.TextCommand):
             and conn.session != None \
             and len(self.view.sel()) == 1
 
-class EvalSelectionCommand(sublime_plugin.TextCommand):
+class SublimeClojureEvalSelectionCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         region = self.view.sel()[0]
         eval(self.view, region)
@@ -341,7 +341,7 @@ class EvalSelectionCommand(sublime_plugin.TextCommand):
             and len(self.view.sel()) == 1 \
             and not self.view.sel()[0].empty()
 
-class EvalBufferCommand(sublime_plugin.TextCommand):
+class SublimeClojureEvalBufferCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         region = sublime.Region(0, view.size())
@@ -356,11 +356,11 @@ class EvalBufferCommand(sublime_plugin.TextCommand):
         return conn.socket != None \
             and conn.session != None
 
-class ClearEvalsCommand(sublime_plugin.TextCommand):
+class SublimeClojureClearEvalsCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         conn.erase_evals(lambda eval: eval.status in {"success", "exception"}, self.view)
 
-class InterruptEvalCommand(sublime_plugin.TextCommand):
+class SublimeClojureInterruptEvalCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         for eval in conn.evals.values():
             if eval.status == "eval":
@@ -373,7 +373,7 @@ class InterruptEvalCommand(sublime_plugin.TextCommand):
         return conn.socket != None \
             and conn.session != None
 
-class ToggleTraceCommand(sublime_plugin.TextCommand):
+class SublimeClojureToggleTraceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         point = view.sel()[0].begin()
@@ -442,7 +442,7 @@ def handle_lookup(msg):
         else:
             view.show_popup("Not found")
 
-class LookupSymbolCommand(sublime_plugin.TextCommand):
+class SublimeClojureLookupSymbolCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         region = self.view.sel()[0]
@@ -559,7 +559,7 @@ def connect(host, port):
         if sublime.active_window():
             sublime.active_window().status_message(f"Failed to connect to {host}:{port}")
 
-class HostPortInputHandler(sublime_plugin.TextInputHandler):
+class SublimeClojureHostPortInputHandler(sublime_plugin.TextInputHandler):
     def placeholder(self):
         return "host:port"
 
@@ -579,26 +579,26 @@ class HostPortInputHandler(sublime_plugin.TextInputHandler):
         port = int(port)
         return 0 <= port and port <= 65536
 
-class ConnectCommand(sublime_plugin.ApplicationCommand):
+class SublimeClojureConnectCommand(sublime_plugin.ApplicationCommand):
     def run(self, host_port):
         host, port = host_port.strip().split(':')
         port = int(port)
         connect(host, port)
 
     def input(self, args):
-        return HostPortInputHandler()
+        return SublimeClojureHostPortInputHandler()
 
     def is_enabled(self):
         return conn.socket == None
 
-class DisconnectCommand(sublime_plugin.ApplicationCommand):
+class SublimeClojureDisconnectCommand(sublime_plugin.ApplicationCommand):
     def run(self):
         conn.disconnect()
 
     def is_enabled(self):
         return conn.socket != None
 
-class ReconnectCommand(sublime_plugin.ApplicationCommand):
+class SublimeClojureReconnectCommand(sublime_plugin.ApplicationCommand):
     def run(self):
         conn.disconnect()
         connect(conn.host, conn.port)
@@ -606,7 +606,7 @@ class ReconnectCommand(sublime_plugin.ApplicationCommand):
     def is_enabled(self):
         return conn.socket != None
 
-class EventListener(sublime_plugin.EventListener):
+class SublimeClojureEventListener(sublime_plugin.EventListener):
     def on_activated_async(self, view):
         conn.refresh_status()
         progress_thread.wake()

@@ -96,15 +96,15 @@ Important! Make sure you switched your syntax to `Clojure (Sublime Clojure)`.
 
 From here you have three options:
 
-`Clojure REPL: Evaluate Selection` evaluates selected text (`Cmd + Enter` in macOS):
-
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_selection.png" width="283" height="58" alt="Evaluate Selection">
-
-`Clojure REPL: Evaluate Topmost Form` evaluates topmost form around your cursor position (also `Cmd + Enter` in macOS):
+`Clojure REPL: Evaluate Topmost Form` evaluates topmost form around your cursor:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_topmost.png" width="285" height="55" alt="Evaluate Topmost">
 
-`Clojure REPL: Evaluate Buffer` will evaluate the entire file (`Cmd + Shift + Enter` in macOS):
+`Clojure REPL: Evaluate Selection` evaluates selected text:
+
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_selection.png" width="283" height="58" alt="Evaluate Selection">
+
+`Clojure REPL: Evaluate Buffer` will evaluate the entire file:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_buffer.png" width="416" height="211" alt="Evaluate Buffer">
 
@@ -116,21 +116,35 @@ By default, Sublime Clojure will also print evaluation time if it took more than
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_elapsed.png" width="453" height="134" alt="Elapsed time">
 
-If your evaluation failed, put your cursor inside failed region and run `Clojure REPL: Toggle Stacktrace` (`Ctrl + E` in macOS):
+If your evaluation failed, put your cursor inside failed region and run `Clojure REPL: Toggle Stacktrace`:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/toggle_stacktrace.png" width="594" height="165" alt="Toggle Stacktrace">
 
-If your evaluation runs too long and you want to interrupt it, run `Clojure REPL: Interrupt Pending Evaluations`  (`Ctrl + C` in macOS):
+If your evaluation runs too long and you want to interrupt it, run `Clojure REPL: Interrupt Pending Evaluations`:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/interrupt.png" width="587" height="39" alt="Interrupt">
 
-If you want to clear evaluation results, run `Clojure REPL: Clear Evaluation Results` (`Ctrl + L` in macOS).
+If you want to clear evaluation results, run `Clojure REPL: Clear Evaluation Results`.
 
-Finally, run `Clojure REPL: Lookup Symbol` when over a symbol to see its documentation (`Ctrl + D` in macOS):
+Finally, run `Clojure REPL: Lookup Symbol` when over a symbol to see its documentation:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/lookup.png" width="593" height="143" alt="Lookup Symbol">
 
 To edit settings, run `Preferences: Sublime Clojure Settings` command.
+
+## Default Key Bindings
+
+Command                       | macOS                            | Windows/Linux                                   | Mnemonic
+------------------------------|----------------------------------|-------------------------------------------------| -----------------------
+Evaluate Topmost Form         | <kbd>Ctrl</kbd> <kbd>Enter</kbd> | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Enter</kbd> |
+Evaluate Selection            | <kbd>Ctrl</kbd> <kbd>Enter</kbd> | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Enter</kbd> |
+Evaluate Buffer               | <kbd>Ctrl</kbd> <kbd>B</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>B</kbd>     | <kbd>B</kbd>uffer
+Toggle Stacktrace             | <kbd>Ctrl</kbd> <kbd>E</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>E</kbd>     | <kbd>E</kbd>xception
+Interrupt Pending Evaluations | <kbd>Ctrl</kbd> <kbd>C</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>C</kbd>     | <kbd>C</kbd>ancel
+Clear Evaluation Results      | <kbd>Ctrl</kbd> <kbd>L</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>L</kbd>     | C<kbd>l</kbd>ear
+Lookup Symbol                 | <kbd>Ctrl</kbd> <kbd>D</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>D</kbd>     | <kbd>D</kbd>ocumentation
+
+To change key bindings, run `Preferences: Sublime Clojure Key Bindings` command.
 
 ## License
 

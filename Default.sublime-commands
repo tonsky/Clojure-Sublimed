@@ -46,5 +46,13 @@
             "base_file": "${packages}/Sublime Clojure/Sublime Clojure.sublime-settings",
             "default": "// Sublime Clojure Settings - User\n{\n\t$0\n}\n"
         }
-    }
+    },
+    {
+        "caption": "Preferences: Sublime Clojure Key Bindings",
+        "command": "edit_settings",
+        "args": {
+            "base_file": "${packages}/Sublime Clojure/Default (${platform}).sublime-keymap",
+            "user_file": "${packages}/User/Default (${platform}).sublime-keymap"
+        }
+    },
 ]

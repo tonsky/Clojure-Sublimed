@@ -1,38 +1,38 @@
 [
  // Evaluate Selection
- {"keys": ["ctrl+enter"],
+ {"keys": ["ctrl+alt+enter"],
   "command": "sublime_clojure_eval_selection",
   "context": [{"key": "selection_empty", "operator": "equal", "operand": false},
               {"key": "selector", "operator": "equal", "operand": "source.clojure", "match_all": true}]},
 
  // Evaluate Topmost Form
- {"keys": ["ctrl+enter"],
+ {"keys": ["ctrl+alt+enter"],
   "command": "sublime_clojure_eval_topmost_form",
   "context": [{"key": "selection_empty", "operator": "equal", "operand": true},
               {"key": "selector", "operator": "equal", "operand": "source.clojure", "match_all": true}]},
 
  // Evaluate Buffer
- {"keys": ["ctrl+b"],
+ {"keys": ["ctrl+alt+b"],
   "command": "sublime_clojure_eval_buffer",
   "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
  // Clear Evaluation Results
- {"keys": ["ctrl+l"],
+ {"keys": ["ctrl+alt+l"],
   "command": "sublime_clojure_clear_evals",
   "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
  // Interrupt Pending Evaluations
- {"keys": ["ctrl+c"],
+ {"keys": ["ctrl+alt+c"],
   "command": "sublime_clojure_interrupt_eval",
   "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
  
  // Lookup Symbol
- {"keys": ["ctrl+d"],
+ {"keys": ["ctrl+alt+d"],
   "command": "sublime_clojure_lookup_symbol",
   "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
  // Toggle Stacktrace
- {"keys": ["ctrl+e"],
+ {"keys": ["ctrl+alt+e"],
   "command": "sublime_clojure_toggle_trace",
   "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 ]
