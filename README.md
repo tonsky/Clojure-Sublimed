@@ -1,5 +1,7 @@
 # Clojure support for Sublime Text 4
 
+<div align=center><img src="./screenshots/logo.png" width="350"></div>
+
 This package provides Clojure support for Sublime Text and includes:
 
 - Clojure and EDN syntax grammars (Sublime Text 3 or later)
