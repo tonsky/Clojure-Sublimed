@@ -71,15 +71,18 @@ class Eval:
         region = region or self.region()
         if region:
             scope, color = self.scope_color()
-            if settings().get("elapsed_threshold_ms") and self.start_time:
+            threshold = settings().get("elapsed_threshold_ms")
+            if threshold != None and self.start_time and self.status in {"success", "exception"}:
                 elapsed = time.perf_counter() - self.start_time
-                if elapsed * 1000 >= settings().get("elapsed_threshold_ms"):
+                if elapsed * 1000 >= threshold:
                     if elapsed >= 10:
                         value = f"({'{:,.0f}'.format(elapsed)} sec) {value}"
                     elif elapsed >= 1:
                         value = f"({'{:.1f}'.format(elapsed)} sec) {value}"
                     elif elapsed >= 0.1:
                         value = f"({'{:.0f}'.format(elapsed * 1000)} ms) {value}"
+                    else:
+                        value = f"({elapsed * 1000} ms) {value}"
             self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL, [value], color)
 
     def toggle_trace(self):
@@ -167,7 +170,7 @@ def handle_new_session(msg):
         eval.msg["session"] = msg["new-session"]
         eval.start_time = time.perf_counter()
         conn.send(eval.msg)
-        eval.update("eval", "Evaluating...")
+        eval.update("eval", progress_thread.phase())
         return True
 
 def handle_value(msg):
@@ -215,10 +218,67 @@ def namespace(view, point):
             break
     return ns
 
+class ProgressThread:
+    def __init__(self):
+        self.running = False
+        self.condition = threading.Condition()
+        self.phases = None
+        self.phase_idx = 0
+        self.interval = 100
+
+    def update_phases(self, phases, interval):
+        self.phases = phases
+        self.phase_idx = 0
+        self.interval = interval
+        if len(phases) > 1:
+            self.start()
+        else:
+            self.stop()
+
+    def phase(self):
+        return self.phases[self.phase_idx]
+
+    def run_loop(self):
+        while True:
+            if not self.running:
+                break
+            updated = False
+            if sublime.active_window() and sublime.active_window().active_view():
+                view = sublime.active_window().active_view()
+                for eval in list(conn.evals.values()):
+                    if eval.view == view and eval.status in {"clone", "eval", "interrupt"}:
+                        prefix = "Interrupting " if eval.status == "interrupt" else ""
+                        eval.update(eval.status, prefix + self.phase())
+                        updated = True
+            if updated:
+                time.sleep(self.interval / 1000.0)
+                self.phase_idx = (self.phase_idx + 1) % len(self.phases)
+            else:
+                with self.condition:
+                    self.condition.wait()
+
+    def start(self):
+        if not self.running:
+            self.running = True
+            threading.Thread(daemon=True, target=self.run_loop).start()
+
+    def wake(self):
+        if self.running:
+            with self.condition:
+                self.condition.notify_all()
+
+    def stop(self):
+        self.running = False
+        with self.condition:
+            self.condition.notify_all()
+        
+progress_thread = ProgressThread()
+
 def eval_msg(view, region, msg):
     extended_region = view.line(region)
     conn.erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
-    eval = Eval(view, region, "clone", "Cloning...")
+    eval = Eval(view, region, "clone", progress_thread.phase())
+    progress_thread.wake()
     eval.msg = {k: v for k, v in msg.items() if v}
     eval.msg["id"] = eval.id
     eval.msg["nrepl.middleware.caught/caught"] = f"{ns}.middleware/print-root-trace"
@@ -416,16 +476,6 @@ class LookupSymbolCommand(sublime_plugin.TextCommand):
             return True
         return False
 
-class EventListener(sublime_plugin.EventListener):
-    def on_activated(self, view):
-        conn.refresh_status()
-
-    def on_modified_async(self, view):
-        conn.erase_evals(lambda eval: eval.region() and view.substr(eval.region()) != eval.code, view)
-
-    def on_close(self, view):
-        conn.erase_evals(lambda eval: True, view)
-
 class SocketIO:
     def __init__(self, socket):
         self.socket = socket
@@ -556,12 +606,29 @@ class ReconnectCommand(sublime_plugin.ApplicationCommand):
     def is_enabled(self):
         return conn.socket != None
 
+class EventListener(sublime_plugin.EventListener):
+    def on_activated_async(self, view):
+        conn.refresh_status()
+        progress_thread.wake()
+
+    def on_modified_async(self, view):
+        conn.erase_evals(lambda eval: eval.region() and view.substr(eval.region()) != eval.code, view)
+
+    def on_close(self, view):
+        conn.erase_evals(lambda eval: True, view)
+
+def on_settings_change():
+    Eval.colors.clear()
+    progress_thread.update_phases(settings().get("progress_phases"), settings().get("progress_interval_ms"))
+
 def plugin_loaded():
     connect('localhost', 5555) # FIXME
-    preferences = sublime.load_settings("Preferences.sublime-settings")
-    preferences.add_on_change(ns, lambda: Eval.colors.clear())
+    sublime.load_settings("Preferences.sublime-settings").add_on_change(ns, on_settings_change)
+    settings().add_on_change(ns, on_settings_change)
+    on_settings_change()
 
 def plugin_unloaded():
+    progress_thread.stop()
     conn.disconnect()
-    preferences = sublime.load_settings("Preferences.sublime-settings")
-    preferences.clear_on_change(ns)
+    sublime.load_settings("Preferences.sublime-settings").clear_on_change(ns)
+    settings().clear_on_change(ns)

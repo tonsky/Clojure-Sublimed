@@ -6,7 +6,10 @@
 (range 300)
 
 ; delayed eval
-(do (Thread/sleep 1000) :done)
+(do (Thread/sleep 5000) :done)
+(do (Thread/sleep 5000) :done)
+(do (Thread/sleep 5000) :done)
+(do (Thread/sleep 5000) :done)
 (do (Thread/sleep 900) :done)
 (do (Thread/sleep 490) :done)
 (do (Thread/sleep 90) :done)
