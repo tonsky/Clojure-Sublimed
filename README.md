@@ -151,9 +151,9 @@ Clear Evaluation Results      | <kbd>Ctrl</kbd> <kbd>L</kbd>     | <kbd>Ctrl</kb
 
 To change key bindings, run `Preferences: Sublime Clojure Key Bindings` command.
 
-## License
+## Credits
 
-[MIT License](./LICENSE.txt)
+Made by [Niki Tonsky](https://twitter.com/nikitonsky).
 
 ## See also
 
@@ -163,6 +163,6 @@ To change key bindings, run `Preferences: Sublime Clojure Key Bindings` command.
 
 [Sublime Profiles](https://github.com/tonsky/sublime-profiles): Profile switcher.
 
-## Credits
+## License
 
-Made by [Niki Tonsky](https://twitter.com/nikitonsky).
+[MIT License](./LICENSE.txt)
