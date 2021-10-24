@@ -114,7 +114,7 @@ You don’t have to wait for one form to finish evaluating to evaluate something
 
 By default, Sublime Clojure will also print evaluation time if it took more than 100 ms:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_elapsed.png" width="453" height="134" alt="Elapsed time">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_elapsed.png" width="500" height="139" alt="Elapsed time">
 
 If your evaluation runs too long and you want to interrupt it, run `Clojure REPL: Interrupt Pending Evaluations`:
 
@@ -126,7 +126,7 @@ If your evaluation failed, put your cursor inside failed region and run `Clojure
 
 To show symbol info, run `Clojure REPL: Toggle Symbol Info`:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/lookup.png" width="593" height="143" alt="Lookup Symbol">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/symbol_info.png" width="580" height="172" alt="Toggle Symbol Info">
 
 Universal `Clojure REPL: Toggle Info` command acts as either `Toggle Stacktrace` or `Toggle Symbol Info`, depending on context.
 
