@@ -110,7 +110,7 @@ From here you have three options:
 
 You don’t have to wait for one form to finish evaluating to evaluate something else. Multiple things can be executed in parallel:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_parallel.png" width="416" height="137" alt="Evaluate in Parallel">
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_parallel.gif" width="353" height="151" alt="Evaluate in Parallel">
 
 By default, Sublime Clojure will also print evaluation time if it took more than 100 ms:
 
