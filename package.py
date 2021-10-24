@@ -5,14 +5,6 @@ from typing import Any, Dict, Tuple
 
 ns = 'sublime-clojure'
 
-package_path = os.path.dirname(os.path.abspath(__file__))
-if os.path.isfile(package_path):
-    # Package is a .sublime-package so get its filename
-    package, _ = os.path.splitext(os.path.basename(package_path))
-elif os.path.isdir(package_path):
-    # Package is a directory, so get its basename
-    package = os.path.basename(package_path)
-
 def settings():
     return sublime.load_settings("Sublime Clojure.sublime-settings")
 
@@ -119,7 +111,7 @@ def regions_touch(r1, r2):
 class Connection:
     def __init__(self):
         self.host = 'localhost'
-        self.port = 5555
+        self.port = None
         self.evals: dict[int, Eval] = {}
         self.reset()
 
@@ -174,8 +166,6 @@ class Connection:
 
     def ready(self):
         return bool(self.socket and self.session)
-
-conn = Connection()
 
 def handle_new_session(msg):
     if "new-session" in msg and "id" in msg and msg["id"] in conn.evals:
@@ -285,8 +275,6 @@ class ProgressThread:
         with self.condition:
             self.condition.notify_all()
         
-progress_thread = ProgressThread()
-
 def eval_msg(view, region, msg):
     extended_region = view.line(region)
     conn.erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
@@ -593,12 +581,14 @@ class SublimeClojureHostPortInputHandler(sublime_plugin.TextInputHandler):
         return "host:port"
 
     def initial_text(self):
-        if conn.host and conn.port:
-            return f'{conn.host}:{conn.port}'
+        return conn.host + ":" + (str(conn.port) if conn.port else "")
+
+    def initial_selection(self):
+        return [(len(conn.host + ":"), len(self.initial_text()))]
 
     def preview(self, text):
         if not self.validate(text):
-            return "Invalid, expected <host>:<port>"
+            return "Expected <host>:<port>"
 
     def validate(self, text):
         text = text.strip()
@@ -651,7 +641,20 @@ def on_settings_change():
     progress_thread.update_phases(settings().get("progress_phases"), settings().get("progress_interval_ms"))
 
 def plugin_loaded():
-    connect('localhost', 5555) # FIXME
+    global package, conn, progress_thread
+
+    package_path = os.path.dirname(os.path.abspath(__file__))
+    if os.path.isfile(package_path):
+        # Package is a .sublime-package so get its filename
+        package, _ = os.path.splitext(os.path.basename(package_path))
+    elif os.path.isdir(package_path):
+        # Package is a directory, so get its basename
+        package = os.path.basename(package_path)
+
+    conn = Connection()
+    progress_thread = ProgressThread()
+
+    # connect('localhost', 5555) # FIXME
     sublime.load_settings("Preferences.sublime-settings").add_on_change(ns, on_settings_change)
     settings().add_on_change(ns, on_settings_change)
     on_settings_change()
