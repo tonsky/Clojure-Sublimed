@@ -105,14 +105,53 @@ class Eval:
         if self.phantom_id:
             self.view.erase_phantom_by_id(self.phantom_id)
 
+class StatusEval(Eval):
+    def __init__(self, code):
+        self.id = Eval.next_id
+        self.view = None
+        self.code = code
+        self.session = None
+        self.msg = None
+        self.trace = None
+        self.start_time = None
+        Eval.next_id += 1
+        self.update("pending", None)
+
+    def region(self):
+        return None
+
+    def active_view(self):
+        if sublime.active_window():
+            return sublime.active_window().active_view()
+
+    def update(self, status, value, region = None):
+        self.status = status
+        self.value = value
+        if self.active_view():
+            if status in {"pending", "interrupt"}:
+                self.active_view().set_status(self.value_key(), "⏳ " + self.code)
+            elif "success" == status:
+                self.active_view().set_status(self.value_key(), "✅ " + value)
+            elif "exception" == status:
+                self.active_view().set_status(self.value_key(), "❌ " + value)
+
+    def erase(self):
+        if self.active_view():
+            self.active_view().erase_status(self.value_key())
+
 def regions_touch(r1, r2):
     return r1 != None and r2 != None and not r1.end() < r2.begin() and not r1.begin() > r2.end()
 
 class Connection:
+    host: str
+    port: str
+    status: str
+    evals: Dict[int, Eval]
+
     def __init__(self):
         self.host = 'localhost'
         self.port = None
-        self.evals: dict[int, Eval] = {}
+        self.evals = {}
         self.reset()
 
     def set_status(self, status):
@@ -127,6 +166,9 @@ class Connection:
                     view.set_status(ns, self.status)
                 else:
                     view.erase_status(ns)
+                for eval in self.evals.values():
+                    if isinstance(eval, StatusEval):
+                        eval.update(eval.status, eval.value)    
 
     def send(self, msg):
         if settings().get("debug"):
@@ -350,9 +392,25 @@ class SublimeClojureEvalBufferCommand(sublime_plugin.TextCommand):
     def is_enabled(self):
         return conn.ready()
 
+class SublimeClojureEvalCodeCommand(sublime_plugin.ApplicationCommand):
+    def run(self, code):
+        conn.erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
+        eval = StatusEval(code)
+        eval.msg = {"op": "eval",
+                    "id": eval.id,
+                    "code": code,
+                    "nrepl.middleware.caught/caught": f"{ns}.middleware/print-root-trace",
+                    "nrepl.middleware.print/quota": 300}
+        conn.add_eval(eval)
+        conn.send({"op": "clone", "session": conn.session, "id": eval.id})
+
+    def is_enabled(self):
+        return conn.ready()
+
 class SublimeClojureClearEvalsCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         conn.erase_evals(lambda eval: eval.status not in {"pending", "interrupt"}, self.view)
+        conn.erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
 
 class SublimeClojureInterruptEvalCommand(sublime_plugin.TextCommand):
     def run(self, edit):

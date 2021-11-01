@@ -44,7 +44,8 @@ Features:
 - [x] interrupt evaluation,
 - [x] eval multiple forms at once (parallel evaluation),
 - [x] lookup symbol info,
-- [x] show evaluation time.
+- [x] show evaluation time,
+- [x] bind keys to eval arbitrary code.
 
 We intentionally excluded following features:
 
@@ -94,6 +95,8 @@ Important! Make sure you switched your syntax to `Clojure (Sublime Clojure)`.
 1. Run nREPL server.
 2. Run `Clojure REPL: Connect` command.
 
+### Evaluating code from buffer
+
 From here you have three options:
 
 `Clojure REPL: Evaluate` without selection evaluates topmost form around your cursor:
@@ -116,9 +119,13 @@ By default, Sublime Clojure will also print evaluation time if it took more than
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_elapsed.png" width="500" height="139" alt="Elapsed time">
 
+### Interrupting
+
 If your evaluation runs too long and you want to interrupt it, run `Clojure REPL: Interrupt Pending Evaluations`:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/interrupt.png" width="587" height="39" alt="Interrupt">
+
+### Opening stacktrace
 
 If your evaluation failed, put your cursor inside failed region and run `Clojure REPL: Toggle Stacktrace`:
 
@@ -128,13 +135,35 @@ Sublime Clojure will display stacktraces in a Clojure-friendly way. Compare with
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/stacktraces.png" width="806" height="390" alt="Stacktraces">
 
+### Looking up symbol
+
 To show symbol info, run `Clojure REPL: Toggle Symbol Info`:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/symbol_info.png" width="580" height="172" alt="Toggle Symbol Info">
 
 Universal `Clojure REPL: Toggle Info` command acts as either `Toggle Stacktrace` or `Toggle Symbol Info`, depending on context.
 
+### Binding keys to eval code
+
+Every project is different, and sometimes it’s convenient to run a piece of code so often you’d want it on a shortcut. It might me namespace reload, test execution, database reconnect — possibilities are endless.
+
+To support such use cases, Sublime Clojure allows you to bind arbitrary piece of code to a keyboard shortcut. Run `Preferences: Sublime Clojure Key Bindings` and add something like this:
+
+```
+{"keys": ["ctrl+t"],
+ "command": "sublime_clojure_eval_code",
+ "args": {"code": "(clojure.test/run-all-tests)"}}
+```
+
+Then, whenever you press <key>Ctrl</key> + <key>T</key>, you’ll see the result in the status bar, like this:
+
+<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_code.png" width="536" height="37" alt="Eval Code">
+
+### Clearing results
+
 Finally, to clear evaluation results run `Clojure REPL: Clear Evaluation Results`.
+
+### Editing settings
 
 To edit settings, run `Preferences: Sublime Clojure Settings` command.
 
