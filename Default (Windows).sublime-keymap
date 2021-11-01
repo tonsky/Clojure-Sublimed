@@ -1,36 +1,38 @@
 [
- // Evaluate
- {"keys": ["ctrl+alt+enter"],
-  "command": "sublime_clojure_eval",
-  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+ // // Evaluate
+ // {"keys": ["ctrl+alt+enter"],
+ //  "command": "sublime_clojure_eval",
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
- // Evaluate Buffer
- {"keys": ["ctrl+alt+b"],
-  "command": "sublime_clojure_eval_buffer",
-  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+ // // Evaluate Buffer
+ // {"keys": ["ctrl+alt+b"],
+ //  "command": "sublime_clojure_eval_buffer",
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
- // Interrupt Pending Evaluations
- {"keys": ["ctrl+alt+c"],
-  "command": "sublime_clojure_interrupt_eval",
-  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+ // // Interrupt Pending Evaluations
+ // {"keys": ["ctrl+alt+c"],
+ //  "command": "sublime_clojure_interrupt_eval",
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
  
- // Toggle Stacktrace
+ // // Toggle Info
+ // {"keys": ["ctrl+alt+i"],
+ //  "command": "sublime_clojure_toggle_info",
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+
+ // // Clear Evaluation Results
+ // {"keys": ["ctrl+alt+l"],
+ //  "command": "sublime_clojure_clear_evals",
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+
+ // // Extras
+
+ // // Toggle Stacktrace
  // {"keys": ["ctrl+alt+e"],
  //  "command": "sublime_clojure_toggle_trace",
  //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
- // Toggle Symbol Info
+ // // Toggle Symbol Info
  // {"keys": ["ctrl+alt+d"],
  //  "command": "sublime_clojure_lookup_symbol",
  //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
-
- // Toggle Info
- {"keys": ["ctrl+alt+i"],
-  "command": "sublime_clojure_toggle_info",
-  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
-
- // Clear Evaluation Results
- {"keys": ["ctrl+alt+l"],
-  "command": "sublime_clojure_clear_evals",
-  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 ]

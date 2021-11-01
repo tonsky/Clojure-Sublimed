@@ -136,10 +136,13 @@ Universal `Clojure REPL: Toggle Info` command acts as either `Toggle Stacktrace`
 
 Finally, to clear evaluation results run `Clojure REPL: Clear Evaluation Results`.
 
-
 To edit settings, run `Preferences: Sublime Clojure Settings` command.
 
 ## Default Key Bindings
+
+Sublime Clojure comes with no keybindings enabled by default to guarantee they won’t conflict with any other extension.
+
+This is the recommended keymap:
 
 Command                       | macOS                            | Windows/Linux                                   | Mnemonic
 ------------------------------|----------------------------------|-------------------------------------------------| -----------------------
@@ -149,7 +152,7 @@ Interrupt Pending Evaluations | <kbd>Ctrl</kbd> <kbd>C</kbd>     | <kbd>Ctrl</kb
 Toggle Info                   | <kbd>Ctrl</kbd> <kbd>I</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>I</kbd>     | [I]nfo
 Clear Evaluation Results      | <kbd>Ctrl</kbd> <kbd>L</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>L</kbd>     | c[L]ear
 
-To change key bindings, run `Preferences: Sublime Clojure Key Bindings` command.
+To set it up, run `Preferences: Sublime Clojure Key Bindings` command and copy example keybindings to your local Key Bindings file.
 
 ## Credits
 

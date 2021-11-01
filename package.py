@@ -72,10 +72,10 @@ class Eval:
                             value = f"({'{:,.0f}'.format(elapsed)} sec) {value}"
                         elif elapsed >= 1:
                             value = f"({'{:.1f}'.format(elapsed)} sec) {value}"
-                        elif elapsed >= 0.1:
+                        elif elapsed >= 0.005:
                             value = f"({'{:.0f}'.format(elapsed * 1000)} ms) {value}"
                         else:
-                            value = f"({elapsed * 1000} ms) {value}"
+                            value = f"({'{:.2f}'.format(elapsed * 1000)} ms) {value}"
                 self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL, [value], color)
             else:
                 self.view.erase_regions(self.value_key())
@@ -654,7 +654,6 @@ def plugin_loaded():
     conn = Connection()
     progress_thread = ProgressThread()
 
-    # connect('localhost', 5555) # FIXME
     sublime.load_settings("Preferences.sublime-settings").add_on_change(ns, on_settings_change)
     settings().add_on_change(ns, on_settings_change)
     on_settings_change()

@@ -5,6 +5,9 @@
 ; long value
 (range 300)
 
+; complex value
+(bean "abc")
+
 ; delayed eval
 (do (Thread/sleep 5000) :done)
 (do (Thread/sleep 5000) :done)
