@@ -145,7 +145,7 @@ Universal `Clojure REPL: Toggle Info` command acts as either `Toggle Stacktrace`
 
 ### Binding keys to eval code
 
-Every project is different, and sometimes it’s convenient to run a piece of code so often you’d want it on a shortcut. It might me namespace reload, test execution, database reconnect — possibilities are endless.
+Every project is different, and sometimes it’s convenient to run a piece of code so often you’d want it on a shortcut. It might be a namespace reload, test execution, database reconnect, linter, formatter — possibilities are endless.
 
 To support such use cases, Sublime Clojure allows you to bind arbitrary piece of code to a keyboard shortcut. Run `Preferences: Sublime Clojure Key Bindings` and add something like this:
 

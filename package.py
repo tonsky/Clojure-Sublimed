@@ -396,8 +396,13 @@ class SublimeClojureEvalCodeCommand(sublime_plugin.ApplicationCommand):
     def run(self, code):
         conn.erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
         eval = StatusEval(code)
+        ns = 'user'
+        view = eval.active_view()
+        if view:
+            ns = namespace(view, view.size()) or 'user'
         eval.msg = {"op": "eval",
                     "id": eval.id,
+                    "ns": ns,
                     "code": code,
                     "nrepl.middleware.caught/caught": f"{ns}.middleware/print-root-trace",
                     "nrepl.middleware.print/quota": 300}
@@ -689,7 +694,7 @@ class SublimeClojureEventListener(sublime_plugin.EventListener):
         progress_thread.wake()
 
     def on_modified_async(self, view):
-        conn.erase_evals(lambda eval: eval.region() and view.substr(eval.region()) != eval.code, view)
+        conn.erase_evals(lambda eval: not eval.region() or view.substr(eval.region()) != eval.code, view)
 
     def on_close(self, view):
         conn.erase_evals(lambda eval: True, view)
