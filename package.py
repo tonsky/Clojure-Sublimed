@@ -644,7 +644,18 @@ class SublimeClojureHostPortInputHandler(sublime_plugin.TextInputHandler):
         return "host:port"
 
     def initial_text(self):
-        return conn.host + ":" + (str(conn.port) if conn.port else "")
+        port = ''
+        if conn.port:
+            port = str(conn.port)
+        window = sublime.active_window()
+        if window:
+            for folder in window.folders():
+                if os.path.exists(folder + "/.nrepl-port"):
+                    with open(folder + "/.nrepl-port", "rt") as f:
+                        content = f.read(10).strip()
+                        if re.fullmatch(r'[1-9][0-9]*', content):
+                            port = content
+        return conn.host + ":" + port
 
     def initial_selection(self):
         return [(len(conn.host + ":"), len(self.initial_text()))]
