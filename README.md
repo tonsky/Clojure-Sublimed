@@ -4,8 +4,8 @@
 
 This package provides Clojure support for Sublime Text and includes:
 
-- Clojure and EDN syntax grammars (Sublime Text 3 or later)
-- Clojure nREPL client (version 4075 or later)
+- Clojure and EDN syntax grammars (Sublime Text 3+)
+- Clojure nREPL client (Sublime Text 4075+, nREPL 0.8+)
 
 ## Clojure syntax
 
