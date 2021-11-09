@@ -234,7 +234,7 @@ def handle_exception(msg):
             region = None
             if get("root-ex-data"):
                 text += " " + get("root-ex-data")
-            if get("line") and get("column"):
+            if get("line") and get("column") and eval.view:
                 line = get("line")
                 column = get("column")
                 point = eval.view.text_point_utf16(line - 1, column - 1, clamp_column = True)
