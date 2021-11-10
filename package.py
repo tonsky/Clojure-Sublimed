@@ -229,6 +229,12 @@ def handle_value(msg):
         eval.update("success", msg.get("value"))
         return True
 
+def set_selection(view, region):
+    sel = view.sel()
+    sel.clear()
+    sel.add(region)
+    view.show(region, show_surrounds = True, keep_to_left = True, animate = True)
+
 def handle_exception(msg):
     if "id" in msg and msg["id"] in conn.evals:
         eval = conn.evals[msg["id"]]
@@ -243,6 +249,7 @@ def handle_exception(msg):
                 column = get("column")
                 point = eval.view.text_point_utf16(line - 1, column - 1, clamp_column = True)
                 region = sublime.Region(point, eval.view.line(point).end())
+                set_selection(eval.view, sublime.Region(point, point))
             eval.trace = get("trace")
             eval.update("exception", text, region)
             return True
