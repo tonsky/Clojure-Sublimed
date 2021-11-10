@@ -172,7 +172,7 @@ class Connection:
                         if self.last_view and view != self.last_view:
                             self.last_view.erase_status(eval.value_key())
                         eval.update(eval.status, eval.value)
-            conn.last_view = view
+            self.last_view = view
 
     def send(self, msg):
         if settings().get("debug"):
