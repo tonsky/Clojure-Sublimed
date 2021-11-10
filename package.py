@@ -121,8 +121,8 @@ class StatusEval(Eval):
         return None
 
     def active_view(self):
-        if sublime.active_window():
-            return sublime.active_window().active_view()
+        if window := sublime.active_window():
+            return window.active_view()
 
     def update(self, status, value, region = None):
         self.status = status
@@ -147,28 +147,32 @@ class Connection:
     port: str
     status: str
     evals: Dict[int, Eval]
+    last_view: sublime.View
 
     def __init__(self):
         self.host = 'localhost'
         self.port = None
         self.evals = {}
         self.reset()
+        self.last_view = window.active_view() if (window := sublime.active_window()) else None
 
     def set_status(self, status):
         self.status = status
         self.refresh_status()
 
     def refresh_status(self):
-        if sublime.active_window():
-            view = sublime.active_window().active_view()
-            if view:
+        if window := sublime.active_window():
+            if view := window.active_view():
                 if self.status:
                     view.set_status(ns, self.status)
                 else:
                     view.erase_status(ns)
                 for eval in self.evals.values():
                     if isinstance(eval, StatusEval):
-                        eval.update(eval.status, eval.value)    
+                        if self.last_view and view != self.last_view:
+                            self.last_view.erase_status(eval.value_key())
+                        eval.update(eval.status, eval.value)
+            conn.last_view = view
 
     def send(self, msg):
         if settings().get("debug"):
@@ -290,8 +294,7 @@ class ProgressThread:
                 break
             time.sleep(self.interval / 1000.0)
             updated = False
-            if sublime.active_window() and sublime.active_window().active_view():
-                view = sublime.active_window().active_view()
+            if (window := sublime.active_window()) and (view := window.active_view()):
                 for eval in list(conn.evals.values()):
                     if eval.view == view and eval.status == "pending":
                         eval.update(eval.status, self.phase())
@@ -636,8 +639,8 @@ def connect(host, port):
     except Exception as e:
         conn.socket = None
         conn.set_status(None)
-        if sublime.active_window():
-            sublime.active_window().status_message(f"Failed to connect to {host}:{port}")
+        if window := sublime.active_window():
+            window.status_message(f"Failed to connect to {host}:{port}")
 
 class SublimeClojureHostPortInputHandler(sublime_plugin.TextInputHandler):
     def placeholder(self):
@@ -647,8 +650,7 @@ class SublimeClojureHostPortInputHandler(sublime_plugin.TextInputHandler):
         port = ''
         if conn.port:
             port = str(conn.port)
-        window = sublime.active_window()
-        if window:
+        if window := sublime.active_window():
             for folder in window.folders():
                 if os.path.exists(folder + "/.nrepl-port"):
                     with open(folder + "/.nrepl-port", "rt") as f:
