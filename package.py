@@ -58,7 +58,7 @@ class Eval:
         if regions and len(regions) >= 1:
             return regions[0]
 
-    def update(self, status, value, region = None):
+    def update(self, status, value, region = None, time_taken = None):
         self.status = status
         region = region or self.region()
         if region:
@@ -68,6 +68,8 @@ class Eval:
                 if threshold != None and self.start_time and self.status in {"success", "exception"}:
                     elapsed = time.perf_counter() - self.start_time
                     if elapsed * 1000 >= threshold:
+                        if time_taken is not None:
+                            elapsed = time_taken / 1000000000
                         if elapsed >= 10:
                             value = f"({'{:,.0f}'.format(elapsed)} sec) {value}"
                         elif elapsed >= 1:
@@ -226,7 +228,7 @@ def handle_new_session(msg):
 def handle_value(msg):
     if "value" in msg and "id" in msg and msg["id"] in conn.evals:
         eval = conn.evals[msg["id"]]
-        eval.update("success", msg.get("value"))
+        eval.update("success", msg.get("value"), time_taken=msg.get(f'{ns}.middleware/time-taken'))
         return True
 
 def set_selection(view, region):
@@ -582,6 +584,7 @@ class SocketIO:
         return self.buffer[begin:end]
 
 def handle_connect(msg):
+
     if 1 == msg.get("id") and "new-session" in msg:
         conn.session = msg["new-session"]
         conn.send({"op": "load-file",
