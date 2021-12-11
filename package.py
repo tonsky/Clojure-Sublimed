@@ -593,7 +593,8 @@ def handle_connect(msg):
 
     elif 2 == msg.get("id") and msg.get("status") == ["done"]:
         conn.send({"op":               "add-middleware",
-                   "middleware":       [f"{ns}.middleware/wrap-errors",
+                   "middleware":       [f"{ns}.middleware/time-eval",
+                                        f"{ns}.middleware/wrap-errors",
                                         f"{ns}.middleware/wrap-output"],
                    "extra-namespaces": [f"{ns}.middleware"],
                    "session":          conn.session,

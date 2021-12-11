@@ -89,12 +89,6 @@
   (fn [msg]
     (handler (assoc msg :transport (caught-transport msg)))))
 
-(middleware/set-descriptor!
-  #'wrap-errors
-  {:requires #{#'caught/wrap-caught} ;; run inside wrap-caught
-   :expects #{"eval"} ;; but outside of "eval"
-   :handles {}})
-
 (defn- output-transport [{:keys [transport] :as msg}]
   (reify Transport
     (recv [this]
@@ -115,8 +109,39 @@
   (fn [msg]
     (handler (assoc msg :transport (output-transport msg)))))
 
+(defn- time-transport [{:keys [transport start-time] :as msg}]
+  (reify Transport
+    (recv [this]
+      (transport/recv transport))
+    (recv [this timeout]
+      (transport/recv transport timeout))
+    (send [this {:keys [value] :as resp}]
+      (let [resp' (if value
+                    (assoc resp ::time-taken (- (System/nanoTime) start-time))
+                    resp)]
+        (transport/send transport resp'))
+      this)))
+
+(defn time-eval [handler]
+  (fn [{:keys [op] :as msg}]
+    (if (= "eval" op)
+      (handler (assoc msg :transport (time-transport (assoc msg :start-time (System/nanoTime)))))
+      (handler msg))))
+
 (middleware/set-descriptor!
   #'wrap-output
-  {:requires #{}
+  {:requires #{#'time-eval}
    :expects #{"eval"} ;; run outside of "eval"
+   :handles {}})
+
+(middleware/set-descriptor!
+  #'time-eval
+  {:requires #{}
+   :expects #{"eval"}
+   :handles {}})
+
+(middleware/set-descriptor!
+  #'wrap-errors
+  {:requires #{#'caught/wrap-caught #'time-eval} ;; run inside wrap-caught
+   :expects #{"eval"} ;; but outside of "eval"
    :handles {}})
