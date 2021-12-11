@@ -76,7 +76,7 @@ class Eval:
                             value = f"({'{:.0f}'.format(elapsed * 1000)} ms) {value}"
                         else:
                             value = f"({'{:.2f}'.format(elapsed * 1000)} ms) {value}"
-                self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL, [value], color)
+                self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL, [html.escape(value)], color)
             else:
                 self.view.erase_regions(self.value_key())
                 self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL)
