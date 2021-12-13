@@ -79,10 +79,6 @@ git clone https://github.com/tonsky/sublime-clojure.git
 ln -s `pwd`/sublime-clojure ~/Library/Application\ Support/Sublime\ Text/Packages/Sublime\ Clojure
 ```
 
-Or from Package Control (coming later):
-
-- `Package Control: Install Package` → `Sublime Clojure`
-
 Assign syntax to Clojure files:
 
 - open any clj/cljc/cljs file,
@@ -182,6 +178,17 @@ Toggle Info                   | <kbd>Ctrl</kbd> <kbd>I</kbd>     | <kbd>Ctrl</kb
 Clear Evaluation Results      | <kbd>Ctrl</kbd> <kbd>L</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>L</kbd>     | c[L]ear
 
 To set it up, run `Preferences: Sublime Clojure Key Bindings` command and copy example keybindings to your local Key Bindings file.
+
+## Frequently Asked Questions
+
+Q: Why no Package Control?
+
+A: They seem to have a shortage of reviewers, [track progress](https://github.com/wbond/package_control_channel/pull/8394).
+
+Q: REPL/eval doesn’t work
+
+A: Make sure you are using nREPL 0.8 or later.
+A: Make sure you have assigned `Clojure (Sublime Clojre)` syntax to the file.
 
 ## Credits
 
