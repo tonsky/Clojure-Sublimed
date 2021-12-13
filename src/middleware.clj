@@ -6,6 +6,7 @@
    [nrepl.middleware :as middleware]
    [nrepl.middleware.print :as print]
    [nrepl.middleware.caught :as caught]
+   [nrepl.middleware.session :as session]
    [nrepl.transport :as transport])
   (:import
    [nrepl.transport Transport]))
@@ -89,6 +90,12 @@
   (fn [msg]
     (handler (assoc msg :transport (caught-transport msg)))))
 
+(middleware/set-descriptor!
+  #'wrap-errors
+  {:requires #{#'caught/wrap-caught} ;; run inside wrap-caught
+   :expects #{"eval"} ;; but outside of "eval"
+   :handles {}})
+
 (defn- output-transport [{:keys [transport] :as msg}]
   (reify Transport
     (recv [this]
@@ -130,18 +137,12 @@
 
 (middleware/set-descriptor!
   #'wrap-output
-  {:requires #{#'time-eval}
+  {:requires #{}
    :expects #{"eval"} ;; run outside of "eval"
    :handles {}})
 
 (middleware/set-descriptor!
   #'time-eval
-  {:requires #{}
+  {:requires #{#'wrap-output #'wrap-errors #'print/wrap-print}
    :expects #{"eval"}
-   :handles {}})
-
-(middleware/set-descriptor!
-  #'wrap-errors
-  {:requires #{#'caught/wrap-caught #'time-eval} ;; run inside wrap-caught
-   :expects #{"eval"} ;; but outside of "eval"
    :handles {}})
