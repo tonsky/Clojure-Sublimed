@@ -31,7 +31,6 @@ class Eval:
         self.msg = None
         self.trace = None
         self.phantom_id = None
-        self.start_time = None
         Eval.next_id += 1
         self.update("pending", None, region)
 
@@ -58,15 +57,15 @@ class Eval:
         if regions and len(regions) >= 1:
             return regions[0]
 
-    def update(self, status, value, region = None):
+    def update(self, status, value, region = None, time_taken = None):
         self.status = status
         region = region or self.region()
         if region:
             scope, color = self.scope_color()
             if value:
                 threshold = settings().get("elapsed_threshold_ms")
-                if threshold != None and self.start_time and self.status in {"success", "exception"}:
-                    elapsed = time.perf_counter() - self.start_time
+                if threshold != None and time_taken != None and self.status in {"success", "exception"}:
+                    elapsed = time_taken / 1000000000
                     if elapsed * 1000 >= threshold:
                         if elapsed >= 10:
                             value = f"({'{:,.0f}'.format(elapsed)} sec) {value}"
@@ -113,7 +112,6 @@ class StatusEval(Eval):
         self.session = None
         self.msg = None
         self.trace = None
-        self.start_time = None
         Eval.next_id += 1
         self.update("pending", None)
 
@@ -218,7 +216,6 @@ def handle_new_session(msg):
         eval = conn.evals[msg["id"]]
         eval.session = msg["new-session"]
         eval.msg["session"] = msg["new-session"]
-        eval.start_time = time.perf_counter()
         conn.send(eval.msg)
         eval.update("pending", progress_thread.phase())
         return True
@@ -226,7 +223,7 @@ def handle_new_session(msg):
 def handle_value(msg):
     if "value" in msg and "id" in msg and msg["id"] in conn.evals:
         eval = conn.evals[msg["id"]]
-        eval.update("success", msg.get("value"))
+        eval.update("success", msg.get("value"), time_taken=msg.get(f'{ns}.middleware/time-taken'))
         return True
 
 def set_selection(view, region):
@@ -582,6 +579,7 @@ class SocketIO:
         return self.buffer[begin:end]
 
 def handle_connect(msg):
+
     if 1 == msg.get("id") and "new-session" in msg:
         conn.session = msg["new-session"]
         conn.send({"op": "load-file",
@@ -593,7 +591,8 @@ def handle_connect(msg):
 
     elif 2 == msg.get("id") and msg.get("status") == ["done"]:
         conn.send({"op":               "add-middleware",
-                   "middleware":       [f"{ns}.middleware/wrap-errors",
+                   "middleware":       [f"{ns}.middleware/time-eval",
+                                        f"{ns}.middleware/wrap-errors",
                                         f"{ns}.middleware/wrap-output"],
                    "extra-namespaces": [f"{ns}.middleware"],
                    "session":          conn.session,

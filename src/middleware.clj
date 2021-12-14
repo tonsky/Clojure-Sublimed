@@ -6,6 +6,7 @@
    [nrepl.middleware :as middleware]
    [nrepl.middleware.print :as print]
    [nrepl.middleware.caught :as caught]
+   [nrepl.middleware.session :as session]
    [nrepl.transport :as transport])
   (:import
    [nrepl.transport Transport]))
@@ -115,8 +116,33 @@
   (fn [msg]
     (handler (assoc msg :transport (output-transport msg)))))
 
+(defn- time-transport [{:keys [transport start-time] :as msg}]
+  (reify Transport
+    (recv [this]
+      (transport/recv transport))
+    (recv [this timeout]
+      (transport/recv transport timeout))
+    (send [this {:keys [value] :as resp}]
+      (let [resp' (if value
+                    (assoc resp ::time-taken (- (System/nanoTime) start-time))
+                    resp)]
+        (transport/send transport resp'))
+      this)))
+
+(defn time-eval [handler]
+  (fn [{:keys [op] :as msg}]
+    (if (= "eval" op)
+      (handler (assoc msg :transport (time-transport (assoc msg :start-time (System/nanoTime)))))
+      (handler msg))))
+
 (middleware/set-descriptor!
   #'wrap-output
   {:requires #{}
    :expects #{"eval"} ;; run outside of "eval"
+   :handles {}})
+
+(middleware/set-descriptor!
+  #'time-eval
+  {:requires #{#'wrap-output #'wrap-errors #'print/wrap-print}
+   :expects #{"eval"}
    :handles {}})
