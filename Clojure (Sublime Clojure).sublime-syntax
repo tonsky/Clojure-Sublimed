@@ -126,7 +126,7 @@ contexts:
         1: punctuation.section.parens.begin.clojure
         2: punctuation.definition.symbol.namespace.clojure
       push:
-        - meta_scope: meta.parens meta.definition.clojure
+        - meta_scope: meta.parens meta.definition.clojure source.symbol.clojure
         - match: '{{wsb}}(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
           scope: source.symbol.clojure entity.name.clojure
           captures:

@@ -548,11 +548,20 @@ class SublimeClojureToggleSymbolCommand(sublime_plugin.TextCommand):
                 region = sel
                 if region.empty():
                     point = region.begin()
-                    if point > 0 and view.match_selector(point - 1, 'source.symbol.clojure'):
+                    if point > 0 and view.match_selector(point - 1, 'source.symbol.clojure') and not view.match_selector(point - 1, 'punctuation.section.parens.begin.clojure'):
                         region = self.view.extract_scope(point - 1)
-                    elif view.match_selector(point, 'source.symbol.clojure'):
+                    elif view.match_selector(point, 'source.symbol.clojure') and not view.match_selector(point, 'punctuation.section.parens.begin.clojure'):
                         region = self.view.extract_scope(point)
-
+                    # to make it work on def* symbols
+                    if view.match_selector(region.b-1, 'meta.definition.clojure') and not view.match_selector(region.a, 'entity.name.clojure') and view.match_selector(region.b-1, 'entity.name.clojure'):
+                        entity_name_region = view.extract_scope(region.b-1)
+                        if entity_name_region.a == point:
+                            region = entity_name_region
+                        else:
+                            region = sublime.Region(region.a+1, view.extract_scope(region.b-1).a-1)
+                            region.b = region.a + len(view.substr(region).strip(', \n\t'))
+                            if point > region.b:
+                                region = sublime.Region(-1, -1)
                 if region:
                     line = view.line(region)
                     conn.erase_evals(lambda eval: eval.region() and eval.region().intersects(line), view)
