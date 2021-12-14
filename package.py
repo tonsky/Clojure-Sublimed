@@ -535,10 +535,10 @@ class SublimeClojureToggleSymbolCommand(sublime_plugin.TextCommand):
                 region = sel
                 if region.empty():
                     point = region.begin()
-                    if view.match_selector(point, 'source.symbol.clojure'):
-                        region = self.view.extract_scope(point)
-                    elif point > 0 and view.match_selector(point - 1, 'source.symbol.clojure'):
+                    if point > 0 and view.match_selector(point - 1, 'source.symbol.clojure'):
                         region = self.view.extract_scope(point - 1)
+                    elif view.match_selector(point, 'source.symbol.clojure'):
+                        region = self.view.extract_scope(point)
 
                 if region:
                     line = view.line(region)
