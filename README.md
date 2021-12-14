@@ -115,6 +115,10 @@ By default, Sublime Clojure will also print evaluation time if it took more than
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_elapsed.png" width="500" height="139" alt="Elapsed time">
 
+### Copying evaluation results
+
+Sometimes you want to copy evaluation result. It is recommended to rebind `Cmd+C`/`Ctrl+C` from `copy` to `sublime_clojure_copy`. This will copy evaluation result if inside evaluated region and fallback to default `copy` otherwise.
+
 ### Interrupting
 
 If your evaluation runs too long and you want to interrupt it, run `Clojure REPL: Interrupt Pending Evaluations`:
@@ -176,6 +180,7 @@ Evaluate Buffer               | <kbd>Ctrl</kbd> <kbd>B</kbd>     | <kbd>Ctrl</kb
 Interrupt Pending Evaluations | <kbd>Ctrl</kbd> <kbd>C</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>C</kbd>     | [C]ancel
 Toggle Info                   | <kbd>Ctrl</kbd> <kbd>I</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>I</kbd>     | [I]nfo
 Clear Evaluation Results      | <kbd>Ctrl</kbd> <kbd>L</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>L</kbd>     | c[L]ear
+Copy Evaluation Results       | <kbd>Command</kbd> <kbd>C</kbd>  | <kbd>Ctrl</kbd> <kbd>C</kbd>                    | [C]opy
 
 To set it up, run `Preferences: Sublime Clojure Key Bindings` command and copy example keybindings to your local Key Bindings file.
 

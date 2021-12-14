@@ -35,4 +35,9 @@
  // {"keys": ["ctrl+d"],
  //  "command": "sublime_clojure_lookup_symbol",
  //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+
+ // // Copy Evaluation Result
+ // {"keys": ["super+c"],
+ //  "command": "sublime_clojure_copy",
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 ]

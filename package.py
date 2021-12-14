@@ -31,6 +31,7 @@ class Eval:
         self.msg = None
         self.trace = None
         self.phantom_id = None
+        self.value = None
         Eval.next_id += 1
         self.update("pending", None, region)
 
@@ -59,6 +60,7 @@ class Eval:
 
     def update(self, status, value, region = None, time_taken = None):
         self.status = status
+        self.value = value
         region = region or self.region()
         if region:
             scope, color = self.scope_color()
@@ -423,6 +425,17 @@ class SublimeClojureEvalCodeCommand(sublime_plugin.ApplicationCommand):
 
     def is_enabled(self):
         return conn.ready()
+
+class SublimeClojureCopyCommand(sublime_plugin.TextCommand):
+    def eval(self):
+        view = self.view
+        return conn.find_eval(view, view.sel()[0])
+
+    def run(self, edir):
+        if conn.ready() and len(self.view.sel()) == 1 and self.view.sel()[0].empty() and (eval := self.eval()) and eval.value:
+            sublime.set_clipboard(eval.value)
+        else:
+            self.view.run_command("copy", {})
 
 class SublimeClojureClearEvalsCommand(sublime_plugin.TextCommand):
     def run(self, edit):

@@ -24,6 +24,10 @@
         "command": "sublime_clojure_interrupt_eval"
     },
     {
+        "caption": "Clojure REPL: Copy Evaluation Result",
+        "command": "sublime_clojure_copy"
+    },
+    {
         "caption": "Clojure REPL: Toggle Stacktrace",
         "command": "sublime_clojure_toggle_trace"
     },
