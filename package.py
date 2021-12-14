@@ -359,12 +359,10 @@ def expand_until(view, point, scopes):
         return sublime.Region(begin, end)
 
 def topmost_form(view, point):
-    # move left if point is in whitespace and the rest of the line is also whitespace
-    line = view.line(point)
-    rest_of_line = view.substr(sublime.Region(point, line.b))
-    if rest_of_line.isspace() or not rest_of_line:
-        while point-1 > line.a and view.substr(point-1).isspace():
-            point -= 1
+    # move left to first non-space
+    if point >= view.size() or view.substr(sublime.Region(point, point + 1)).isspace():
+        while point > 0 and view.substr(sublime.Region(point - 1, point)).isspace():
+            point = point - 1
 
     region = expand_until(view, point, {'source.clojure '})
     if region \
