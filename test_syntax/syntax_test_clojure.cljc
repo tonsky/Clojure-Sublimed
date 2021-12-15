@@ -1,4 +1,4 @@
-; SYNTAX TEST "Packages/sublime-clojure/Clojure (Sublime Clojure).sublime-syntax"
+; SYNTAX TEST "Clojure (Sublime Clojure).sublime-syntax"
 
 
 ; VAR QUOTE
@@ -242,12 +242,14 @@
 ;                             ^ -meta.definition -meta.parens
 ;       ^^^^^ source.symbol entity.name 
 ; ^ punctuation.section.parens.begin
+;  ^^^^ source.symbol
 ;                            ^ punctuation.section.parens.end
 
 
 ; EVERYTHING
   (defn- ^{:meta :map} fn "doc" {:attr :map} [args] {:pre ()} body)
 ; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.definition
+;  ^^^^^ source.symbol
 ;        ^^^^^^^^^^^^^ meta.metadata
 ;                      ^^ entity.name
 
@@ -270,12 +272,14 @@
 ; DEF
   (def x 1)
 ; ^^^^^^^^^ meta.definition
+;  ^^^ source.symbol
 ;      ^ entity.name
 
 
 ; DEFMETHOD
   (defmethod x 1)
 ; ^^^^^^^^^^^^^^^ meta.definition
+;  ^^^^^^^^^ source.symbol
 ;            ^ entity.name
 
 
@@ -284,6 +288,7 @@
 ; ^^^^^^^^^^^^^^^ meta.definition & meta.parens
 ;            ^ entity.name
 ; ^ punctuation.section.parens.begin
+;  ^^^^^^^^^ source.symbol
 ;     ^ punctuation.definition.symbol.namespace
 ;               ^ punctuation.section.parens.end
 

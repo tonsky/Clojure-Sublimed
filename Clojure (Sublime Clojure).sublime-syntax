@@ -121,10 +121,11 @@ contexts:
           pop: true
 
   defs:
-    - match: '(\()(?:def{{symbol}}*|{{ns_symbol}}(/)def{{symbol}}*|ns)(?=\s|\))'
+    - match: '(\()(def{{symbol}}*|{{ns_symbol}}(/)def{{symbol}}*|ns)(?=\s|\))'
       captures:
         1: punctuation.section.parens.begin.clojure
-        2: punctuation.definition.symbol.namespace.clojure
+        2: source.symbol.clojure
+        3: punctuation.definition.symbol.namespace.clojure
       push:
         - meta_scope: meta.parens meta.definition.clojure
         - match: '{{wsb}}(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
