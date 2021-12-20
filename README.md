@@ -74,9 +74,16 @@ Differences from [Tutkain](https://tutkain.flowthing.me/):
 
 Install package from source:
 
+OS X:
 ```bash
 git clone https://github.com/tonsky/sublime-clojure.git
 ln -s `pwd`/sublime-clojure ~/Library/Application\ Support/Sublime\ Text/Packages/Sublime\ Clojure
+```
+
+Linux:
+```bash
+git clone https://github.com/tonsky/sublime-clojure.git
+ln -s `pwd`/sublime-clojure ~/.config/sublime-text/Packages/Sublime\ Clojure
 ```
 
 Assign syntax to Clojure files:
