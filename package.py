@@ -3,10 +3,10 @@ from collections import defaultdict
 from .src import bencode
 from typing import Any, Dict, Tuple
 
-ns = 'sublime-clojure'
+ns = 'clojure-sublimed'
 
 def settings():
-    return sublime.load_settings("Sublime Clojure.sublime-settings")
+    return sublime.load_settings("Clojure Sublimed.sublime-settings")
 
 class Eval:
     # class
@@ -88,7 +88,7 @@ class Eval:
                 self.view.erase_phantom_by_id(self.phantom_id)
                 self.phantom_id = None
             else:
-                body = f"""<body id='sublime-clojure'>
+                body = f"""<body id='clojure-sublimed'>
                     { basic_styles(self.view) }
                     .light body {{ background-color: hsl(0, 100%, 90%); }}
                     .dark body  {{ background-color: hsl(0, 100%, 10%); }}
@@ -375,7 +375,7 @@ def topmost_form(view, point):
                                           'source.clojure meta.parens.clojure punctuation.section.parens.end.clojure '})
     return region
 
-class SublimeClojureEval(sublime_plugin.TextCommand):
+class ClojureSublimedEval(sublime_plugin.TextCommand):
     def run(self, edit):
         covered = []
         for sel in self.view.sel():
@@ -392,7 +392,7 @@ class SublimeClojureEval(sublime_plugin.TextCommand):
     def is_enabled(self):
         return conn.ready()
 
-class SublimeClojureEvalBufferCommand(sublime_plugin.TextCommand):
+class ClojureSublimedEvalBufferCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         region = sublime.Region(0, view.size())
@@ -406,7 +406,7 @@ class SublimeClojureEvalBufferCommand(sublime_plugin.TextCommand):
     def is_enabled(self):
         return conn.ready()
 
-class SublimeClojureEvalCodeCommand(sublime_plugin.ApplicationCommand):
+class ClojureSublimedEvalCodeCommand(sublime_plugin.ApplicationCommand):
     def run(self, code):
         conn.erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
         eval = StatusEval(code)
@@ -426,7 +426,7 @@ class SublimeClojureEvalCodeCommand(sublime_plugin.ApplicationCommand):
     def is_enabled(self):
         return conn.ready()
 
-class SublimeClojureCopyCommand(sublime_plugin.TextCommand):
+class ClojureSublimedCopyCommand(sublime_plugin.TextCommand):
     def eval(self):
         view = self.view
         return conn.find_eval(view, view.sel()[0])
@@ -437,12 +437,12 @@ class SublimeClojureCopyCommand(sublime_plugin.TextCommand):
         else:
             self.view.run_command("copy", {})
 
-class SublimeClojureClearEvalsCommand(sublime_plugin.TextCommand):
+class ClojureSublimedClearEvalsCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         conn.erase_evals(lambda eval: eval.status not in {"pending", "interrupt"}, self.view)
         conn.erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
 
-class SublimeClojureInterruptEvalCommand(sublime_plugin.TextCommand):
+class ClojureSublimedInterruptEvalCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         for eval in conn.evals.values():
             if eval.status == "pending":
@@ -454,7 +454,7 @@ class SublimeClojureInterruptEvalCommand(sublime_plugin.TextCommand):
     def is_enabled(self):
         return conn.ready()
 
-class SublimeClojureToggleTraceCommand(sublime_plugin.TextCommand):
+class ClojureSublimedToggleTraceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         point = view.sel()[0].begin()
@@ -481,7 +481,7 @@ def format_lookup(view, info):
     settings = view.settings()
     top = settings.get('line_padding_top', 0)
     bottom = settings.get('line_padding_bottom', 0)
-    body = f"""<body id='sublime-clojure'>
+    body = f"""<body id='clojure-sublimed'>
         {basic_styles(view)}
         .dark body  {{ background-color: color(var(--background) blend(#FFF 90%)); }}
         .light body {{ background-color: color(var(--background) blend(#000 95%)); }}
@@ -537,7 +537,7 @@ def handle_lookup(msg):
         eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
         return True
 
-class SublimeClojureToggleSymbolCommand(sublime_plugin.TextCommand):
+class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         for sel in view.sel():
@@ -568,15 +568,15 @@ class SublimeClojureToggleSymbolCommand(sublime_plugin.TextCommand):
     def is_enabled(self):
         return conn.ready()
 
-class SublimeClojureToggleInfoCommand(sublime_plugin.TextCommand):
+class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         for sel in view.sel():
             eval = conn.find_eval(view, sel)
             if eval and eval.status == "exception":
-                view.run_command("sublime_clojure_toggle_trace", {})
+                view.run_command("clojure_sublimed_toggle_trace", {})
             else:
-                view.run_command("sublime_clojure_toggle_symbol", {})
+                view.run_command("clojure_sublimed_toggle_symbol", {})
 
     def is_enabled(self):
         return conn.ready()
@@ -666,7 +666,7 @@ def connect(host, port):
         if window := sublime.active_window():
             window.status_message(f"Failed to connect to {host}:{port}")
 
-class SublimeClojureHostPortInputHandler(sublime_plugin.TextInputHandler):
+class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
     def placeholder(self):
         return "host:port"
 
@@ -698,26 +698,26 @@ class SublimeClojureHostPortInputHandler(sublime_plugin.TextInputHandler):
         port = int(port)
         return 0 <= port and port <= 65536
 
-class SublimeClojureConnectCommand(sublime_plugin.ApplicationCommand):
-    def run(self, sublime_clojure_host_port):
-        host, port = sublime_clojure_host_port.strip().split(':')
+class ClojureSublimedConnectCommand(sublime_plugin.ApplicationCommand):
+    def run(self, clojure_sublimed_host_port):
+        host, port = clojure_sublimed_host_port.strip().split(':')
         port = int(port)
         connect(host, port)
 
     def input(self, args):
-        return SublimeClojureHostPortInputHandler()
+        return ClojureSublimedHostPortInputHandler()
 
     def is_enabled(self):
         return conn.socket == None
 
-class SublimeClojureDisconnectCommand(sublime_plugin.ApplicationCommand):
+class ClojureSublimedDisconnectCommand(sublime_plugin.ApplicationCommand):
     def run(self):
         conn.disconnect()
 
     def is_enabled(self):
         return conn.socket != None
 
-class SublimeClojureReconnectCommand(sublime_plugin.ApplicationCommand):
+class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
     def run(self):
         conn.disconnect()
         connect(conn.host, conn.port)
@@ -725,7 +725,7 @@ class SublimeClojureReconnectCommand(sublime_plugin.ApplicationCommand):
     def is_enabled(self):
         return conn.socket != None
 
-class SublimeClojureEventListener(sublime_plugin.EventListener):
+class ClojureSublimedEventListener(sublime_plugin.EventListener):
     def on_activated_async(self, view):
         conn.refresh_status()
         progress_thread.wake()

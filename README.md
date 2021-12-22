@@ -28,7 +28,7 @@ Want to put your parser to test? Check out [syntax_test_edn.edn](./test_syntax/e
 
 ## nREPL Client
 
-Sublime Clojure nREPL client enables interactive development from the comfort of your editor.
+Clojure Sublimed nREPL client enables interactive development from the comfort of your editor.
 
 Principles:
 
@@ -77,40 +77,42 @@ Install package from source:
 OS X:
 ```bash
 git clone https://github.com/tonsky/sublime-clojure.git
-ln -s `pwd`/sublime-clojure ~/Library/Application\ Support/Sublime\ Text/Packages/Sublime\ Clojure
+ln -s `pwd`/sublime-clojure ~/Library/Application\ Support/Sublime\ Text/Packages/Clojure\ Sublimed
 ```
 
 Linux:
 ```bash
 git clone https://github.com/tonsky/sublime-clojure.git
-ln -s `pwd`/sublime-clojure ~/.config/sublime-text/Packages/Sublime\ Clojure
+ln -s `pwd`/sublime-clojure ~/.config/sublime-text/Packages/Clojure\ Sublimed
 ```
+
+Note for people upgrading from Sublimed Clojure days: make sure to rename directory to `Clojure Sublimed`, it might be important.
 
 Assign syntax to Clojure files:
 
 - open any clj/cljc/cljs file,
-- run `View` → `Syntax` → `Open all with current extension as...` → `Sublime Clojure` → `Clojure (Sublime Clojure)`.
+- run `View` → `Syntax` → `Open all with current extension as...` → `Clojure Sublimed` → `Clojure (Sublimed)`.
 
 ## How to use
 
-Important! Make sure you switched your syntax to `Clojure (Sublime Clojure)`.
+Important! Make sure you switched your syntax to `Clojure (Sublimed)`.
 
 1. Run nREPL server.
-2. Run `Clojure REPL: Connect` command.
+2. Run `Clojure Sublimed: Connect` command.
 
 ### Evaluating code from buffer
 
 From here you have three options:
 
-`Clojure REPL: Evaluate` without selection evaluates topmost form around your cursor:
+`Clojure Sublimed: Evaluate` without selection evaluates topmost form around your cursor:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_topmost.png" width="285" height="55" alt="Evaluate Topmost">
 
-`Clojure REPL: Evaluate` with selection evaluates selected text:
+`Clojure Sublimed: Evaluate` with selection evaluates selected text:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_selection.png" width="283" height="58" alt="Evaluate Selection">
 
-`Clojure REPL: Evaluate Buffer` will evaluate the entire file:
+`Clojure Sublimed: Evaluate Buffer` will evaluate the entire file:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_buffer.png" width="416" height="211" alt="Evaluate Buffer">
 
@@ -118,7 +120,7 @@ You don’t have to wait for one form to finish evaluating to evaluate something
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_parallel.gif" width="353" height="151" alt="Evaluate in Parallel">
 
-By default, Sublime Clojure will also print evaluation time if it took more than 100 ms:
+By default, Clojure Sublimed will also print evaluation time if it took more than 100 ms:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_elapsed.png" width="500" height="139" alt="Elapsed time">
 
@@ -128,33 +130,33 @@ Sometimes you want to copy evaluation result. It is recommended to rebind `Cmd+C
 
 ### Interrupting
 
-If your evaluation runs too long and you want to interrupt it, run `Clojure REPL: Interrupt Pending Evaluations`:
+If your evaluation runs too long and you want to interrupt it, run `Clojure Sublimed: Interrupt Pending Evaluations`:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/interrupt.png" width="587" height="39" alt="Interrupt">
 
 ### Opening stacktrace
 
-If your evaluation failed, put your cursor inside failed region and run `Clojure REPL: Toggle Stacktrace`:
+If your evaluation failed, put your cursor inside failed region and run `Clojure Sublimed: Toggle Stacktrace`:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/toggle_stacktrace.png" width="553" height="146" alt="Toggle Stacktrace">
 
-Sublime Clojure will display stacktraces in a Clojure-friendly way. Compare with the default REPL:
+Clojure Sublimed will display stacktraces in a Clojure-friendly way. Compare with the default REPL:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/stacktraces.png" width="806" height="390" alt="Stacktraces">
 
 ### Looking up symbol
 
-To show symbol info, run `Clojure REPL: Toggle Symbol Info`:
+To show symbol info, run `Clojure Sublimed: Toggle Symbol Info`:
 
 <img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/symbol_info.png" width="580" height="172" alt="Toggle Symbol Info">
 
-Universal `Clojure REPL: Toggle Info` command acts as either `Toggle Stacktrace` or `Toggle Symbol Info`, depending on context.
+Universal `Clojure Sublimed: Toggle Info` command acts as either `Toggle Stacktrace` or `Toggle Symbol Info`, depending on context.
 
 ### Binding keys to eval code
 
 Every project is different, and sometimes it’s convenient to run a piece of code so often you’d want it on a shortcut. It might be a namespace reload, test execution, database reconnect, linter, formatter — possibilities are endless.
 
-To support such use cases, Sublime Clojure allows you to bind arbitrary piece of code to a keyboard shortcut. Run `Preferences: Sublime Clojure Key Bindings` and add something like this:
+To support such use cases, Clojure Sublimed allows you to bind arbitrary piece of code to a keyboard shortcut. Run `Preferences: Clojure Sublimed Key Bindings` and add something like this:
 
 ```
 {"keys": ["ctrl+t"],
@@ -168,15 +170,15 @@ Then, whenever you press <key>Ctrl</key> + <key>T</key>, you’ll see the result
 
 ### Clearing results
 
-Finally, to clear evaluation results run `Clojure REPL: Clear Evaluation Results`.
+Finally, to clear evaluation results run `Clojure Sublimed: Clear Evaluation Results`.
 
 ### Editing settings
 
-To edit settings, run `Preferences: Sublime Clojure Settings` command.
+To edit settings, run `Preferences: Clojure Sublimed Settings` command.
 
 ## Default Key Bindings
 
-Sublime Clojure comes with no keybindings enabled by default to guarantee they won’t conflict with any other extension.
+Clojure Sublimed comes with no keybindings enabled by default to guarantee they won’t conflict with any other extension.
 
 This is the recommended keymap:
 
@@ -189,7 +191,7 @@ Toggle Info                   | <kbd>Ctrl</kbd> <kbd>I</kbd>     | <kbd>Ctrl</kb
 Clear Evaluation Results      | <kbd>Ctrl</kbd> <kbd>L</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>L</kbd>     | c[L]ear
 Copy Evaluation Results       | <kbd>Command</kbd> <kbd>C</kbd>  | <kbd>Ctrl</kbd> <kbd>C</kbd>                    | [C]opy
 
-To set it up, run `Preferences: Sublime Clojure Key Bindings` command and copy example keybindings to your local Key Bindings file.
+To set it up, run `Preferences: Clojure Sublimed Key Bindings` command and copy example keybindings to your local Key Bindings file.
 
 ## Frequently Asked Questions
 
@@ -200,7 +202,7 @@ A: They seem to have a shortage of reviewers, [track progress](https://github.co
 Q: REPL/eval doesn’t work
 
 A: Make sure you are using nREPL 0.8 or later.
-A: Make sure you have assigned `Clojure (Sublime Clojre)` syntax to the file.
+A: Make sure you have assigned `Clojure (Sublimed)` syntax to the file.
 
 ## Credits
 

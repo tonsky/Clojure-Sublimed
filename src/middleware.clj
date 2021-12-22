@@ -1,4 +1,4 @@
-(ns sublime-clojure.middleware
+(ns clojure-sublimed.middleware
   (:require
    [clojure.main :as main]
    [clojure.stacktrace :as stacktrace]

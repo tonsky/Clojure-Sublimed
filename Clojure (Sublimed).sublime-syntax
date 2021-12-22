@@ -1,8 +1,8 @@
 %YAML 1.2
 ---
 # http://www.sublimetext.com/docs/3/syntax.html
-name: Clojure (Sublime Clojure)
-file_extensions: [clj, cljs, cljc, cljx, boot]
+name: Clojure (Sublimed)
+file_extensions: [clj, cljs, cljc, cljx, boot, bb]
 scope: source.clojure
 variables:
   ws:           '(?:\s|(,))*'

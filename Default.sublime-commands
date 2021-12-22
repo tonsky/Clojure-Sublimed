@@ -1,61 +1,61 @@
 [
     {
-        "caption": "Clojure REPL: Connect",
-        "command": "sublime_clojure_connect"
+        "caption": "Clojure Sublimed: Connect",
+        "command": "clojure_sublimed_connect"
     },
     {
-        "caption": "Clojure REPL: Disconnect",
-        "command": "sublime_clojure_disconnect"
+        "caption": "Clojure Sublimed: Disconnect",
+        "command": "clojure_sublimed_disconnect"
     },
     {
-        "caption": "Clojure REPL: Reconnect",
-        "command": "sublime_clojure_reconnect"
+        "caption": "Clojure Sublimed: Reconnect",
+        "command": "clojure_sublimed_reconnect"
     },
     {
-        "caption": "Clojure REPL: Evaluate",
-        "command": "sublime_clojure_eval"
+        "caption": "Clojure Sublimed: Evaluate",
+        "command": "clojure_sublimed_eval"
     },
     {
-        "caption": "Clojure REPL: Evaluate Buffer",
-        "command": "sublime_clojure_eval_buffer"
+        "caption": "Clojure Sublimed: Evaluate Buffer",
+        "command": "clojure_sublimed_eval_buffer"
     },
     {
-        "caption": "Clojure REPL: Interrupt Pending Evaluations",
-        "command": "sublime_clojure_interrupt_eval"
+        "caption": "Clojure Sublimed: Interrupt Pending Evaluations",
+        "command": "clojure_sublimed_interrupt_eval"
     },
     {
-        "caption": "Clojure REPL: Copy Evaluation Result",
-        "command": "sublime_clojure_copy"
+        "caption": "Clojure Sublimed: Copy Evaluation Result",
+        "command": "clojure_sublimed_copy"
     },
     {
-        "caption": "Clojure REPL: Toggle Stacktrace",
-        "command": "sublime_clojure_toggle_trace"
+        "caption": "Clojure Sublimed: Toggle Stacktrace",
+        "command": "clojure_sublimed_toggle_trace"
     },
     {
-        "caption": "Clojure REPL: Toggle Symbol Info",
-        "command": "sublime_clojure_toggle_symbol"
+        "caption": "Clojure Sublimed: Toggle Symbol Info",
+        "command": "clojure_sublimed_toggle_symbol"
     },
     {
-        "caption": "Clojure REPL: Toggle Info",
-        "command": "sublime_clojure_toggle_info"
+        "caption": "Clojure Sublimed: Toggle Info",
+        "command": "clojure_sublimed_toggle_info"
     },
     {
-        "caption": "Clojure REPL: Clear Evaluation Results",
-        "command": "sublime_clojure_clear_evals"
+        "caption": "Clojure Sublimed: Clear Evaluation Results",
+        "command": "clojure_sublimed_clear_evals"
     },
     {
-        "caption": "Preferences: Sublime Clojure Settings",
+        "caption": "Preferences: Clojure Sublimed Settings",
         "command": "edit_settings",
         "args": {
-            "base_file": "${packages}/Sublime Clojure/Sublime Clojure.sublime-settings",
-            "default": "// Sublime Clojure Settings - User\n{\n\t$0\n}\n"
+            "base_file": "${packages}/Clojure Sublimed/Clojure Sublimed.sublime-settings",
+            "default": "// Clojure Sublimed Settings - User\n{\n\t$0\n}\n"
         }
     },
     {
-        "caption": "Preferences: Sublime Clojure Key Bindings",
+        "caption": "Preferences: Clojure Sublimed Key Bindings",
         "command": "edit_settings",
         "args": {
-            "base_file": "${packages}/Sublime Clojure/Default (${platform}).sublime-keymap",
+            "base_file": "${packages}/Clojure Sublimed/Default (${platform}).sublime-keymap",
             "user_file": "${packages}/User/Default (${platform}).sublime-keymap"
         }
     },

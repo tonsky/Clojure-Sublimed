@@ -1,4 +1,4 @@
-; SYNTAX TEST "Clojure (Sublime Clojure).sublime-syntax"
+; SYNTAX TEST "Clojure (Sublimed).sublime-syntax"
 
 
 ; VAR QUOTE
