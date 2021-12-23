@@ -326,7 +326,7 @@ class ProgressThread:
         with self.condition:
             self.condition.notify_all()
         
-def eval_msg(view, region, msg):
+def prep_msg(view, region, msg):
     extended_region = view.line(region)
     conn.erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
     eval = Eval(view, region)
@@ -336,17 +336,18 @@ def eval_msg(view, region, msg):
     eval.msg["nrepl.middleware.caught/caught"] = f"{ns}.middleware/print-root-trace"
     eval.msg["nrepl.middleware.print/quota"] = 300
     conn.add_eval(eval)
-    conn.send({"op": "clone", "session": conn.session, "id": eval.id})
+    return eval
 
 def eval(view, region):
     (line, column) = view.rowcol_utf16(region.begin())
-    msg = {"op":     "eval",
+    msg = {"op":     "clone-and-eval",
            "code":   view.substr(region),
            "ns":     namespace(view, region.begin()) or 'user',
            "line":   line,
            "column": column,
            "file":   view.file_name()}
-    eval_msg(view, region, msg)
+    eval = prep_msg(view, region, msg)
+    conn.send({**msg, "session": conn.session, "id": eval.id})
     
 def expand_until(view, point, scopes):
     if view.scope_name(point) in scopes and point > 0:
@@ -401,7 +402,7 @@ class ClojureSublimedEvalBufferCommand(sublime_plugin.TextCommand):
                "file":      view.substr(region),
                "file-path": file_name,
                "file-name": os.path.basename(file_name) if file_name else "NO_SOURCE_FILE.cljc"}
-        eval_msg(view, region, msg)
+        conn.send({"op": "clone", "session": conn.session, "id": prep_msg(view, region, msg).id})
         
     def is_enabled(self):
         return conn.ready()
@@ -609,7 +610,8 @@ def handle_connect(msg):
 
     elif 2 == msg.get("id") and msg.get("status") == ["done"]:
         conn.send({"op":               "add-middleware",
-                   "middleware":       [f"{ns}.middleware/time-eval",
+                   "middleware":       [f"{ns}.middleware/clone-and-eval",
+                                        f"{ns}.middleware/time-eval",
                                         f"{ns}.middleware/wrap-errors",
                                         f"{ns}.middleware/wrap-output"],
                    "extra-namespaces": [f"{ns}.middleware"],
