@@ -135,6 +135,26 @@
       (handler (assoc msg :transport (time-transport (assoc msg :start-time (System/nanoTime)))))
       (handler msg))))
 
+(defn- capture-resp [handler {:keys [transport] :as msg}]
+  (let [ret (atom [])
+        t (reify Transport
+            (recv [this]
+              (transport/recv transport))
+            (recv [this timeout]
+              (transport/recv transport timeout))
+            (send [this resp]
+              (swap! ret conj resp)))]
+    (handler (assoc msg :transport t))
+    @ret))
+
+(defn clone-and-eval [handler]
+  (fn [{:keys [op session] :as msg}]
+    (if-not (= op "clone-and-eval")
+      (handler msg)
+      (let [[{:keys [new-session]}]
+            (capture-resp handler {:op "clone" :session session})]
+        (handler (assoc msg :session new-session :op "eval"))))))
+
 (middleware/set-descriptor!
   #'wrap-output
   {:requires #{}
@@ -146,3 +166,10 @@
   {:requires #{#'wrap-output #'wrap-errors #'print/wrap-print}
    :expects #{"eval"}
    :handles {}})
+
+(middleware/set-descriptor!
+  #'clone-and-eval
+  {:requires #{}
+   :expects #{"eval" "clone"}
+   :handles {"clone-and-eval"
+             {:doc "Clones current session, evals given code in the cloned session"}}})
