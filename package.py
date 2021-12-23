@@ -213,15 +213,6 @@ class Connection:
     def ready(self):
         return bool(self.socket and self.session)
 
-def handle_new_session(msg):
-    if "new-session" in msg and "id" in msg and msg["id"] in conn.evals:
-        eval = conn.evals[msg["id"]]
-        eval.session = msg["new-session"]
-        eval.msg["session"] = msg["new-session"]
-        conn.send(eval.msg)
-        eval.update("pending", progress_thread.phase())
-        return True
-
 def handle_value(msg):
     if "value" in msg and "id" in msg and msg["id"] in conn.evals:
         eval = conn.evals[msg["id"]]
@@ -336,7 +327,8 @@ def eval_msg(view, region, msg):
     eval.msg["nrepl.middleware.caught/caught"] = f"{ns}.middleware/print-root-trace"
     eval.msg["nrepl.middleware.print/quota"] = 300
     conn.add_eval(eval)
-    conn.send({"op": "clone", "session": conn.session, "id": eval.id})
+    conn.send(eval.msg)
+    eval.update("pending", progress_thread.phase())
 
 def eval(view, region):
     (line, column) = view.rowcol_utf16(region.begin())
@@ -421,7 +413,8 @@ class ClojureSublimedEvalCodeCommand(sublime_plugin.ApplicationCommand):
                     "nrepl.middleware.caught/caught": f"{ns}.middleware/print-root-trace",
                     "nrepl.middleware.print/quota": 300}
         conn.add_eval(eval)
-        conn.send({"op": "clone", "session": conn.session, "id": eval.id})
+        conn.send(eval.msg)
+        eval.update("pending", progress_thread.phase())
 
     def is_enabled(self):
         return conn.ready()
@@ -636,7 +629,6 @@ def handle_msg(msg):
         msg[key] += '...'
 
     handle_connect(msg) \
-    or handle_new_session(msg) \
     or handle_value(msg) \
     or handle_exception(msg) \
     or handle_lookup(msg) \
