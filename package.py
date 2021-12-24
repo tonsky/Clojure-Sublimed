@@ -147,12 +147,14 @@ class Connection:
     port: str
     status: str
     evals: Dict[int, Eval]
+    evals_by_view: Dict[int, Dict[int, Eval]]
     last_view: sublime.View
 
     def __init__(self):
         self.host = 'localhost'
         self.port = None
         self.evals = {}
+        self.evals_by_view = defaultdict(dict)
         self.reset()
         self.last_view = window.active_view() if (window := sublime.active_window()) else None
 
@@ -187,22 +189,27 @@ class Connection:
         for id, eval in self.evals.items():
             eval.erase()
         self.evals.clear()
+        self.evals_by_view.clear()
 
     def add_eval(self, eval):
         self.evals[eval.id] = eval
+        self.evals_by_view[eval.view.id()][eval.id] = eval
 
     def erase_eval(self, eval):
+        view_id = eval.view.id()
         eval.erase()
         del self.evals[eval.id]
+        del self.evals_by_view[view_id]
 
     def find_eval(self, view, region):
-        for eval in self.evals.values():
-            if eval.view == view and regions_touch(eval.region(), region):
+        for eval in self.evals_by_view[view.id()].values():
+            if regions_touch(eval.region(), region):
                 return eval
 
     def erase_evals(self, predicate, view = None):
-        for id, eval in list(self.evals.items()):
-            if (view == None or view == eval.view) and predicate(eval):
+        evals = list(self.evals.items()) if view is None else list(self.evals_by_view[view.id()].items())
+        for id, eval in evals:
+            if predicate(eval):
                 self.erase_eval(eval)
 
     def disconnect(self):
@@ -301,8 +308,8 @@ class ProgressThread:
             time.sleep(self.interval / 1000.0)
             updated = False
             if (window := sublime.active_window()) and (view := window.active_view()):
-                for eval in list(conn.evals.values()):
-                    if eval.view == view and eval.status == "pending":
+                for eval in list(conn.evals_by_view[view.id()].values()):
+                    if eval.status == "pending":
                         eval.update(eval.status, self.phase())
                         updated = True
             if updated:
@@ -444,7 +451,7 @@ class ClojureSublimedClearEvalsCommand(sublime_plugin.TextCommand):
 
 class ClojureSublimedInterruptEvalCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        for eval in conn.evals.values():
+        for eval in conn.evals_by_view[self.view.id()].values():
             if eval.status == "pending":
                 conn.send({"op":           "interrupt",
                            "session":      eval.session,
@@ -458,7 +465,7 @@ class ClojureSublimedToggleTraceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         point = view.sel()[0].begin()
-        for eval in conn.evals.values():
+        for eval in conn.evals_by_view[view.id()].values():
             if eval.view == view:
                 region = eval.region()
                 if region and region.contains(point):
