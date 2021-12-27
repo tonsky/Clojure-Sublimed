@@ -11,7 +11,7 @@ This package provides Clojure support for Sublime Text and includes:
 
 Unfortunately, Clojure syntax that is shipped with Sublime Text handles many edge cases badly:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/syntaxes.png" width="806" height="299" alt="Syntaxes">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/syntaxes.png" width="806" height="299" alt="Syntaxes">
 
 Unlike default Clojure syntax, this package is:
 
@@ -76,14 +76,14 @@ Install package from source:
 
 OS X:
 ```bash
-git clone https://github.com/tonsky/sublime-clojure.git
-ln -s `pwd`/sublime-clojure ~/Library/Application\ Support/Sublime\ Text/Packages/Clojure\ Sublimed
+git clone https://github.com/tonsky/Clojure-Sublimed.git
+ln -s `pwd`/Clojure-Sublimed ~/Library/Application\ Support/Sublime\ Text/Packages/Clojure\ Sublimed
 ```
 
 Linux:
 ```bash
-git clone https://github.com/tonsky/sublime-clojure.git
-ln -s `pwd`/sublime-clojure ~/.config/sublime-text/Packages/Clojure\ Sublimed
+git clone https://github.com/tonsky/Clojure-Sublimed.git
+ln -s `pwd`/Clojure-Sublimed ~/.config/sublime-text/Packages/Clojure\ Sublimed
 ```
 
 Note for people upgrading from Sublimed Clojure days: make sure to rename directory to `Clojure Sublimed`, it might be important.
@@ -106,23 +106,23 @@ From here you have three options:
 
 `Clojure Sublimed: Evaluate` without selection evaluates topmost form around your cursor:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_topmost.png" width="285" height="55" alt="Evaluate Topmost">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_topmost.png" width="285" height="55" alt="Evaluate Topmost">
 
 `Clojure Sublimed: Evaluate` with selection evaluates selected text:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_selection.png" width="283" height="58" alt="Evaluate Selection">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_selection.png" width="283" height="58" alt="Evaluate Selection">
 
 `Clojure Sublimed: Evaluate Buffer` will evaluate the entire file:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_buffer.png" width="416" height="211" alt="Evaluate Buffer">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_buffer.png" width="416" height="211" alt="Evaluate Buffer">
 
 You don’t have to wait for one form to finish evaluating to evaluate something else. Multiple things can be executed in parallel:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_parallel.gif" width="353" height="151" alt="Evaluate in Parallel">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_parallel.gif" width="353" height="151" alt="Evaluate in Parallel">
 
 By default, Clojure Sublimed will also print evaluation time if it took more than 100 ms:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_elapsed.png" width="500" height="139" alt="Elapsed time">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_elapsed.png" width="500" height="139" alt="Elapsed time">
 
 ### Copying evaluation results
 
@@ -132,23 +132,23 @@ Sometimes you want to copy evaluation result. It is recommended to rebind `Cmd+C
 
 If your evaluation runs too long and you want to interrupt it, run `Clojure Sublimed: Interrupt Pending Evaluations`:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/interrupt.png" width="587" height="39" alt="Interrupt">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/interrupt.png" width="587" height="39" alt="Interrupt">
 
 ### Opening stacktrace
 
 If your evaluation failed, put your cursor inside failed region and run `Clojure Sublimed: Toggle Stacktrace`:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/toggle_stacktrace.png" width="553" height="146" alt="Toggle Stacktrace">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/toggle_stacktrace.png" width="553" height="146" alt="Toggle Stacktrace">
 
 Clojure Sublimed will display stacktraces in a Clojure-friendly way. Compare with the default REPL:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/stacktraces.png" width="806" height="390" alt="Stacktraces">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/stacktraces.png" width="806" height="390" alt="Stacktraces">
 
 ### Looking up symbol
 
 To show symbol info, run `Clojure Sublimed: Toggle Symbol Info`:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/symbol_info.png" width="580" height="172" alt="Toggle Symbol Info">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/symbol_info.png" width="580" height="172" alt="Toggle Symbol Info">
 
 Universal `Clojure Sublimed: Toggle Info` command acts as either `Toggle Stacktrace` or `Toggle Symbol Info`, depending on context.
 
@@ -166,7 +166,7 @@ To support such use cases, Clojure Sublimed allows you to bind arbitrary piece o
 
 Then, whenever you press <key>Ctrl</key> + <key>T</key>, you’ll see the result in the status bar, like this:
 
-<img src="https://raw.github.com/tonsky/sublime-clojure/master/screenshots/eval_code.png" width="536" height="37" alt="Eval Code">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_code.png" width="536" height="37" alt="Eval Code">
 
 ### Clearing results
 
