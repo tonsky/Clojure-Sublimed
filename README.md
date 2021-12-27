@@ -208,6 +208,8 @@ A: Make sure you have assigned `Clojure (Sublimed)` syntax to the file.
 
 Made by [Niki Tonsky](https://twitter.com/nikitonsky).
 
+With contributions by [Jaihindh Reddy](https://github.com/jaihindhreddy).
+
 ## See also
 
 [Writer Color Scheme](https://github.com/tonsky/sublime-scheme-writer): A color scheme optimized for long-form writing.
