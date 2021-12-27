@@ -32,4 +32,7 @@
 
   // how often to update animation
   "progress_interval_ms": 100,
+
+  // Disabled nREPL session cloning, causing all evaluation to happen sequentially.
+  "disable_session_cloning": false
 }
