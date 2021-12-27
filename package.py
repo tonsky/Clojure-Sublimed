@@ -729,11 +729,16 @@ class ClojureSublimedEventListener(sublime_plugin.EventListener):
         conn.refresh_status()
         progress_thread.wake()
 
-    def on_modified_async(self, view):
-        conn.erase_evals(lambda eval: not eval.region() or view.substr(eval.region()) != eval.code, view)
-
     def on_close(self, view):
         conn.erase_evals(lambda eval: True, view)
+
+class ClojureSublimedViewEventListener(sublime_plugin.TextChangeListener):
+    def on_text_changed_async(self, changes):
+        view = self.buffer.primary_view()
+        changed = [sublime.Region(x.a.pt, x.b.pt) for x in changes]
+        def should_erase(eval):
+            return not (reg := eval.region()) or any(reg.intersects(r) for r in changed) and view.substr(reg) != eval.code
+        conn.erase_evals(should_erase, view)
 
 def on_settings_change():
     Eval.colors.clear()
