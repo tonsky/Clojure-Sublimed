@@ -150,7 +150,7 @@ class Connection:
     evals_by_view: Dict[int, Dict[int, Eval]]
     last_view: sublime.View
     session: str
-    cloning_disabled: bool
+    eval_in_session: bool
 
     def __init__(self):
         self.host = 'localhost'
@@ -346,7 +346,7 @@ def eval(view, region):
            "line":   line,
            "column": column,
            "file":   view.file_name()}
-    if conn.cloning_disabled:
+    if conn.eval_in_session:
         msg["session"] = conn.session
     eval_msg(view, region, msg)
     
@@ -746,7 +746,7 @@ class ClojureSublimedViewEventListener(sublime_plugin.TextChangeListener):
 def on_settings_change():
     Eval.colors.clear()
     progress_thread.update_phases(settings().get("progress_phases"), settings().get("progress_interval_ms"))
-    conn.cloning_disabled = settings().get("disable_session_cloning")
+    conn.eval_in_session = settings().get("eval_in_session", False)
 
 def plugin_loaded():
     global package, conn, progress_thread

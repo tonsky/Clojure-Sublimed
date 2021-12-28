@@ -33,6 +33,11 @@
   // how often to update animation
   "progress_interval_ms": 100,
 
-  // Disabled nREPL session cloning, causing all evaluation to happen sequentially.
-  "disable_session_cloning": false
+  // When true, all evals will happen in a single session. This makes 
+  // dynamic vars like `*e` or `*warn-on-reflection*` persistent, but also
+  // makes all evaluations strictly sequential (new eval will not start until
+  // all the previous ones have finished).
+  // 
+  // False by default (enables parallel evals).
+  "eval_in_session": false
 }
