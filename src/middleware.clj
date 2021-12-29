@@ -11,6 +11,30 @@
   (:import
    [nrepl.transport Transport]))
 
+(defn on-send [{:keys [transport] :as msg} on-send]
+  (assoc msg :transport
+    (reify Transport
+      (recv [this]
+        (transport/recv transport))
+      (recv [this timeout]
+        (transport/recv transport timeout))
+      (send [this resp]
+        (when-some [resp' (on-send resp)]
+          (transport/send transport resp'))
+        this))))
+
+(defn after-send [{:keys [transport] :as msg} after-send]
+  (assoc msg :transport
+    (reify Transport
+      (recv [this]
+        (transport/recv transport))
+      (recv [this timeout]
+        (transport/recv transport timeout))
+      (send [this resp]
+        (transport/send transport resp)
+        (after-send resp)
+        this))))
+
 (defn- root-cause [^Throwable t]
   (if-some [cause (some-> t .getCause)]
     (recur cause)
@@ -62,33 +86,26 @@
       (map trace-element-str)
       (str/join "\n"))))
 
-(defn- caught-transport [{:keys [transport] :as msg}]
-  (reify Transport
-    (recv [this]
-      (transport/recv transport))
-    (recv [this timeout]
-      (transport/recv transport timeout))
-    (send [this {throwable ::caught/throwable :as resp}]
-      (let [root  (root-cause throwable)
-            data  (ex-data root)
-            loc   (when (instance? clojure.lang.Compiler$CompilerException throwable)
-                    {::line   (or (.-line throwable) (:clojure.error/line (ex-data throwable)))
-                     ::column (:clojure.error/column (ex-data throwable))
-                     ::source (or (.-source throwable) (:clojure.error/source (ex-data throwable)))})
-            resp' (cond-> resp
-                    root (assoc
-                           ::root-ex-msg   (.getMessage root)
-                           ::root-ex-class (.getSimpleName (class root))
-                           ::trace         (trace-str root))
-                    loc  (merge loc)
-                    data (update ::print/keys (fnil conj []) ::root-ex-data)
-                    data (assoc ::root-ex-data data))]
-        (transport/send transport resp'))
-      this)))
+(defn- populate-caught [{throwable ::caught/throwable :as resp}]
+  (let [root  (root-cause throwable)
+        data  (ex-data root)
+        loc   (when (instance? clojure.lang.Compiler$CompilerException throwable)
+                {::line   (or (.-line throwable) (:clojure.error/line (ex-data throwable)))
+                 ::column (:clojure.error/column (ex-data throwable))
+                 ::source (or (.-source throwable) (:clojure.error/source (ex-data throwable)))})
+        resp' (cond-> resp
+                root (assoc
+                       ::root-ex-msg   (.getMessage root)
+                       ::root-ex-class (.getSimpleName (class root))
+                       ::trace         (trace-str root))
+                loc  (merge loc)
+                data (update ::print/keys (fnil conj []) ::root-ex-data)
+                data (assoc ::root-ex-data data))]
+    resp'))
 
 (defn wrap-errors [handler]
   (fn [msg]
-    (handler (assoc msg :transport (caught-transport msg)))))
+    (handler (-> msg (on-send populate-caught)))))
 
 (middleware/set-descriptor!
   #'wrap-errors
@@ -96,64 +113,19 @@
    :expects #{"eval"} ;; but outside of "eval"
    :handles {}})
 
-(defn- output-transport [{:keys [transport] :as msg}]
-  (reify Transport
-    (recv [this]
-      (transport/recv transport))
-    (recv [this timeout]
-      (transport/recv transport timeout))
-    (send [this resp]
-      (when-some [out (:out resp)]
-        (.print System/out out)
-        (.flush System/out))
-      (when-some [err (:err resp)]
-        (.print System/err err)
-        (.flush System/err))
-      (transport/send transport resp)
-      this)))
+
+(defn- redirect-output [resp]
+  (when-some [out (:out resp)]
+    (.print System/out out)
+    (.flush System/out))
+  (when-some [err (:err resp)]
+    (.print System/err err)
+    (.flush System/err))
+  resp)
 
 (defn wrap-output [handler]
   (fn [msg]
-    (handler (assoc msg :transport (output-transport msg)))))
-
-(defn- time-transport [{:keys [transport start-time] :as msg}]
-  (reify Transport
-    (recv [this]
-      (transport/recv transport))
-    (recv [this timeout]
-      (transport/recv transport timeout))
-    (send [this {:keys [value] :as resp}]
-      (let [resp' (if value
-                    (assoc resp ::time-taken (- (System/nanoTime) start-time))
-                    resp)]
-        (transport/send transport resp'))
-      this)))
-
-(defn time-eval [handler]
-  (fn [{:keys [op] :as msg}]
-    (if (= "eval" op)
-      (handler (assoc msg :transport (time-transport (assoc msg :start-time (System/nanoTime)))))
-      (handler msg))))
-
-(defn- capture-resp [handler {:keys [transport] :as msg}]
-  (let [ret (atom [])
-        t (reify Transport
-            (recv [this]
-              (transport/recv transport))
-            (recv [this timeout]
-              (transport/recv transport timeout))
-            (send [this resp]
-              (swap! ret conj resp)))]
-    (handler (assoc msg :transport t))
-    @ret))
-
-(defn clone-and-eval [handler]
-  (fn [{:keys [op session] :as msg}]
-    (if-not (= op "clone-and-eval")
-      (handler msg)
-      (let [[{:keys [new-session]}]
-            (capture-resp handler {:op "clone" :session session})]
-        (handler (assoc msg :session new-session :op "eval"))))))
+    (handler (-> msg (on-send redirect-output)))))
 
 (middleware/set-descriptor!
   #'wrap-output
@@ -161,11 +133,40 @@
    :expects #{"eval"} ;; run outside of "eval"
    :handles {}})
 
+
+(defn time-eval [handler]
+  (fn [{:keys [op] :as msg}]
+    (if (= "eval" op)
+      (let [start (System/nanoTime)]
+        (-> msg
+          (on-send #(cond-> % (contains? % :value) (assoc ::time-taken (- (System/nanoTime) start))))
+          (handler)))
+      (handler msg))))
+
 (middleware/set-descriptor!
   #'time-eval
   {:requires #{#'wrap-output #'wrap-errors #'print/wrap-print}
    :expects #{"eval"}
    :handles {}})
+
+
+(defn clone-and-eval [handler]
+  (fn [{:keys [id op session transport] :as msg}]
+    (if (= op "clone-eval-close")
+      (let [*new-session (promise)]
+        (-> {:id id :op "clone" :session session :transport transport}
+          (on-send #(do (deliver *new-session (:new-session %)) %))
+          (handler))
+        (-> msg
+          (assoc :session @*new-session :op "eval")
+          (after-send (fn [resp]
+                        (when (and
+                                (= (:id resp) id)
+                                (= (:session resp) @*new-session)
+                                (contains? (:status resp) :done))
+                          (future ((session/session handler) {:id id :op "close" :session @*new-session :transport transport})))))
+          (handler)))
+      (handler msg))))
 
 (middleware/set-descriptor!
   #'clone-and-eval

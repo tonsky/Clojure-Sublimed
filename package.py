@@ -221,6 +221,12 @@ class Connection:
     def ready(self):
         return bool(self.socket and self.session)
 
+def handle_new_session(msg):
+    if "new-session" in msg and "id" in msg and msg["id"] in conn.evals:
+        eval = conn.evals[msg["id"]]
+        eval.session = msg["new-session"]
+        return True
+
 def handle_value(msg):
     if "value" in msg and "id" in msg and msg["id"] in conn.evals:
         eval = conn.evals[msg["id"]]
@@ -325,7 +331,7 @@ class ProgressThread:
         with self.condition:
             self.condition.notify_all()
         
-def prep_msg(view, region, msg):
+def eval_msg(view, region, msg):
     extended_region = view.line(region)
     conn.erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
     eval = Eval(view, region)
@@ -334,20 +340,20 @@ def prep_msg(view, region, msg):
     eval.msg["id"] = eval.id
     eval.msg["nrepl.middleware.caught/caught"] = f"{ns}.middleware/print-root-trace"
     eval.msg["nrepl.middleware.print/quota"] = 300
+    eval.msg["session"] = conn.session
     conn.add_eval(eval)
+    conn.send(eval.msg)
     eval.update("pending", progress_thread.phase())
-    return eval
 
 def eval(view, region):
     (line, column) = view.rowcol_utf16(region.begin())
-    msg = {"op":     "eval" if conn.eval_in_session else "clone-and-eval",
+    msg = {"op":     "eval" if conn.eval_in_session else "clone-eval-close",
            "code":   view.substr(region),
            "ns":     namespace(view, region.begin()) or 'user',
            "line":   line,
            "column": column,
            "file":   view.file_name()}
-    eval = prep_msg(view, region, msg)
-    conn.send({**msg, "session": conn.session, "id": eval.id})
+    eval_msg(view, region, msg)
     
 def expand_until(view, point, scopes):
     if view.scope_name(point) in scopes and point > 0:
@@ -402,7 +408,7 @@ class ClojureSublimedEvalBufferCommand(sublime_plugin.TextCommand):
                "file":      view.substr(region),
                "file-path": file_name,
                "file-name": os.path.basename(file_name) if file_name else "NO_SOURCE_FILE.cljc"}
-        conn.send({"op": "clone", "session": conn.session, "id": prep_msg(view, region, msg).id})
+        eval_msg(view, region, msg)
         
     def is_enabled(self):
         return conn.ready()
@@ -639,6 +645,7 @@ def handle_msg(msg):
         msg[key] += '...'
 
     handle_connect(msg) \
+    or handle_new_session(msg) \
     or handle_value(msg) \
     or handle_exception(msg) \
     or handle_lookup(msg) \
