@@ -201,8 +201,8 @@ class Connection:
         eval.erase()
         del self.evals[eval.id]
         del self.evals_by_view[eval.view.id()][eval.id]
-        if eval.status == "pending" and (session := eval.msg.get("session")):
-            conn.send({"op": "interrupt", "interrupt-id": eval.id, "session": session})
+        if eval.status == "pending" and eval.session:
+            conn.send({"op": "interrupt", "interrupt-id": eval.id, "session": eval.session})
 
     def find_eval(self, view, region):
         for eval in self.evals_by_view[view.id()].values():
