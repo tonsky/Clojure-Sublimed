@@ -347,10 +347,10 @@ def eval_msg(view, region, msg):
     conn.send(eval.msg)
     eval.update("pending", progress_thread.phase())
 
-def eval(view, region):
+def eval(view, region, code=None):
     (line, column) = view.rowcol_utf16(region.begin())
     msg = {"op":     "eval" if conn.eval_in_session else "clone-eval-close",
-           "code":   view.substr(region),
+           "code":   view.substr(region) if code is None else code,
            "ns":     namespace(view, region.begin()) or 'user',
            "line":   line,
            "column": column,
@@ -547,6 +547,12 @@ def handle_lookup(msg):
         eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
         return True
 
+def symbol_at_point(view, point):
+    if point > 0 and view.match_selector(point - 1, 'source.symbol.clojure'):
+        return view.extract_scope(point - 1)
+    if view.match_selector(point, 'source.symbol.clojure'):
+        return view.extract_scope(point)
+
 class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
@@ -555,15 +561,7 @@ class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
             if eval and eval.phantom_id:
                 conn.erase_eval(eval)
             else:
-                region = sel
-                if region.empty():
-                    point = region.begin()
-                    if point > 0 and view.match_selector(point - 1, 'source.symbol.clojure'):
-                        region = self.view.extract_scope(point - 1)
-                    elif view.match_selector(point, 'source.symbol.clojure'):
-                        region = self.view.extract_scope(point)
-
-                if region:
+                if region := symbol_at_point(view, sel.begin()) if sel.empty() else sel:
                     line = view.line(region)
                     conn.erase_evals(lambda eval: eval.region() and eval.region().intersects(line), view)
                     eval = Eval(view, region)
@@ -587,6 +585,20 @@ class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
                 view.run_command("clojure_sublimed_toggle_trace", {})
             else:
                 view.run_command("clojure_sublimed_toggle_symbol", {})
+
+    def is_enabled(self):
+        return conn.ready()
+
+class ClojureSublimedRequireNamespaceCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        for sel in view.sel():
+            region = symbol_at_point(view, sel.begin()) if sel.empty() else sel
+            # narrow down to the namespace part if present
+            if region and (sym := view.substr(region).partition('/')[0]):
+                region = sublime.Region(region.a, region.a + len(sym))
+            if region:
+                eval(view, region, code=f"(require '{sym})")
 
     def is_enabled(self):
         return conn.ready()
