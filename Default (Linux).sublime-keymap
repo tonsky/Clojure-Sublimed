@@ -40,4 +40,9 @@
  // {"keys": ["ctrl+c"],
  //  "command": "clojure_sublimed_copy",
  //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+
+ // // Require Namespace
+ // {"keys": ["ctrl+alt+r"],
+ //  "command": "clojure_sublimed_require_namespace",
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 ]
