@@ -159,6 +159,8 @@ class Connection:
         self.evals_by_view = defaultdict(dict)
         self.reset()
         self.last_view = window.active_view() if (window := sublime.active_window()) else None
+        self.session = None
+        self.eval_in_session = None
 
     def set_status(self, status):
         self.status = status

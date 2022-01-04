@@ -116,3 +116,7 @@ symbol
 ; malformed expr
 (+ 1
 (+ 1 2))
+
+; namespace
+(clojure.pprint/pprint :abc)
+clojure.pprint
