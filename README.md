@@ -72,26 +72,12 @@ Differences from [Tutkain](https://tutkain.flowthing.me/):
 
 ## Installation
 
-Install package from source:
+1. `Package Control: Install Package` → `Clojure Sublimed`
 
-OS X:
-```bash
-git clone https://github.com/tonsky/Clojure-Sublimed.git
-ln -s `pwd`/Clojure-Sublimed ~/Library/Application\ Support/Sublime\ Text/Packages/Clojure\ Sublimed
-```
+2. Assign syntax to Clojure files:
 
-Linux:
-```bash
-git clone https://github.com/tonsky/Clojure-Sublimed.git
-ln -s `pwd`/Clojure-Sublimed ~/.config/sublime-text/Packages/Clojure\ Sublimed
-```
-
-Note for people upgrading from Sublimed Clojure days: make sure to rename directory to `Clojure Sublimed`, it might be important.
-
-Assign syntax to Clojure files:
-
-- open any clj/cljc/cljs file,
-- run `View` → `Syntax` → `Open all with current extension as...` → `Clojure Sublimed` → `Clojure (Sublimed)`.
+   - open any clj/cljc/cljs file,
+   - run `View` → `Syntax` → `Open all with current extension as...` → `Clojure Sublimed` → `Clojure (Sublimed)`.
 
 ## How to use
 
