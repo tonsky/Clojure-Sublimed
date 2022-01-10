@@ -9,22 +9,21 @@ This package provides Clojure support for Sublime Text and includes:
 
 ## Clojure syntax
 
-Unfortunately, Clojure syntax that is shipped with Sublime Text handles many edge cases badly:
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/syntaxes.png" width="463" height="362" alt="Syntaxes">
 
-<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/syntaxes.png" width="806" height="299" alt="Syntaxes">
+Clojure Sublimed ships with its own syntax definition for Clojure and EDN. Unlike default Clojure syntax, this package is:
 
-Unlike default Clojure syntax, this package is:
-
-- pedantic as per [EDN spec](https://github.com/edn-format/edn) and [Clojure Reader](https://clojure.org/reference/reader),
+- slightly more pedantic as per [EDN spec](https://github.com/edn-format/edn) and [Clojure Reader](https://clojure.org/reference/reader),
 - rigorously tested,
-- detects unbalanced brackets and incorrect escape sequences efficiently,
-- punctuation and validation _inside_ regexps.,
+- can be used to highlight rainbow parentheses,
+- punctuation and validation _inside_ regexps,
 - quoted and unquoted regions are marked for highlighting,
 - semantically correct tokenization, perfect for fonts with ligatures,
-- unicode-friendly (supports unicode letters in symbols/keywords),
 - has separate EDN syntax, same way JSON is separate from JavaScript in Sublime Text.
 
 Want to put your parser to test? Check out [syntax_test_edn.edn](./test_syntax/edn.edn) and [syntax_test_clojure.cljc](./test_syntax/clojure.cljc).
+
+Clojure Sublimed syntax is also used by nREPL client to find form boundaries and namespaces (might be changed in the future).
 
 ## nREPL Client
 
