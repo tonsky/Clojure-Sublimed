@@ -1,3 +1,73 @@
+### 2.4.0 - January 12, 2022
+
+New commands:
+
+- Reindent Buffer
+- Reindent Lines
+- Insert Newline
+
+### 2.3.0 - January 4, 2022
+
+- A command to require namespace of symbol #12 #59 via @jaihindhreddy
+- Fixed regions returning on undo #22 #60 via @jaihindhreddy
+- Fixed AttributeError: 'Connection' object has no attribute 'eval_in_session'
+
+### 2.2.0 - December 29, 2021
+
+- Do clone, eval and close in a single middleware #20 via @jaihindhreddy and @tonsky
+- Auto-close sessions cloned by eval #48 #49 #50 via @tonsky
+- Interrupt pending eval when region is erased #16 #58 via @jaihindhreddy and @tonsky
+
+### 2.1.0 - December 28, 2021
+
+- An option to use nREPL session for eval #9 #57 via @jaihindhreddy
+- Optimize region invalidation #19 #54 via @jaihindhreddy
+- Optimise iterating through evals by maintaining evals by view #23 #51 #55 #56 via @jaihindhreddy
+- Use ephemeral sessions instead of cloning for each eval #20 #48 #50 via @jaihindhreddy
+
+### 2.0.0 - December 22, 2021
+
+- Renamed to Clojure Sublimed due to Package Control policy. Thanks @YurySolovyov for the name
+
+### 1.0.7 - December 15, 2021
+
+- Toggle symbol info works on def/defn #44 #45
+
+### 1.0.6 - December 14, 2021
+
+- Escape HTML in evaluation results #35 #38 thx @jaihindhreddy
+- Measure time-taken in nREPL middleware #13 #39 thx @jaihindhreddy
+- Eval form on the left if between forms #10 #42 thx @jaihindhreddy
+- Fixed Ctrl+I at the last position in the file #17
+- Copy evaluation result #37
+
+### 1.0.5 - November 10, 2021
+
+- Fixed runtime error on startup #32
+
+### 1.0.4 - November 10, 2021
+
+- Clear Eval Code status in non-active views #32
+- When evaluating buffer fails, scroll to error line #28
+
+### 1.0.3 - November 9, 2021
+
+- Fixed exception in eval code command handling excetpion response
+
+### 1.0.2 - November 4, 2021
+
+- Automatically detect port from .nrepl-port #5
+
+### 1.0.1 - November 1, 2021
+
+- Do not bundle any key bindings by default
+- Bind keys to eval arbitrary code #25
+- Remove phantom if region is fully removed #21
+
+### 1.0.0 - October 25, 2021
+
+- Initial release
+
 ### October 22, 2021
 
 - Renamed syntaxes to `Clojure (Sublime Clojure)` and `EDN (Sublime Clojure)`

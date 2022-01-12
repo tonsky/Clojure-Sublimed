@@ -5,6 +5,7 @@
 This package provides Clojure support for Sublime Text and includes:
 
 - Clojure and EDN syntax grammars (Sublime Text 3+)
+- Clojure code formatter/indenter (Sublime Text 4075+)
 - Clojure nREPL client (Sublime Text 4075+, nREPL 0.8+)
 
 ## Clojure syntax
@@ -24,6 +25,26 @@ Clojure Sublimed ships with its own syntax definition for Clojure and EDN. Unlik
 Want to put your parser to test? Check out [syntax_test_edn.edn](./test_syntax/edn.edn) and [syntax_test_clojure.cljc](./test_syntax/clojure.cljc).
 
 Clojure Sublimed syntax is also used by nREPL client to find form boundaries and namespaces (might be changed in the future).
+
+## Formatter/indenter
+
+Clojure Sublimed includes optional support for [Simple Clojure Formatting rules](https://tonsky.me/blog/clojurefmt/). It doesn’t require nREPL connection but does require `Clojure (Sublimed)` syntax to be selected for buffer.
+
+To reformat whole file, run `Clojure Sublimed: Reindent Buffer`.
+
+To reindent only current line(s), run `Clojure Sublimed: Reindent Lines`.
+
+To enable correct indentations as you type code, rebind `Enter` to `Clojure Sublimed: Insert Newline`:
+
+```
+{"keys":    ["enter"],
+ "command": "clojure_sublimed_insert_newline",
+ "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"},
+             {"key": "auto_complete_visible", "operator": "equal", "operand": false},
+             {"key": "panel_has_focus", "operator": "equal", "operand": false}]}
+```
+
+Best way to do it is through running `Preferences: Clojure Sublimed Key Bindings`.
 
 ## nREPL Client
 
@@ -175,6 +196,8 @@ Interrupt Pending Evaluations | <kbd>Ctrl</kbd> <kbd>C</kbd>     | <kbd>Ctrl</kb
 Toggle Info                   | <kbd>Ctrl</kbd> <kbd>I</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>I</kbd>     | [I]nfo
 Clear Evaluation Results      | <kbd>Ctrl</kbd> <kbd>L</kbd>     | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>L</kbd>     | c[L]ear
 Copy Evaluation Results       | <kbd>Command</kbd> <kbd>C</kbd>  | <kbd>Ctrl</kbd> <kbd>C</kbd>                    | [C]opy
+Reindent Lines                | <kbd>Ctrl</kbd> <kbd>F</kbd> | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>F</kbd> | [F]ormat
+Reindent Buffer               | <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>F</kbd> | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Shift</kbd> <kbd>F</kbd> | Capital [F]ormat
 
 To set it up, run `Preferences: Clojure Sublimed Key Bindings` command and copy example keybindings to your local Key Bindings file.
 

@@ -750,6 +750,94 @@ class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
     def is_enabled(self):
         return conn.socket != None
 
+def match_selectors(view, pos, selectors):
+    return any(view.match_selector(pos, selector) for selector in selectors)
+
+def reindent(view, edit, point):
+    line = view.line(point)
+    text = view.substr(line)
+    prefix = re.match(r"\s*", text).group(0)
+    # Do not indent inside strings
+    if view.match_selector(line.begin(), 'string') and not view.match_selector(line.begin(), 'punctuation.definition.string.begin'):
+        pass
+    # Clear leading spaces at first line
+    elif line.begin() == 0:
+        if prefix:
+            view.erase(edit, sublime.Region(0, len(prefix)))
+    else:
+        stack = []
+        last_open = None
+        pos = line.begin()
+        while pos >= 0:
+            pos = pos - 1
+            ch = view.substr(pos)
+            if match_selectors(view, pos, ['string', 'comment.line', 'constant.character']):
+                pass
+            # Short-circuit if outside of any parens
+            elif not match_selectors(view, pos, ['meta.brackets', 'meta.braces', 'meta.parens']):
+                break
+            elif ch in [']', ')', '}']:
+                stack.append(ch)
+            elif ch not in ['(', '[', '{']:
+                pass
+            elif not stack:
+                last_open = pos
+                break
+            elif {'[': ']', '(': ')', '{': '}'}[ch] == stack[-1]:
+                stack.pop()
+            else:
+                pass
+
+        replace = sublime.Region(line.begin(), line.begin() + len(prefix))
+        # top-level form, everything before is balanced
+        if last_open is None:
+            view.replace(edit, replace, '')
+            return line.begin()
+        else:
+            indent = last_open - view.line(last_open).begin()
+            # list form that doesn’t start with paren. Indent to paren + 2
+            if view.substr(last_open) == '(' and (last_open + 1 >= line.begin() or view.substr(last_open + 1) not in ['(', '[', '{']):
+                view.replace(edit, replace, ' ' * (indent + 2))
+                return line.begin() + indent + 2
+            # everything else. Indent to paren + 1
+            else:
+                view.replace(edit, replace, ' ' * (indent + 1))
+                return line.begin() + indent + 1
+    return line.begin()
+
+class ClojureSublimedReindentBufferCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        lines = view.lines(sublime.Region(0, view.size()))
+        change_id = view.change_id()
+        for line in lines:
+            reindent(view, edit, view.transform_region_from(line, change_id).begin())
+
+class ClojureSublimedReindentLinesCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        change_id_sel = view.change_id()
+        for sel in view.sel():
+            sel = view.transform_region_from(sel, change_id_sel)
+            change_id_line = view.change_id()
+            for line in view.lines(sel):
+                line = view.transform_region_from(line, change_id_line)
+                reindent(view, edit, line.begin())
+
+class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        change_id_sel = view.change_id()
+        ends = []
+        for sel in view.sel():
+            sel = view.transform_region_from(sel, change_id_sel)
+            view.replace(edit, sel, "\n")
+            ends.append(reindent(view, edit, sel.begin() + 1))
+
+        view.sel().clear()
+        for end in ends:
+            view.sel().add(sublime.Region(end, end))
+
 class ClojureSublimedEventListener(sublime_plugin.EventListener):
     def on_activated_async(self, view):
         conn.refresh_status()

@@ -1,0 +1,22 @@
+Clojure Sublimed 2.4.0
+----------------------
+
+Clojure Sublimed now includes optional support for [Simple Clojure Formatting rules](https://tonsky.me/blog/clojurefmt/). It doesn’t require nREPL connection but does require `Clojure (Sublimed)` syntax to be selected for buffer.
+
+To reformat whole file, run `Clojure Sublimed: Reindent Buffer`.
+
+To reindent only current line(s), run `Clojure Sublimed: Reindent Lines`.
+
+To enable correct indentations as you type code, rebind `Enter` to `Clojure Sublimed: Insert Newline`:
+
+```
+{"keys":    ["enter"],
+ "command": "clojure_sublimed_insert_newline",
+ "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"},
+             {"key": "auto_complete_visible", "operator": "equal", "operand": false},
+             {"key": "panel_has_focus", "operator": "equal", "operand": false}]}
+```
+
+Best way to do it is through running `Preferences: Clojure Sublimed Key Bindings`.
+
+For full changelog, see https://github.com/tonsky/Clojure-Sublimed/blob/master/CHANGELOG.md

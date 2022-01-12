@@ -45,4 +45,21 @@
  // {"keys": ["ctrl+alt+r"],
  //  "command": "clojure_sublimed_require_namespace",
  //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+ 
+ // // Reindent Lines
+ // {"keys": ["ctrl+alt+f"],
+ //  "command": "clojure_sublimed_reindent_lines",
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+
+ // // Reindent Buffer
+ // {"keys": ["ctrl+alt+shift+f"],
+ //  "command": "clojure_sublimed_reindent_buffer",
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+
+ // // Insert New Line
+ // {"keys": ["enter"],
+ //  "command": "clojure_sublimed_insert_newline",
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"},
+ //              {"key": "auto_complete_visible", "operator": "equal", "operand": false},
+ //              {"key": "panel_has_focus", "operator": "equal", "operand": false}]},
 ]
