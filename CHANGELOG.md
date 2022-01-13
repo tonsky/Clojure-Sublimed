@@ -1,3 +1,7 @@
+### 2.4.1 - January 13, 2022
+
+- Proper `messages.json` and install message.
+
 ### 2.4.0 - January 12, 2022
 
 New commands:

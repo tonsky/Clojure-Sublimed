@@ -1,0 +1,13 @@
+Clojure Sublimed
+----------------
+
+Hi there! Thank you for installing Clojure Sublimed.
+
+A few important points to help you get started:
+
+- Assign `Clojure (Sublimed)` syntax to your Clojure files: `View` → `Syntax` → `Open all with current extension as...` → `Clojure Sublimed` → `Clojure (Sublimed)` (this step is required for everything else to work)
+- Make sure you have nREPL version 0.8+
+- Connect using `Clojure Sublimed: Connect`
+- Configure key bindings using `Preferences: Clojure Sublimed Key Bindings`
+
+Read more at https://github.com/tonsky/Clojure-Sublimed/blob/master/README.md
