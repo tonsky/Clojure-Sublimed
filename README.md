@@ -166,7 +166,7 @@ To support such use cases, Clojure Sublimed allows you to bind arbitrary piece o
 
 ```
 {"keys": ["ctrl+t"],
- "command": "sublime_clojure_eval_code",
+ "command": "clojure_sublimed_eval_code",
  "args": {"code": "(clojure.test/run-all-tests)"}}
 ```
 
