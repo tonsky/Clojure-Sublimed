@@ -760,6 +760,9 @@ def reindent(view, edit, point):
     # Do not indent inside strings
     if view.match_selector(line.begin(), 'string') and not view.match_selector(line.begin(), 'punctuation.definition.string.begin'):
         pass
+    # Do not reindent blank lines
+    elif len(prefix) == line.size():
+        pass
     # Clear leading spaces at first line
     elif line.begin() == 0:
         if prefix:
