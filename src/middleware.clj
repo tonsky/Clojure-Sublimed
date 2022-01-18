@@ -1,6 +1,7 @@
 (ns clojure-sublimed.middleware
   (:require
    [clojure.main :as main]
+   [clojure.pprint :as pprint]
    [clojure.stacktrace :as stacktrace]
    [clojure.string :as str]
    [nrepl.middleware :as middleware]
@@ -174,3 +175,7 @@
    :expects #{"eval" "clone"}
    :handles {"clone-and-eval"
              {:doc "Clones current session, evals given code in the cloned session"}}})
+
+(defn pprint [value writer opts]
+  (binding [pprint/*print-right-margin* 120]
+    (pprint/pprint value writer)))

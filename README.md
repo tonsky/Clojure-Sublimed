@@ -203,10 +203,6 @@ To set it up, run `Preferences: Clojure Sublimed Key Bindings` command and copy 
 
 ## Frequently Asked Questions
 
-Q: Why no Package Control?
-
-A: They seem to have a shortage of reviewers, [track progress](https://github.com/wbond/package_control_channel/pull/8394).
-
 Q: REPL/eval doesn’t work
 
 A: Make sure you are using nREPL 0.8 or later.

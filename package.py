@@ -82,24 +82,35 @@ class Eval:
                 self.view.erase_regions(self.value_key())
                 self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO)
 
-    def toggle_trace(self):
-        if self.trace:
+    def toggle_phantom(self, text, styles):
+        if text:
             if self.phantom_id:
                 self.view.erase_phantom_by_id(self.phantom_id)
                 self.phantom_id = None
             else:
                 body = f"""<body id='clojure-sublimed'>
                     { basic_styles(self.view) }
-                    .light body {{ background-color: hsl(0, 100%, 90%); }}
-                    .dark body  {{ background-color: hsl(0, 100%, 10%); }}
+                    { styles }
                 </style>"""
-                for line in html.escape(self.trace).split("\n"):
-                    body += "<p>" + line.replace("\t", "&nbsp;&nbsp;") + "</p>"
+                for line in html.escape(text).split("\n"):
+                    body += "<p>" + line.replace("\t", "&nbsp;&nbsp;").replace(" ", "&nbsp;") + "</p>"
                 body += "</body>"
                 region = self.region()
                 if region:
                     point = self.view.line(region.end()).begin()
                     self.phantom_id = self.view.add_phantom(self.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
+
+    def toggle_pprint(self):
+        self.toggle_phantom(self.value, """
+            .light body { background-color: hsl(100, 100%, 90%); }
+            .dark body  { background-color: hsl(100, 100%, 10%); }
+        """)
+        
+    def toggle_trace(self):
+        self.toggle_phantom(self.trace, """
+            .light body { background-color: hsl(0, 100%, 90%); }
+            .dark body  { background-color: hsl(0, 100%, 10%); }
+        """)
 
     def erase(self):
         self.view.erase_regions(self.value_key())
@@ -343,7 +354,8 @@ def eval_msg(view, region, msg):
     eval.msg = {k: v for k, v in msg.items() if v}
     eval.msg["id"] = eval.id
     eval.msg["nrepl.middleware.caught/caught"] = f"{ns}.middleware/print-root-trace"
-    eval.msg["nrepl.middleware.print/quota"] = 300
+    eval.msg["nrepl.middleware.print/print"] = f"{ns}.middleware/pprint"
+    eval.msg["nrepl.middleware.print/quota"] = 1024
     eval.msg["session"] = conn.session
     conn.add_eval(eval)
     conn.send(eval.msg)
@@ -585,6 +597,11 @@ class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
             eval = conn.find_eval(view, sel)
             if eval and eval.status == "exception":
                 view.run_command("clojure_sublimed_toggle_trace", {})
+            elif eval and eval.status == "success":
+                if eval := conn.find_eval(view, sel):
+                    print("eval.toggle_pprint()", eval, sel)
+                    eval.toggle_pprint()
+                    break
             else:
                 view.run_command("clojure_sublimed_toggle_symbol", {})
 
