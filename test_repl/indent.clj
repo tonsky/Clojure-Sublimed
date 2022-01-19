@@ -11,10 +11,12 @@ something)
   
 (defn f
 [x]      
+
 body)
   
 (defn many-args [a b c
 d e f]
+             
 body)
   
 (defn multi-arity

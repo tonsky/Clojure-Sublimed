@@ -770,7 +770,7 @@ class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
 def match_selectors(view, pos, selectors):
     return any(view.match_selector(pos, selector) for selector in selectors)
 
-def reindent(view, edit, point):
+def reindent(view, edit, point, skip_blanks = True):
     line = view.line(point)
     text = view.substr(line)
     prefix = re.match(r"\s*", text).group(0)
@@ -778,7 +778,7 @@ def reindent(view, edit, point):
     if view.match_selector(line.begin(), 'string') and not view.match_selector(line.begin(), 'punctuation.definition.string.begin'):
         pass
     # Do not reindent blank lines
-    elif len(prefix) == line.size():
+    elif skip_blanks and len(prefix) == line.size():
         pass
     # Clear leading spaces at first line
     elif line.begin() == 0:
@@ -852,7 +852,7 @@ class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
         for sel in view.sel():
             sel = view.transform_region_from(sel, change_id_sel)
             view.replace(edit, sel, "\n")
-            ends.append(reindent(view, edit, sel.begin() + 1))
+            ends.append(reindent(view, edit, sel.begin() + 1, skip_blanks = False))
 
         view.sel().clear()
         for end in ends:
