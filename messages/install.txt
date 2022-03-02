@@ -1,6 +1,3 @@
-Clojure Sublimed
-----------------
-
 Hi there! Thank you for installing Clojure Sublimed.
 
 A few important points to help you get started:
