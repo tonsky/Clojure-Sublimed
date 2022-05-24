@@ -8,6 +8,20 @@ ns = 'clojure-sublimed'
 def settings():
     return sublime.load_settings("Clojure Sublimed.sublime-settings")
 
+def format_time_taken(time_taken):
+    threshold = settings().get("elapsed_threshold_ms")
+    if threshold != None and time_taken != None:
+        elapsed = time_taken / 1000000000
+        if elapsed * 1000 >= threshold:
+            if elapsed >= 10:
+                return f"({'{:,.0f}'.format(elapsed)} sec)"
+            elif elapsed >= 1:
+                return f"({'{:.1f}'.format(elapsed)} sec)"
+            elif elapsed >= 0.005:
+                return f"({'{:.0f}'.format(elapsed * 1000)} ms)"
+            else:
+                return f"({'{:.2f}'.format(elapsed * 1000)} ms)"
+
 class Eval:
     # class
     next_id:   int = 10
@@ -65,18 +79,8 @@ class Eval:
         if region:
             scope, color = self.scope_color()
             if value:
-                threshold = settings().get("elapsed_threshold_ms")
-                if threshold != None and time_taken != None and self.status in {"success", "exception"}:
-                    elapsed = time_taken / 1000000000
-                    if elapsed * 1000 >= threshold:
-                        if elapsed >= 10:
-                            value = f"({'{:,.0f}'.format(elapsed)} sec) {value}"
-                        elif elapsed >= 1:
-                            value = f"({'{:.1f}'.format(elapsed)} sec) {value}"
-                        elif elapsed >= 0.005:
-                            value = f"({'{:.0f}'.format(elapsed * 1000)} ms) {value}"
-                        else:
-                            value = f"({'{:.2f}'.format(elapsed * 1000)} ms) {value}"
+                if (self.status in {"success", "exception"}) and (time := format_time_taken(time_taken)):
+                    value = time + " " + value
                 self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO, [html.escape(value)], color)
             else:
                 self.view.erase_regions(self.value_key())
@@ -135,15 +139,19 @@ class StatusEval(Eval):
         if window := sublime.active_window():
             return window.active_view()
 
-    def update(self, status, value, region = None):
+    def update(self, status, value, region = None, time_taken = None):
         self.status = status
         self.value = value
         if self.active_view():
             if status in {"pending", "interrupt"}:
                 self.active_view().set_status(self.value_key(), "⏳ " + self.code)
             elif "success" == status:
+                if time := format_time_taken(time_taken):
+                    value = time + ' ' + value
                 self.active_view().set_status(self.value_key(), "✅ " + value)
             elif "exception" == status:
+                if time := format_time_taken(time_taken):
+                    value = time + ' ' + value
                 self.active_view().set_status(self.value_key(), "❌ " + value)
 
     def erase(self):
@@ -208,12 +216,14 @@ class Connection:
 
     def add_eval(self, eval):
         self.evals[eval.id] = eval
-        self.evals_by_view[eval.view.id()][eval.id] = eval
+        if view := eval.view:
+            self.evals_by_view[view.id()][eval.id] = eval
 
     def erase_eval(self, eval):
         eval.erase()
         del self.evals[eval.id]
-        del self.evals_by_view[eval.view.id()][eval.id]
+        if view := eval.view:
+            del self.evals_by_view[view.id()][eval.id]
         if eval.status == "pending" and eval.session:
             conn.send({"op": "interrupt", "interrupt-id": eval.id, "session": eval.session})
 
@@ -245,7 +255,7 @@ def handle_new_session(msg):
 def handle_value(msg):
     if "value" in msg and "id" in msg and msg["id"] in conn.evals:
         eval = conn.evals[msg["id"]]
-        eval.update("success", msg.get("value"), time_taken=msg.get(f'{ns}.middleware/time-taken'))
+        eval.update("success", msg.get("value"), time_taken = msg.get(f'{ns}.middleware/time-taken'))
         return True
 
 def set_selection(view, region):
