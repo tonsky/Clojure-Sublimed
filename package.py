@@ -860,7 +860,7 @@ class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
         change_id_sel = view.change_id()
         ends = []
         for sel in view.sel():
-            sel = view.transform_region_from(sel, change_id_sel)
+            # sel = view.transform_region_from(sel, change_id_sel)
             view.replace(edit, sel, "\n")
             ends.append(reindent(view, edit, sel.begin() + 1, skip_blanks = False))
 

@@ -1,3 +1,17 @@
+### 2.5.2 - May 24, 2022
+
+- Fixed clojure_sublimed_eval_code #75
+- Fixed clojure_sublimed_insert_newline with multicursor #72 
+
+### 2.5.1 - January 19, 2022
+
+- Fixed indent on Enter
+
+### 2.5.0 - January 18, 2022
+
+- Pretty print returned values. Toggle with Toggle Info (Ctrl + I)
+- Do not reindent blank lines
+
 ### 2.4.1 - January 13, 2022
 
 - Proper `messages.json` and install message.
