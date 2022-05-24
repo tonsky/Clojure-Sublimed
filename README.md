@@ -22,7 +22,7 @@ Clojure Sublimed ships with its own syntax definition for Clojure and EDN. Unlik
 - semantically correct tokenization, perfect for fonts with ligatures,
 - has separate EDN syntax, same way JSON is separate from JavaScript in Sublime Text.
 
-Want to put your parser to test? Check out [syntax_test_edn.edn](./test_syntax/edn.edn) and [syntax_test_clojure.cljc](./test_syntax/clojure.cljc).
+Want to put your parser to test? Check out [syntax_test_edn.edn](./test_syntax/syntax_test_edn.edn) and [syntax_test_clojure.cljc](./test_syntax/syntax_test_clojure.cljc).
 
 Clojure Sublimed syntax is also used by nREPL client to find form boundaries and namespaces (might be changed in the future).
 
