@@ -71,6 +71,8 @@ We intentionally excluded following features:
 
 - [ ] Autocomplete. Static analysis is much simpler and much more reliable than requiring an always-live connection to the working app.
 
+Look at [Sublime LSP](https://github.com/sublimelsp/LSP) with [Clojure LSP](https://github.com/clojure-lsp/clojure-lsp) or [SublimeLinter](https://github.com/SublimeLinter/SublimeLinter) with [clj-kondo](https://github.com/ToxicFrog/SublimeLinter-contrib-clj-kondo) if you need autocompletion.
+
 Why nREPL and not Socket Server REPL/pREPL/unREPL?
 
 - nREPL has the widest adoption,
