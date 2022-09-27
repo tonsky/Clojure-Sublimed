@@ -34,6 +34,8 @@ To reformat whole file, run `Clojure Sublimed: Reindent Buffer`.
 
 To reindent only current line(s), run `Clojure Sublimed: Reindent Lines`.
 
+To enable reindenting / formatting on save, add `format_on_save: true` to settings. ([See how to edit settings](#editing-settings))
+
 To enable correct indentations as you type code, rebind `Enter` to `Clojure Sublimed: Insert Newline`:
 
 ```
