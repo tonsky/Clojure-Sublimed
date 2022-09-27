@@ -39,5 +39,8 @@
   // all the previous ones have finished).
   // 
   // False by default (enables parallel evals).
-  "eval_in_session": false
+  "eval_in_session": false,
+
+  // reformat file on save, false by default
+  "format_on_save": false
 }

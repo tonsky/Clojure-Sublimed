@@ -1,3 +1,7 @@
+### 2.6.0 - Sep 27, 2022
+
+- Added `format_on_save` option #76 thx @sainadh-d
+
 ### 2.5.2 - May 24, 2022
 
 - Fixed clojure_sublimed_eval_code #75
