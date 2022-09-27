@@ -1,3 +1,7 @@
+### 2.7.0 - Sep 27, 2022
+
+- Added `eval_shared`
+
 ### 2.6.0 - Sep 27, 2022
 
 - Added `format_on_save` option #76 thx @sainadh-d

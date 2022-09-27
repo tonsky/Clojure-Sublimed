@@ -41,6 +41,10 @@
   // False by default (enables parallel evals).
   "eval_in_session": false,
 
+  // A form to be evaluated in shared session and inherited by all evals
+  // E.g. (set! *warn-on-reflection* true)
+  "eval_shared": "",
+
   // reformat file on save, false by default
   "format_on_save": false
 }

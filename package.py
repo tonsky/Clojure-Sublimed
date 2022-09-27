@@ -659,6 +659,7 @@ def handle_connect(msg):
         return True
 
     elif 2 == msg.get("id") and msg.get("status") == ["done"]:
+        id = 3 if settings().get("eval_shared") else 4
         conn.send({"op":               "add-middleware",
                    "middleware":       [f"{ns}.middleware/clone-and-eval",
                                         f"{ns}.middleware/time-eval",
@@ -666,11 +667,17 @@ def handle_connect(msg):
                                         f"{ns}.middleware/wrap-output"],
                    "extra-namespaces": [f"{ns}.middleware"],
                    "session":          conn.session,
-                   "id":               3})
+                   "id":               id})
         conn.set_status("🌔 Adding middlewares")
         return True
 
     elif 3 == msg.get("id") and msg.get("status") == ["done"]:
+        conn.send({"op":      "eval",
+                   "code":    settings().get("eval_shared"), 
+                   "session": conn.session,
+                   "id":      4})
+
+    elif 4 == msg.get("id") and msg.get("status") == ["done"]:
         conn.set_status(f"🌕 {conn.host}:{conn.port}")
         return True
 

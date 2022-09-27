@@ -6,7 +6,7 @@ This package provides Clojure support for Sublime Text and includes:
 
 - Clojure and EDN syntax grammars (Sublime Text 3+)
 - Clojure code formatter/indenter (Sublime Text 4075+)
-- Clojure nREPL client (Sublime Text 4075+, nREPL 0.8+)
+- Clojure nREPL client (Sublime Text 4075+, nREPL 0.9+)
 
 ## Clojure syntax
 
@@ -186,6 +186,16 @@ Finally, to clear evaluation results run `Clojure Sublimed: Clear Evaluation Res
 
 To edit settings, run `Preferences: Clojure Sublimed Settings` command.
 
+### Session-wide settings
+
+It is sometimes desirable to set dynamic Clojure vars for the whole session. To do that, edit `"eval_shared"` setting. For example:
+
+```
+"eval_shared": "(do (set! *warn-on-reflection* true) (set! *print-namespace-maps* false))"
+```
+
+This will be applied to every evaluation.
+
 ## Default Key Bindings
 
 Clojure Sublimed comes with no keybindings enabled by default to guarantee they won’t conflict with any other extension.
@@ -209,7 +219,7 @@ To set it up, run `Preferences: Clojure Sublimed Key Bindings` command and copy 
 
 Q: REPL/eval doesn’t work
 
-A: Make sure you are using nREPL 0.8 or later.
+A: Make sure you are using nREPL 0.9 or later.
 A: Make sure you have assigned `Clojure (Sublimed)` syntax to the file.
 
 ## Credits
