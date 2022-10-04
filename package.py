@@ -22,6 +22,10 @@ def format_time_taken(time_taken):
             else:
                 return f"({'{:.2f}'.format(elapsed * 1000)} ms)"
 
+class Profile:
+    CLOJURE = 'clojure'
+    SHADOW_CLJS = 'shadow-cljs'
+
 class Eval:
     # class
     next_id:   int = 10
@@ -170,6 +174,8 @@ class Connection:
     last_view: sublime.View
     session: str
     eval_in_session: bool
+    profile: Profile
+    cljs_build: str
 
     def __init__(self):
         self.host = 'localhost'
@@ -180,6 +186,8 @@ class Connection:
         self.last_view = window.active_view() if (window := sublime.active_window()) else None
         self.session = None
         self.eval_in_session = None
+        self.profile = None
+        self.cljs_build = None
 
     def set_status(self, status):
         self.status = status
@@ -365,7 +373,7 @@ def eval_msg(view, region, msg):
     eval.msg["id"] = eval.id
     eval.msg["nrepl.middleware.caught/caught"] = f"{ns}.middleware/print-root-trace"
     eval.msg["nrepl.middleware.print/print"] = f"{ns}.middleware/pprint"
-    eval.msg["nrepl.middleware.print/quota"] = 1024
+    eval.msg["nrepl.middleware.print/quota"] = 4096
     eval.msg["session"] = conn.session
     conn.add_eval(eval)
     conn.send(eval.msg)
@@ -373,7 +381,7 @@ def eval_msg(view, region, msg):
 
 def eval(view, region, code=None):
     (line, column) = view.rowcol_utf16(region.begin())
-    msg = {"op":     "eval" if conn.eval_in_session else "clone-eval-close",
+    msg = {"op":     "eval" if (conn.profile == Profile.SHADOW_CLJS or conn.eval_in_session) else "clone-eval-close",
            "code":   view.substr(region) if code is None else code,
            "ns":     namespace(view, region.begin()) or 'user',
            "line":   line,
@@ -649,6 +657,23 @@ class SocketIO:
 
 def handle_connect(msg):
 
+    if conn.profile == Profile.SHADOW_CLJS:
+        shadow_cljs_init = {
+            ":app": "(shadow.cljs.devtools.api/repl :app)",
+            "node-repl": "(shadow.cljs.devtools.api/browser-repl)",
+            "browser-repl": "(shadow.cljs.devtools.api/node-repl)"
+        }
+        if 1 == msg.get("id") and "new-session" in msg:
+            conn.session = msg["new-session"]
+            conn.send({"op": "eval",
+                       "session": conn.session,
+                       "code": shadow_cljs_init[conn.cljs_build],
+                       "id": 2})
+            return True
+        elif 2 == msg.get("id") and msg.get("status") == ["done"]:
+            conn.set_status(f"🌕 {conn.host}:{conn.port}")
+            return True
+
     if 1 == msg.get("id") and "new-session" in msg:
         conn.session = msg["new-session"]
         conn.send({"op": "load-file",
@@ -705,9 +730,11 @@ def read_loop():
         pass
     conn.disconnect()
 
-def connect(host, port):
+def connect(host, port, profile, cljs_build):
     conn.host = host
     conn.port = port
+    conn.profile = profile
+    conn.cljs_build = cljs_build
     try:
         conn.socket = socket.create_connection((host, port))
         conn.reader = threading.Thread(daemon=True, target=read_loop)
@@ -750,14 +777,32 @@ class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
         port = int(port)
         return 0 <= port and port <= 65536
 
+class ClojureSublimedCljsBuildInputHandler(sublime_plugin.ListInputHandler):
+    def list_items(self):
+        return [':app', 'node-repl', 'browser-repl']
+
+    def next_input(self, args):
+        return ClojureSublimedHostPortInputHandler()
+
+class ClojureSublimedProfileInputHandler(sublime_plugin.ListInputHandler):
+    def list_items(self):
+        return [Profile.CLOJURE, Profile.SHADOW_CLJS]
+
+    def next_input(self, args):
+        if args.get('clojure_sublimed_profile') == Profile.SHADOW_CLJS:
+            return ClojureSublimedCljsBuildInputHandler()
+        return ClojureSublimedHostPortInputHandler()
+
 class ClojureSublimedConnectCommand(sublime_plugin.ApplicationCommand):
-    def run(self, clojure_sublimed_host_port):
+
+    def run(self, clojure_sublimed_profile, clojure_sublimed_cljs_build=None, clojure_sublimed_host_port=''):
         host, port = clojure_sublimed_host_port.strip().split(':')
         port = int(port)
-        connect(host, port)
+        connect(host, port, clojure_sublimed_profile, clojure_sublimed_cljs_build)
 
     def input(self, args):
-        return ClojureSublimedHostPortInputHandler()
+        if 'clojure_sublimed_profile' not in args:
+            return ClojureSublimedProfileInputHandler()
 
     def is_enabled(self):
         return conn.socket == None
@@ -772,7 +817,7 @@ class ClojureSublimedDisconnectCommand(sublime_plugin.ApplicationCommand):
 class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
     def run(self):
         conn.disconnect()
-        connect(conn.host, conn.port)
+        connect(conn.host, conn.port, conn.profile, conn.cljs_build)
 
     def is_enabled(self):
         return conn.socket != None
