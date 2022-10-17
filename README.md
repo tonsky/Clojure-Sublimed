@@ -107,8 +107,17 @@ Differences from [Tutkain](https://tutkain.flowthing.me/):
 
 Important! Make sure you switched your syntax to `Clojure (Sublimed)`.
 
+For Clojure apps
+
 1. Run nREPL server.
 2. Run `Clojure Sublimed: Connect` command.
+
+For Shadow-cljs apps
+
+1. Run `shadow-cljs watch app`. (This starts a HTTP server and an nREPL)
+2. If you are building a web-app, open the http-server url (from step 1) in the browser. This connects the shadow server to JS runtime.
+3. Run `Clojure Sublimed: Connect shadow-cljs` command from sublime's command palette.
+
 
 ### Evaluating code from buffer
 
