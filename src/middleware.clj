@@ -1,16 +1,17 @@
 (ns clojure-sublimed.middleware
   (:require
-   [clojure.main :as main]
-   [clojure.pprint :as pprint]
-   [clojure.stacktrace :as stacktrace]
-   [clojure.string :as str]
-   [nrepl.middleware :as middleware]
-   [nrepl.middleware.print :as print]
-   [nrepl.middleware.caught :as caught]
-   [nrepl.middleware.session :as session]
-   [nrepl.transport :as transport])
+    [clojure.main :as main]
+    [clojure.pprint :as pprint]
+    [clojure.stacktrace :as stacktrace]
+    [clojure.string :as str]
+    [nrepl.middleware :as middleware]
+    [nrepl.middleware.print :as print]
+    [nrepl.middleware.caught :as caught]
+    [nrepl.middleware.session :as session]
+    [nrepl.transport :as transport])
   (:import
-   [nrepl.transport Transport]))
+    [clojure.lang ExceptionInfo]
+    [nrepl.transport Transport]))
 
 (defn on-send [{:keys [transport] :as msg} on-send]
   (assoc msg :transport
@@ -36,13 +37,17 @@
         (after-send resp)
         this))))
 
+;; CompilerException has location info, but its cause RuntimeException has the message ¯\_(ツ)_/¯
 (defn- root-cause [^Throwable t]
-  (if-some [cause (some-> t .getCause)]
-    (recur cause)
-    t))
-
-(defn print-root-trace [^Throwable t]
-  (stacktrace/print-stack-trace (root-cause t)))
+  (loop [t t
+         data nil]
+    (if (and (nil? data) (instance? clojure.lang.Compiler$CompilerException t))
+      (recur t (ex-data t))
+      (if-some [cause (some-> t .getCause)]
+        (recur cause data)
+        (if data
+          (ExceptionInfo. "Wrapper to pass CompilerException ex-data" data t)
+          t)))))
 
 (defn- duplicate? [^StackTraceElement prev-el ^StackTraceElement el]
   (and
@@ -56,52 +61,70 @@
         :when (or (nil? prev-el) (not (duplicate? prev-el el)))]
     el))
 
-(defn- trace-element-str [^StackTraceElement el]
+(defn- trace-element [^StackTraceElement el]
   (let [file     (.getFileName el)
         clojure? (and file
                    (or (.endsWith file ".clj")
                      (.endsWith file ".cljc")
                      (= file "NO_SOURCE_FILE")))]
-    (str
-      "\t"
-      (if clojure?
-        (clojure.lang.Compiler/demunge (.getClassName el))
-        (str (.getClassName el) "." (.getMethodName el)))
-      " ("
-      (.getFileName el)
-      ":"
-      (.getLineNumber el)
-      ")")))
+    {:method (if clojure?
+               (clojure.lang.Compiler/demunge (.getClassName el))
+               (str (.getClassName el) "." (.getMethodName el)))
+     :file   (.getFileName el)
+     :line   (.getLineNumber el)}))
 
-(defn- trace-str [^Throwable t]
-  (str
-    (.getSimpleName (class t))
-    ": "
-    (.getMessage t)
-    (when-some [data (ex-data t)] (str " " (pr-str data)))
-    "\n"
-    (->> (.getStackTrace t)
-      (take-while #(not= "clojure.lang.Compiler" (.getClassName ^StackTraceElement %)))
-      (remove #(#{"clojure.lang.RestFn" "clojure.lang.AFn"} (.getClassName ^StackTraceElement %)))
-      (clear-duplicates)
-      (map trace-element-str)
+(defn as-table [table]
+  (let [[method file] (for [col [:method :file]]
+                        (->> table
+                          (map #(get % col))
+                          (map str)
+                          (map count)
+                          (reduce max 0)))
+        format-str (str "\t%-" method "s\t%-" file "s\t:%d")]
+    (->> table
+      (map #(format format-str (:method %) (:file %) (:line %)))
       (str/join "\n"))))
 
-(defn- populate-caught [{throwable ::caught/throwable :as resp}]
-  (let [root  (root-cause throwable)
-        data  (ex-data root)
-        loc   (when (instance? clojure.lang.Compiler$CompilerException throwable)
-                {::line   (or (.-line throwable) (:clojure.error/line (ex-data throwable)))
-                 ::column (:clojure.error/column (ex-data throwable))
-                 ::source (or (.-source throwable) (:clojure.error/source (ex-data throwable)))})
+(defn- trace-str [^Throwable t]
+  (let [{:clojure.error/keys [source line column]} (ex-data t)
+        cause (or (.getCause t) t)]
+    (str
+      "\n"
+      (->> (.getStackTrace cause)
+        (take-while #(not= "clojure.lang.Compiler" (.getClassName ^StackTraceElement %)))
+        (remove #(#{"clojure.lang.RestFn" "clojure.lang.AFn"} (.getClassName ^StackTraceElement %)))
+        (clear-duplicates)
+        (map trace-element)
+        (reverse)
+        (as-table))
+      "\n>>> "
+      (.getSimpleName (class cause))
+      ": "
+      (.getMessage cause)
+      (when (or source line column)
+        (str " (" source ":" line ":" column ")"))
+      (when-some [data (ex-data cause)]
+        (str " " (pr-str data))))))
+
+(defn print-root-trace [^Throwable t]
+  (println (trace-str t)))
+
+(defn- populate-caught [{t ::caught/throwable :as resp}]
+  (let [root  ^Throwable (root-cause t)
+        {:clojure.error/keys [source line column]} (ex-data root)
+        cause ^Throwable (or (some-> root .getCause) root)
+        data  (ex-data cause)
         resp' (cond-> resp
-                root (assoc
-                       ::root-ex-msg   (.getMessage root)
-                       ::root-ex-class (.getSimpleName (class root))
-                       ::trace         (trace-str root))
-                loc  (merge loc)
-                data (update ::print/keys (fnil conj []) ::root-ex-data)
-                data (assoc ::root-ex-data data))]
+                cause  (assoc
+                         ::caught/throwable root
+                         ::root-ex-msg      (.getMessage cause)
+                         ::root-ex-class    (.getSimpleName (class cause))
+                         ::trace            (trace-str root))
+                source (assoc  ::source source)
+                line   (assoc  ::line line)
+                column (assoc  ::column column)
+                data   (update ::print/keys (fnil conj []) ::root-ex-data)
+                data   (assoc  ::root-ex-data data))]
     resp'))
 
 (defn wrap-errors [handler]
