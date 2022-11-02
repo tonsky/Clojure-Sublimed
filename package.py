@@ -462,16 +462,14 @@ class ClojureSublimedEvalBufferCommand(sublime_plugin.TextCommand):
         return conn.ready()
 
 class ClojureSublimedEvalCodeCommand(sublime_plugin.ApplicationCommand):
-    def run(self, code):
+    def run(self, code, ns = None):
         conn.erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
         eval = StatusEval(code)
-        ns = 'user'
-        view = eval.active_view()
-        if view:
-            ns = namespace(view, view.size()) or 'user'
+        if (not ns) and (view := eval.active_view()):
+            ns = namespace(view, view.size())
         eval.msg = {"op": "eval",
                     "id": eval.id,
-                    "ns": ns,
+                    "ns": ns or 'user',
                     "code": code}
         eval.msg.update(get_middleware_opts(conn))        
         conn.add_eval(eval)

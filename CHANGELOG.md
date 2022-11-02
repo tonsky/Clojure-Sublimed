@@ -1,7 +1,10 @@
+### 2.8.1 - Nov 2, 2022
+
+- Allow specifying `ns` in `clojure-sublimed-eval-code`
+
 ### 2.8.0 - Oct 17, 2022
 
 - Shadow-cljs support #43 #77 via @sainadh-d
-
 
 ### 2.7.0 - Sep 27, 2022
 
