@@ -1,9 +1,15 @@
 import html, json, os, re, socket, sublime, sublime_plugin, threading, time
 from collections import defaultdict
+import operator as op
+import functools as fn
 from .src import bencode
 from typing import Any, Dict, Tuple
+import logging
 
 ns = 'clojure-sublimed'
+
+_log = logging.getLogger(__name__)
+
 
 def settings():
     return sublime.load_settings("Clojure Sublimed.sublime-settings")
@@ -765,18 +771,28 @@ def connect(host, port, profile=Profile.CLOJURE, cljs_build=None):
     conn.profile = profile
     conn.cljs_build = cljs_build
     try:
-        conn.socket = socket.create_connection((host, port))
+        if _is_unix_domain_sock(conn.host):
+            conn.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            conn.socket.connect(port)
+        else:
+            conn.socket = socket.create_connection((host, port))
         conn.reader = threading.Thread(daemon=True, target=read_loop)
         conn.reader.start()
     except Exception as e:
+        _log.exception(e)
         conn.socket = None
         conn.set_status(None)
         if window := sublime.active_window():
             window.status_message(f"Failed to connect to {host}:{port}")
 
+
+def _is_unix_domain_sock(host):
+    return host is None
+
+
 class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
     def placeholder(self):
-        return "host:port"
+        return "host:port or /path/to/nrepl.sock"
 
     def initial_text(self):
         port = ''
@@ -789,22 +805,34 @@ class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
                         content = f.read(10).strip()
                         if re.fullmatch(r'[1-9][0-9]*', content):
                             port = content
-        return conn.host + ":" + port
+        if conn.host:
+            return conn.host + ":" + port
+
+        return port
 
     def initial_selection(self):
-        return [(len(conn.host + ":"), len(self.initial_text()))]
+        if conn.host:
+            return [(len(conn.host + ":"), len(self.initial_text()))]
+
+        return [(_inc(conn.port.rfind('/')), len(self.initial_text()))]
 
     def preview(self, text):
         if not self.validate(text):
-            return "Expected <host>:<port>"
+            return "Expected <host>:<port> or <path>"
 
     def validate(self, text):
         text = text.strip()
-        if not re.fullmatch(r'[a-zA-Z0-9\.]+:\d{1,5}', text):
-            return False
-        host, port = text.split(':')
-        port = int(port)
-        return 0 <= port and port <= 65536
+        if re.fullmatch(r'[a-zA-Z0-9\.]+:\d{1,5}', text):
+            host, port = text.split(':')
+            port = int(port)
+
+            return 0 <= port and port <= 65536
+        else:
+            return bool(os.stat(text))
+
+
+_inc = fn.partial(op.add, 1)
+
 
 class ClojureSublimedShadowCljsBuildInputHandler(sublime_plugin.TextInputHandler):
     def initial_text(self):
@@ -842,8 +870,11 @@ class ClojureSublimedConnectShadowCljsCommand(sublime_plugin.ApplicationCommand)
 
 class ClojureSublimedConnectCommand(sublime_plugin.ApplicationCommand):
     def run(self, clojure_sublimed_host_port):
-        host, port = clojure_sublimed_host_port.strip().split(':')
-        port = int(port)
+        try:
+            host, port = clojure_sublimed_host_port.strip().split(':', 1)
+            port = int(port)
+        except ValueError:
+            host, port = None, clojure_sublimed_host_port
         connect(host, port)
 
     def input(self, args):
