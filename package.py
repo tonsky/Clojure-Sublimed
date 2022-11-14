@@ -826,7 +826,7 @@ class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
             host, port = text.split(':')
             port = int(port)
 
-            return 0 <= port and port <= 65536
+            return port in range(1, 65536)
         else:
             return bool(os.stat(text))
 
