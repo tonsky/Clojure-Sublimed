@@ -699,7 +699,7 @@ def handle_connect(msg):
             return True
 
         elif 2 == msg.get("id") and msg.get("status") == ["done"]:
-            conn.set_status(f"🌕 {conn.host}:{conn.port}")
+            conn.set_status(f"🌕 {conn.host or str()}:{conn.port}")
             return True
 
     if 1 == msg.get("id") and "new-session" in msg:
@@ -731,7 +731,7 @@ def handle_connect(msg):
                    "id":      4})
 
     elif 4 == msg.get("id") and msg.get("status") == ["done"]:
-        conn.set_status(f"🌕 {conn.host}:{conn.port}")
+        conn.set_status(f"🌕 {conn.host or str()}:{conn.port}")
         return True
 
 def handle_done(msg):
