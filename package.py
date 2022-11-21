@@ -1,7 +1,5 @@
 import html, json, os, re, socket, sublime, sublime_plugin, threading, time
 from collections import defaultdict
-import operator as op
-import functools as fn
 from .src import bencode
 from typing import Any, Dict, Tuple
 import logging
@@ -685,6 +683,9 @@ def get_shadow_repl_init_cmd(build):
         return f"(shadow.cljs.devtools.api/repl {build})"
 
 
+def _status_connected(conn):
+    return "🌕 " + (conn.host + ":" if conn.host else "") + str(conn.port)
+
 def handle_connect(msg):
 
     if conn.profile == Profile.SHADOW_CLJS:
@@ -699,7 +700,7 @@ def handle_connect(msg):
             return True
 
         elif 2 == msg.get("id") and msg.get("status") == ["done"]:
-            conn.set_status(f"🌕 {conn.host or str()}:{conn.port}")
+            conn.set_status(_status_connected(conn))
             return True
 
     if 1 == msg.get("id") and "new-session" in msg:
@@ -731,7 +732,7 @@ def handle_connect(msg):
                    "id":      4})
 
     elif 4 == msg.get("id") and msg.get("status") == ["done"]:
-        conn.set_status(f"🌕 {conn.host or str()}:{conn.port}")
+        conn.set_status(_status_connected(conn))
         return True
 
 def handle_done(msg):
@@ -771,7 +772,7 @@ def connect(host, port, profile=Profile.CLOJURE, cljs_build=None):
     conn.profile = profile
     conn.cljs_build = cljs_build
     try:
-        if _is_unix_domain_sock(conn.host):
+        if _is_unix_domain_sock(conn):
             conn.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             conn.socket.connect(port)
         else:
@@ -786,8 +787,8 @@ def connect(host, port, profile=Profile.CLOJURE, cljs_build=None):
             window.status_message(f"Failed to connect to {host}:{port}")
 
 
-def _is_unix_domain_sock(host):
-    return host is None
+def _is_unix_domain_sock(conn):
+    return conn.host is None
 
 
 class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
@@ -795,7 +796,10 @@ class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
         return "host:port or /path/to/nrepl.sock"
 
     def initial_text(self):
+        host = ''
         port = ''
+        if conn.host:
+            host = conn.host
         if conn.port:
             port = str(conn.port)
         if window := sublime.active_window():
@@ -804,9 +808,10 @@ class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
                     with open(folder + "/.nrepl-port", "rt") as f:
                         content = f.read(10).strip()
                         if re.fullmatch(r'[1-9][0-9]*', content):
+                            host = 'localhost'
                             port = content
-        if conn.host:
-            return conn.host + ":" + port
+        if host:
+            return host + ":" + port
 
         return port
 
@@ -814,7 +819,7 @@ class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
         if conn.host:
             return [(len(conn.host + ":"), len(self.initial_text()))]
 
-        return [(_inc(conn.port.rfind('/')), len(self.initial_text()))]
+        return [(conn.port.rfind('/') + 1, len(self.initial_text()))]
 
     def preview(self, text):
         if not self.validate(text):
@@ -829,9 +834,6 @@ class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
             return port in range(1, 65536)
         else:
             return bool(os.stat(text))
-
-
-_inc = fn.partial(op.add, 1)
 
 
 class ClojureSublimedShadowCljsBuildInputHandler(sublime_plugin.TextInputHandler):
