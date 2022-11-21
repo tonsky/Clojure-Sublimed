@@ -1,3 +1,7 @@
+### 2.9.0 - Nov 21, 2022
+
+- Allow connection through UNIX domain socket #80 via @tribals
+
 ### 2.8.1 - Nov 2, 2022
 
 - Allow specifying `ns` in `clojure-sublimed-eval-code`

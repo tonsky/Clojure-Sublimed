@@ -1,0 +1,1 @@
+Clojure Sublimed now includes support for UNIX domain sockets for nREPL, thanks to @tribals. To use it, select `Clojure Sublimed: Connect` command and specify absolute filesystem path to the socket file instead of host:port pair

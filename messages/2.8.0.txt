@@ -1,0 +1,1 @@
+Clojure Sublimed now includes support for Shadow CLJS thanks to @sainadh-d. To use it, select `Clojure Sublimed: Connect shadow-cljs` command
