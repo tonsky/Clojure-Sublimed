@@ -1,0 +1,37 @@
+[
+  { "id": "preferences",
+    "children": [
+      { "caption": "Package Settings",
+        "mnemonic": "P",
+        "id": "package-settings",
+        "children": [
+          { "caption": "Clojure Sublimed",
+            "children": [
+              { "caption": "README",
+                "command": "open_file",
+                "args": {
+                  "file": "${packages}/Clojure-Sublimed/README.md"
+                }
+              },
+              { "caption": "-" },
+              { "caption": "Settings",
+                "command": "edit_settings",
+                "args": {
+                  "base_file": "${packages}/Clojure-Sublimed/Clojure Sublimed.sublime-settings",
+                  "default": "{\n\t$0\n}\n"
+                }
+              },
+              { "caption": "Key Bindings",
+                "command": "edit_settings",
+                "args": {
+                  "base_file": "${packages}/Clojure-Sublimed/Default (${platform}).sublime-keymap",
+                  "default": "[\n\t$0\n]\n"
+                }
+              },
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
