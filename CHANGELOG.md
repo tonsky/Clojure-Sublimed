@@ -1,3 +1,7 @@
+### 2.9.1 - Dec 3, 2022
+
+- Added Main.sublime-menu #85 via @wundervaflja
+
 ### 2.9.0 - Nov 21, 2022
 
 - Allow connection through UNIX domain socket #80 via @tribals
