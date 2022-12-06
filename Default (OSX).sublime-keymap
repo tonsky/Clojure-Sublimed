@@ -33,7 +33,7 @@
 
  // // Toggle Symbol Info
  // {"keys": ["ctrl+d"],
- //  "command": "clojure_sublimed_lookup_symbol",
+ //  "command": "clojure_sublimed_toggle_symbol",
  //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
  // // Copy Evaluation Result
