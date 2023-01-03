@@ -810,6 +810,7 @@ class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
                         if re.fullmatch(r'[1-9][0-9]*', content):
                             host = 'localhost'
                             port = content
+                            break
         if host:
             return host + ":" + port
 
