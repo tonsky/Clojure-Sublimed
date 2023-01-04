@@ -96,7 +96,8 @@
     (str
       "\n"
       (->> (.getStackTrace cause)
-        (take-while #(not= "clojure.lang.Compiler" (.getClassName ^StackTraceElement %)))
+        (take-while #(not (#{"clojure.lang.Compiler" "clojure.lang.LispReader"}
+                           (.getClassName ^StackTraceElement %))))
         (remove #(#{"clojure.lang.RestFn" "clojure.lang.AFn"} (.getClassName ^StackTraceElement %)))
         (clear-duplicates)
         (map trace-element)

@@ -2,7 +2,8 @@
 
 (defn g []
   (let [x 1
-        y 2]]))
+        y )
+        z 2]]))
 
 (defn h [])
 

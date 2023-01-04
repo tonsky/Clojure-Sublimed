@@ -122,10 +122,8 @@ class Eval:
                     { basic_styles(self.view) }
                     { styles }
                 </style>"""
-                text = self.escape(text).replace("\n", "<br>")
-                # try to render newlines in multi-line strings
-                text = re.sub(r"(?<!\\)\\n", "<br>", text)
-                body += "<p>" + text + "</p>"
+                for line in self.escape(text).splitlines():
+                    body += "<p>" + re.sub(r"(?<!\\)\\n", "<br>", line) + "</p>"
                 body += "</body>"
                 region = self.region()
                 if region:
@@ -294,8 +292,7 @@ def set_selection(view, region):
     sel = view.sel()
     sel.clear()
     sel.add(region)
-    if not view.visible_region().contains(region.a):
-        view.show(region.a, show_surrounds = True, keep_to_left = True, animate = True)
+    view.show(region.a, show_surrounds = True, keep_to_left = True, animate = True)
 
 def handle_exception(msg):
     if "id" in msg and msg["id"] in conn.evals:
@@ -311,7 +308,7 @@ def handle_exception(msg):
                 line = get("line") - 1
                 column = get("column")
                 point = eval.view.text_point_utf16(line, column, clamp_column = True)
-                region = sublime.Region(point, eval.view.line(point).end() + 1)
+                region = sublime.Region(eval.view.line(point).begin(), eval.view.line(point).end())
                 set_selection(eval.view, sublime.Region(point, point))
             elif present("line") and present("column") and get("source"):
                 text += " ({}:{}:{})".format(get("source"), get("line"), get("column"))
@@ -641,7 +638,6 @@ class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
                 view.run_command("clojure_sublimed_toggle_trace", {})
             elif eval and eval.status == "success":
                 if eval := conn.find_eval(view, sel):
-                    print("eval.toggle_pprint()", eval, sel)
                     eval.toggle_pprint()
                     break
             else:

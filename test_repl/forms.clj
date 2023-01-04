@@ -82,6 +82,10 @@ symbol
 100.0
 1/2
 "string" 
+"multi
+   line
+ string with   \\n
+   some \n  spaces"
 #"regex"
 @deref
 #'var
@@ -107,7 +111,8 @@ symbol
 (comment "hello" )
 
 ; column reports for Unicode
-#"alkjdljl👨🏿kjlkj👨🏻‍🤝‍👨🏼ljasljlkjasjasljas\u"
+"fhsjdfd\ufhjsdf"
+#"alkjdljl👨🏿kjlkj👨🏻‍🤝‍👨🏼ljasljlkjasjasljas\uakldjasdlk"
 
 ; two forms
 (+ 1 2)(+ 3 4)
