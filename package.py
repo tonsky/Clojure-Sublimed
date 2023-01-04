@@ -95,6 +95,9 @@ class Eval:
         if regions and len(regions) >= 1:
             return regions[0]
 
+    def escape(self, value):
+        return html.escape(value).replace("\t", "&nbsp;&nbsp;").replace(" ", "&nbsp;")
+
     def update(self, status, value, region = None, time_taken = None):
         self.status = status
         self.value = value
@@ -104,7 +107,7 @@ class Eval:
             if value:
                 if (self.status in {"success", "exception"}) and (time := format_time_taken(time_taken)):
                     value = time + " " + value
-                self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO, [html.escape(value)], color)
+                self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO, [self.escape(value)], color)
             else:
                 self.view.erase_regions(self.value_key())
                 self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO)
@@ -119,8 +122,10 @@ class Eval:
                     { basic_styles(self.view) }
                     { styles }
                 </style>"""
-                for line in html.escape(text).split("\n"):
-                    body += "<p>" + line.replace("\t", "&nbsp;&nbsp;").replace(" ", "&nbsp;") + "</p>"
+                text = self.escape(text).replace("\n", "<br>")
+                # try to render newlines in multi-line strings
+                text = re.sub(r"(?<!\\)\\n", "<br>", text)
+                body += "<p>" + text + "</p>"
                 body += "</body>"
                 region = self.region()
                 if region:
