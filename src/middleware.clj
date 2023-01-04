@@ -45,7 +45,8 @@
           (nil? data)
           (or
             (instance? clojure.lang.Compiler$CompilerException t)
-            (instance? clojure.lang.LispReader$ReaderException t)))
+            (instance? clojure.lang.LispReader$ReaderException t))
+          (not= [0 0] ((juxt :clojure.error/line :clojure.error/column) (ex-data t))))
       (recur t (ex-data t))
       (if-some [cause (some-> t .getCause)]
         (recur cause data)
