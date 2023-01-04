@@ -41,7 +41,11 @@
 (defn- root-cause [^Throwable t]
   (loop [t t
          data nil]
-    (if (and (nil? data) (instance? clojure.lang.Compiler$CompilerException t))
+    (if (and
+          (nil? data)
+          (or
+            (instance? clojure.lang.Compiler$CompilerException t)
+            (instance? clojure.lang.LispReader$ReaderException t)))
       (recur t (ex-data t))
       (if-some [cause (some-> t .getCause)]
         (recur cause data)

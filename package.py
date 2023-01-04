@@ -289,24 +289,26 @@ def set_selection(view, region):
     sel = view.sel()
     sel.clear()
     sel.add(region)
-    view.show(region, show_surrounds = True, keep_to_left = True, animate = True)
+    if not view.visible_region().contains(region.a):
+        view.show(region.a, show_surrounds = True, keep_to_left = True, animate = True)
 
 def handle_exception(msg):
     if "id" in msg and msg["id"] in conn.evals:
         eval = conn.evals[msg["id"]]
+        present = lambda key: (ns + ".middleware/" + key) in msg
         get = lambda key: msg.get(ns + ".middleware/" + key)
         if get("root-ex-class") and get("root-ex-msg"):
             text = get("root-ex-class") + ": " + get("root-ex-msg")
             region = None
             if get("root-ex-data"):
                 text += " " + get("root-ex-data")
-            if get("line") and get("column") and eval.view:
-                line = get("line")
+            if present("line") and present("column") and eval.view:
+                line = get("line") - 1
                 column = get("column")
-                point = eval.view.text_point_utf16(line - 1, column - 1, clamp_column = True)
-                region = sublime.Region(point, eval.view.line(point).end())
+                point = eval.view.text_point_utf16(line, column, clamp_column = True)
+                region = sublime.Region(point, eval.view.line(point).end() + 1)
                 set_selection(eval.view, sublime.Region(point, point))
-            elif get("line") and get("column") and get("source"):
+            elif present("line") and present("column") and get("source"):
                 text += " ({}:{}:{})".format(get("source"), get("line"), get("column"))
             eval.trace = get("trace")
             eval.update("exception", text, region)
@@ -404,7 +406,7 @@ def eval(view, region, code=None):
     msg = {"op":     "eval" if (conn.profile == Profile.SHADOW_CLJS or conn.eval_in_session) else "clone-eval-close",
            "code":   view.substr(region) if code is None else code,
            "ns":     namespace(view, region.begin()) or 'user',
-           "line":   line,
+           "line":   line + 1,
            "column": column,
            "file":   view.file_name()}
     eval_msg(view, region, msg)
