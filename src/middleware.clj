@@ -67,10 +67,10 @@
 
 (defn- trace-element [^StackTraceElement el]
   (let [file     (.getFileName el)
-        clojure? (and file
-                   (or (.endsWith file ".clj")
-                     (.endsWith file ".cljc")
-                     (= file "NO_SOURCE_FILE")))]
+        clojure? (or (nil? file)
+                   (= file "NO_SOURCE_FILE")
+                   (.endsWith file ".clj")
+                   (.endsWith file ".cljc"))]
     {:method (if clojure?
                (clojure.lang.Compiler/demunge (.getClassName el))
                (str (.getClassName el) "." (.getMethodName el)))
@@ -83,7 +83,7 @@
                           (map #(get % col))
                           (map str)
                           (map count)
-                          (reduce max 0)))
+                          (reduce max (count "null"))))
         format-str (str "\t%-" method "s\t%-" file "s\t:%d")]
     (->> table
       (map #(format format-str (:method %) (:file %) (:line %)))
