@@ -831,6 +831,8 @@ class ClojureSublimedHostPortInputHandler(sublime_plugin.TextInputHandler):
 
     def validate(self, text):
         text = text.strip()
+        if "auto" == text:
+            return True
         if re.fullmatch(r'[a-zA-Z0-9\.]+:\d{1,5}', text):
             host, port = text.split(':')
             port = int(port)
@@ -877,6 +879,8 @@ class ClojureSublimedConnectShadowCljsCommand(sublime_plugin.ApplicationCommand)
 class ClojureSublimedConnectCommand(sublime_plugin.ApplicationCommand):
     def run(self, clojure_sublimed_host_port):
         try:
+            if clojure_sublimed_host_port == "auto":
+                clojure_sublimed_host_port = ClojureSublimedHostPortInputHandler().initial_text()
             host, port = clojure_sublimed_host_port.strip().split(':', 1)
             port = int(port)
         except ValueError:

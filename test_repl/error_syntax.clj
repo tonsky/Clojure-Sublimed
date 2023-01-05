@@ -8,3 +8,6 @@
 (defn h [])
 
 (let [x])
+
+(let [y 0]
+  x)

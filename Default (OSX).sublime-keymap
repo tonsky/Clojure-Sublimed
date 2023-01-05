@@ -26,6 +26,11 @@
 
  // // Extras
 
+ // // Look for .nrepl-port file and try connection to port in it
+ // {"keys":    ["ctrl+j"],
+ //  "command": "clojure_sublimed_connect",
+ //  "args":    {"clojure_sublimed_host_port": "auto"}},
+
  // // Toggle Stacktrace
  // {"keys": ["ctrl+e"],
  //  "command": "clojure_sublimed_toggle_trace",

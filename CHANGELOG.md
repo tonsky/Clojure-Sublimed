@@ -1,3 +1,16 @@
+### 2.11.0 - Jan 5, 2023
+
+- Connect command accepts 'auto' (will look for `.nrepl-port` file) #82
+
+### 2.10.0 - Jan 4, 2023
+
+- Do not move cursor if error region visible on screen #73
+- Fixed: Wrong highlight of the source of error #79
+- Render sequential spaces #78
+- Fixed: Exceptions from evaluating buffer without a file name are not processed #18
+- Special case when CompilerError has wrong location info
+- Select whole line on error
+
 ### 2.9.1 - Dec 3, 2022
 
 - Added Main.sublime-menu #85 via @wundervaflja
