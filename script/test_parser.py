@@ -46,18 +46,22 @@ if __name__ == '__main__':
     dir = cwd + "/../test_parser/"
     files = [file for file in os.listdir(dir) if file.endswith(".txt")]
     width = max(len(file) for file in files)
+    tests = 0
+    failed = 0
     for file in files:
         with open(dir + file) as f:
             content = f.read()
         print(file.ljust(width), "[", end = "")
         failures = []
         for match in re.finditer("={80}\n(.+)\n={80}\n\n((?:.+\n)+)\n-{80}\n\n((?:.+\n)+)", content):
+            tests += 1
             name = match.group(1)
             expr = match.group(2).strip('\n')
             expected = match.group(3).strip('\n')
             expected = "\n".join(line.rstrip(' ') for line in expected.split('\n'))
             actual = clojure_parser.parse(expr).serialize(expr)
             if actual != expected:
+                failed += 1
                 print("F", end = "")
                 failures.append((name, expr, expected, actual))
             else:
@@ -65,3 +69,4 @@ if __name__ == '__main__':
         print("]")
         for (name, expr, expected, actual) in failures:
             print_table([name, "Expected", "Actual"], [expr, expected, actual])
+    print("Tests: {}, failed: {}".format(tests, failed))

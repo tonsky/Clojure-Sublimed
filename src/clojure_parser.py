@@ -59,6 +59,8 @@ class Named:
             node = self.parser.parse(string, pos)
             if not node:
                 return None
+            elif self.name.startswith(".") and (not node.children or node.start == node.end):
+                return node
             elif not node.name:
                 node.name = self.name
                 return node
@@ -78,7 +80,7 @@ def get_parser(x):
 def append_children(msg, children, node):
     if not isinstance(node, Node):
         pass
-    elif node.name: # and not node.name[0] == "_":
+    elif node.name:
         children.append(node)
     else:
         for child in node.children:
@@ -166,21 +168,65 @@ class Repeat:
                 end = node.end
             return Node(pos, end, children)
 
-parsers['_ws']      = Regex(r"[\f\n\r\t, \u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]+")
+class Repeat1:
+    def __init__(self, parser_name):
+        self.parser_name = parser_name
+        self.parser = None
+
+    def parse(self, string, pos):
+        if not self.parser:
+            self.parser = get_parser(self.parser_name)
+        with Debug("Repeat1 {}".format(self.parser_name)):
+            children = []
+            end = pos
+            while node := self.parser.parse(string, end):
+                append_children(self, children, node)
+                end = node.end
+            if len(children) > 0:
+                return Node(pos, end, children)
+
+ws = r"\f\n\r\t, \u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000"
+parsers['_ws']      = Regex(r'[' + ws + r']+')
 parsers['comment']  = Regex(r"(;|#!)[^\n]*\n?")
-parsers['dis_expr'] = Seq(String("#_"), Repeat('_gap'), '_form')
-parsers['_gap']     = Choice('_ws', 'comment', 'dis_expr')
+parsers['discard']  = Seq(Named("marker", String("#_")), Repeat('_gap'), Named(".body", '_form'))
+parsers['_gap']     = Choice('_ws', 'comment', 'discard')
 
-parsers['token'] = Regex(r"(##)?[^\f\n\r\t, \u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000()\[\]{}\"@~^;`#]+")
+parsers['meta']      = Seq(Repeat1(Seq(Named(".marker", Regex(r'#?\^')),
+                                       Repeat('_gap'),
+                                       Named(".meta", '_form'),
+                                       Repeat('_gap'))),
+                           Named(".body", '_form'))
 
-parsers['str_lit']   = Seq(Optional(Named("marker", String("#"))), String('"'), Optional(Named("body", Regex(r'(\\.|[^"\\])+'))), String('"'))
-parsers['wrap']      = Seq(Named("marker", Regex(r"(#'|@|'|`|~@|~)")), Repeat('_gap'), '_form')
+parsers['wrap']      = Seq(Named(".marker", Regex(r"(#'|@|'|`|~@|~)")),
+                           Repeat('_gap'),
+                           Named('.body', '_form'))
 
-parsers['brackets']  = Seq(String("["), Repeat(Choice('_gap', '_form')), String("]"))
-parsers['parens']    = Seq(Optional(Named("marker", Regex(r"(#\?@|#\?|#=|#)"))), String("("), Repeat(Choice('_gap', '_form')), String(")"))
-parsers['braces']    = Seq(Optional(Named("marker", String("#"))), String("{"), Repeat(Choice('_gap', '_form')), String("}"))
+parsers['token']     = Regex(r'(##)?[^' + ws + r'()\[\]{}\"@~^;`#]+')
 
-parsers['_form']     = Choice('wrap', 'token', 'str_lit', 'brackets', 'parens', 'braces')
+parsers['string']    = Seq(Named('.open', Regex(r'#?"')),
+                           Named('.body', Regex(r'(\\.|[^"\\])*')),
+                           Named('.close', String('"')))
+
+parsers['brackets']  = Seq(Named('.open', String("[")),
+                           Named('.body', Repeat(Choice('_gap', '_form'))),
+                           Named('.close', String("]")))
+
+parsers['parens']    = Seq(Named('.open', Regex(r"(#\?@|#\?|#=|#)?\(")),
+                           Named(".body", Repeat(Choice('_gap', '_form'))),
+                           Named('.close', String(")")))
+
+parsers['braces']    = Seq(Named(".open", Regex(r"#?\{")),
+                           Named(".body", Repeat(Choice('_gap', '_form'))),
+                           Named('.close', String("}")))
+
+parsers['_form']     = Choice('meta',
+                              'wrap',
+                              'token',
+                              'string',
+                              'brackets',
+                              'parens',
+                              'braces')
+
 parsers['source']    = Repeat(Choice('_gap', '_form'))
 
 def parse(string):
