@@ -186,6 +186,7 @@ class Repeat1:
                 return Node(pos, end, children)
 
 ws = r"\f\n\r\t, \u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000"
+safe = ws + r'()\[\]{}\"@~^;`#'
 parsers['_ws']      = Regex(r'[' + ws + r']+')
 parsers['comment']  = Regex(r"(;|#!)[^\n]*\n?")
 parsers['discard']  = Seq(Named("marker", String("#_")), Repeat('_gap'), Named(".body", '_form'))
@@ -201,7 +202,7 @@ parsers['wrap']      = Seq(Named(".marker", Regex(r"(#'|@|'|`|~@|~)")),
                            Repeat('_gap'),
                            Named('.body', '_form'))
 
-parsers['token']     = Regex(r'(##)?[^' + ws + r'()\[\]{}\"@~^;`#]+')
+parsers['token']     = Regex(r'(##)?[^' + safe + r']+')
 
 parsers['string']    = Seq(Named('.open', Regex(r'#?"')),
                            Named('.body', Regex(r'(\\.|[^"\\])*')),
@@ -215,9 +216,15 @@ parsers['parens']    = Seq(Named('.open', Regex(r"(#\?@|#\?|#=|#)?\(")),
                            Named(".body", Repeat(Choice('_gap', '_form'))),
                            Named('.close', String(")")))
 
-parsers['braces']    = Seq(Named(".open", Regex(r"#?\{")),
+parsers['braces']    = Seq(Named(".open", Regex(r"(#(:[^" + safe + r"]+)?)?\{")),
                            Named(".body", Repeat(Choice('_gap', '_form'))),
                            Named('.close', String("}")))
+
+parsers['tagged']    = Seq(String("#"),
+                           Repeat('_gap'),
+                           Named('.tag', 'token'),
+                           Repeat('_gap'),
+                           Named('.body', '_form'))
 
 parsers['_form']     = Choice('meta',
                               'wrap',
@@ -225,7 +232,8 @@ parsers['_form']     = Choice('meta',
                               'string',
                               'brackets',
                               'parens',
-                              'braces')
+                              'braces',
+                              'tagged')
 
 parsers['source']    = Repeat(Choice('_gap', '_form'))
 
