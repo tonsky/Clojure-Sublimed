@@ -166,53 +166,21 @@ class Repeat:
                 end = node.end
             return Node(pos, end, children)
 
-# Whitespace
 parsers['_ws']      = Regex(r"[\f\n\r\t, \u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]+")
 parsers['comment']  = Regex(r"(;|#!)[^\n]*\n?")
 parsers['dis_expr'] = Seq(String("#_"), Repeat('_gap'), '_form')
 parsers['_gap']     = Choice('_ws', 'comment', 'dis_expr')
 
-# Numbers
-num_hex             = Regex(r"0[xX][0-9a-fA-F]+N?")
-num_octal           = Regex(r"0[0-7]+N?")
-num_radix           = Regex(r"[0-9]+[rR][0-9a-zA-Z]+")
-num_ratio           = Regex(r"[0-9]+/[0-9]+")
-num_double          = Regex(r"[0-9]+(\.[0-9]*[eE][+-]?[0-9]+|\.[0-9]*|[eE][+-]?[0-9]+)M?")
-num_int             = Regex(r"[0-9]+[MN]?")
-parsers['num_lit']  = Seq(Optional(Regex(r"[+-]")), Choice(num_hex, num_octal, num_radix, num_ratio, num_double, num_int))
+parsers['token'] = Regex(r"(##)?[^\f\n\r\t, \u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000()\[\]{}\"@~^;`#]+")
 
-# Symbols
-sym_head = r"[^\f\n\r\t \/()\[\]{}\"@~^;`\\,:#'0-9\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]"
-sym_body = r"[^\f\n\r\t \/()\[\]{}\"@~^;`\\,\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]*" # allow :#'0-9
-sym_ns_name = r"[^\f\n\r\t ()\[\]{}\"@~^;`\\,\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]+" # allow :#'0-9/
+parsers['str_lit']   = Seq(Optional(Named("marker", String("#"))), String('"'), Optional(Named("body", Regex(r'(\\.|[^"\\])+'))), String('"'))
+parsers['wrap']      = Seq(Named("marker", Regex(r"(#'|@|'|`|~@|~)")), Repeat('_gap'), '_form')
 
-parsers['_sym_slash']       = Named('sym_name', String("/"))
-parsers['_sym_unqualified'] = Named('sym_name', Regex(sym_head + sym_body))
-parsers['_sym_qualified']   = Seq(Named('sym_ns', Regex(sym_head + sym_body)), String("/"), Named('sym_name', Regex(sym_ns_name)))
-parsers['sym_lit'] = Choice('_sym_slash', "_sym_qualified", "_sym_unqualified")
+parsers['brackets']  = Seq(String("["), Repeat(Choice('_gap', '_form')), String("]"))
+parsers['parens']    = Seq(Optional(Named("marker", Regex(r"(#\?@|#\?|#=|#)"))), String("("), Repeat(Choice('_gap', '_form')), String(")"))
+parsers['braces']    = Seq(Optional(Named("marker", String("#"))), String("{"), Repeat(Choice('_gap', '_form')), String("}"))
 
-# Keywords
-kwd_head = r"[^\f\n\r\t ()\[\]{}\"@~^;`\\,:/\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]"
-kwd_body = r"[^\f\n\r\t ()\[\]{}\"@~^;`\\,/\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]*" # allow :
-kwd_ns_name = r"[^\f\n\r\t ()\[\]{}\"@~^;`\\,\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]+" # allow :/
-
-parsers['_kwd_leading_slash'] = Seq(String("/"), Named('kwd_name', Regex(kwd_ns_name)))
-parsers['_kwd_just_slash']    = Named('kwd_name', String("/"))
-parsers['_kwd_unqualified']   = Named('kwd_name', Regex(kwd_head + kwd_body))
-parsers['_kwd_qualified']     = Seq(Named('kwd_ns', Regex(kwd_head + kwd_body)), String("/"), Named('kwd_name', Regex(kwd_ns_name)))
-parsers['kwd_lit'] = Seq(Named("kwd_marker", Regex("::?")), Choice('_kwd_leading_slash', '_kwd_just_slash', "_kwd_qualified", "_kwd_unqualified"))
-
-# Strings
-parsers['str_lit']   = Regex(r'"(\\.|[^"\\])*"')
-parsers['regex_lit'] = Regex(r'#"(\\.|[^"\\])*"')
-
-# Brackets
-parsers['vec_lit']   = Seq(String("["), Repeat(Choice('_gap', '_form')), String("]"))
-parsers['parens']    = Seq(Regex(r"(#\?@|#\?|#=|#)?\("), Repeat(Choice('_gap', '_form')), String(")"))
-parsers['braces']    = Seq(Regex(r"#?\{"), Repeat(Choice('_gap', '_form')), String("}"))
-
-# Forms
-parsers['_form']     = Choice('num_lit', 'regex_lit', 'str_lit', 'kwd_lit', 'sym_lit', 'vec_lit', 'parens', 'braces')
+parsers['_form']     = Choice('wrap', 'token', 'str_lit', 'brackets', 'parens', 'braces')
 parsers['source']    = Repeat(Choice('_gap', '_form'))
 
 def parse(string):
