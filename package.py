@@ -1,13 +1,12 @@
 import html, json, os, re, socket, sublime, sublime_plugin, threading, time
 from collections import defaultdict
-from .src import bencode
+from .src import bencode, clojure_parser as parser
 from typing import Any, Dict, Tuple
 import logging
 
 ns = 'clojure-sublimed'
 
 _log = logging.getLogger(__name__)
-
 
 def settings():
     return sublime.load_settings("Clojure Sublimed.sublime-settings")
@@ -600,11 +599,32 @@ def handle_lookup(msg):
         eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
         return True
 
+def parse_tree(view):
+    global parse_trees
+    id = view.buffer_id()
+    if id in parse_trees:
+        return parse_trees[id]
+
+    start = time.time()
+    text = view.substr(sublime.Region(0, view.size()))
+    # if settings().get("debug"):
+    #     print("Retrieved {} chars in {} ms".format(len(text), (time.time() - start) * 1000))
+    parsed = parser.parse(text)
+    if settings().get("debug"):
+        print("Parsed {} chars in {} ms".format(len(text), (time.time() - start) * 1000))
+    parse_trees[id] = parsed
+    return parsed
+
 def symbol_at_point(view, point):
-    if point > 0 and view.match_selector(point - 1, 'source.symbol.clojure'):
-        return view.extract_scope(point - 1)
-    if view.match_selector(point, 'source.symbol.clojure'):
-        return view.extract_scope(point)
+    parsed = parse_tree(view)
+    start = time.time()
+    for point in [point, point - 1] if point > 0 else [point]:
+        if path := parsed.search(lambda node: node.start <= point < node.end and node.name == 'token'):
+            region = sublime.Region(path[0].start, path[0].end)
+            if settings().get("debug"):
+                print("Found leaf node '{}' on depth {} in {} ms".format(view.substr(region), len(path), (time.time() - start) * 1000))
+            return region
+    print("Found nothing in {} ms".format((time.time() - start) * 1000))
 
 class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -1015,6 +1035,11 @@ class ClojureSublimedEventListener(sublime_plugin.EventListener):
 
 class ClojureSublimedViewEventListener(sublime_plugin.TextChangeListener):
     def on_text_changed_async(self, changes):
+        global parse_trees
+        id = self.buffer.id()
+        if id in parse_trees:
+            del parse_trees[id]
+            
         view = self.buffer.primary_view()
         changed = [sublime.Region(x.a.pt, x.b.pt) for x in changes]
         def should_erase(eval):
@@ -1027,7 +1052,7 @@ def on_settings_change():
     conn.eval_in_session = settings().get("eval_in_session", False)
 
 def plugin_loaded():
-    global package, conn, progress_thread
+    global package, conn, progress_thread, parse_trees
 
     package_path = os.path.dirname(os.path.abspath(__file__))
     if os.path.isfile(package_path):
@@ -1039,12 +1064,14 @@ def plugin_loaded():
 
     conn = Connection()
     progress_thread = ProgressThread()
+    parse_trees = {}
 
     sublime.load_settings("Preferences.sublime-settings").add_on_change(ns, on_settings_change)
     settings().add_on_change(ns, on_settings_change)
     on_settings_change()
 
 def plugin_unloaded():
+    parse_trees = None
     progress_thread.stop()
     conn.disconnect()
     sublime.load_settings("Preferences.sublime-settings").clear_on_change(ns)
