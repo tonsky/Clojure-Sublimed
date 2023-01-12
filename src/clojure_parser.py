@@ -4,8 +4,10 @@ DEBUG = False
 INDENT = ""
 
 class Debug:
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, name, *args):
+        global DEBUG
+        if DEBUG:
+            self.name = name.format(*args)
 
     def __enter__(self):
         global DEBUG, INDENT
@@ -55,7 +57,7 @@ class Named:
     def parse(self, string, pos):
         if not self.parser:
             self.parser = get_parser(self.parser_name)
-        with Debug("Named '{}' at {}".format(self.name, pos)):
+        with Debug("Named '{}' at {}", self.name, pos):
             node = self.parser.parse(string, pos)
             if not node:
                 return None
@@ -92,7 +94,7 @@ class Regex:
         self.pattern = re.compile(pattern_str)
 
     def parse(self, string, pos):
-        with Debug("Regex '{}' at {}".format(self.pattern_str, pos)):
+        with Debug("Regex '{}' at {}", self.pattern_str, pos):
             if match := self.pattern.match(string, pos):
                 return Node(match.start(), match.end(), children = [match.group(0)])
 
@@ -102,7 +104,7 @@ class String:
         self.len = len(str)
 
     def parse(self, string, pos):
-        with Debug("String '{}' at {}".format(self.str, pos)):
+        with Debug("String '{}' at {}", self.str, pos):
             subs = string[pos:pos+self.len]
             if subs == self.str:
                 return Node(pos, pos + self.len, children = [subs])
@@ -115,7 +117,7 @@ class Seq:
     def parse(self, string, pos):
         if not self.parsers:
             self.parsers = [get_parser(n) for n in self.parser_names]
-        with Debug("Seq {}".format(self.parser_names)):
+        with Debug("Seq {}", self.parser_names):
             children = []
             end = pos
             for parser in self.parsers:
@@ -135,7 +137,7 @@ class Choice:
     def parse(self, string, pos):
         if not self.parsers:
             self.parsers = [get_parser(n) for n in self.parser_names]
-        with Debug("Choice {}".format(self.parser_names)):
+        with Debug("Choice {}", self.parser_names):
             for parser in self.parsers:
                 # print('Choice', parser, parse_quiet(parser, string, pos))
                 if node := parser.parse(string, pos):
@@ -149,7 +151,7 @@ class Optional:
     def parse(self, string, pos):
         if not self.parser:
             self.parser = get_parser(self.parser_name)
-        with Debug("Optional {}".format(self.parser_name)):
+        with Debug("Optional {}", self.parser_name):
             return self.parser.parse(string, pos) or Node(pos, pos)
 
 class Repeat:
@@ -160,7 +162,7 @@ class Repeat:
     def parse(self, string, pos):
         if not self.parser:
             self.parser = get_parser(self.parser_name)
-        with Debug("Repeat {}".format(self.parser_name)):
+        with Debug("Repeat {}", self.parser_name):
             children = []
             end = pos
             while node := self.parser.parse(string, end):
@@ -176,7 +178,7 @@ class Repeat1:
     def parse(self, string, pos):
         if not self.parser:
             self.parser = get_parser(self.parser_name)
-        with Debug("Repeat1 {}".format(self.parser_name)):
+        with Debug("Repeat1 {}", self.parser_name):
             children = []
             end = pos
             while node := self.parser.parse(string, end):
@@ -209,15 +211,15 @@ parsers['string']    = Seq(Named('.open', Regex(r'#?"')),
                            Named('.close', String('"')))
 
 parsers['brackets']  = Seq(Named('.open', String("[")),
-                           Named('.body', Repeat(Choice('_gap', '_form'))),
+                           Named('.body', Repeat(Choice('_gap', '_form', 'error', Named("error", Regex(r"[^\]]"))))),
                            Named('.close', String("]")))
 
 parsers['parens']    = Seq(Named('.open', Regex(r"(#\?@|#\?|#=|#)?\(")),
-                           Named(".body", Repeat(Choice('_gap', '_form'))),
+                           Named(".body", Repeat(Choice('_gap', '_form', 'error', Named("error", Regex(r"[^)]"))))),
                            Named('.close', String(")")))
 
 parsers['braces']    = Seq(Named(".open", Regex(r"(#(:[^" + safe + r"]+)?)?\{")),
-                           Named(".body", Repeat(Choice('_gap', '_form'))),
+                           Named(".body", Repeat(Choice('_gap', '_form', 'error', Named("error", Regex(r"[^}]"))))),
                            Named('.close', String("}")))
 
 parsers['tagged']    = Seq(String("#"),
@@ -226,16 +228,18 @@ parsers['tagged']    = Seq(String("#"),
                            Repeat('_gap'),
                            Named('.body', '_form'))
 
+parsers['error']     = Regex(r"[^" + ws + r"\"()\[\]{}]+")
+
 parsers['_form']     = Choice('meta',
                               'wrap',
-                              'token',
                               'string',
                               'brackets',
                               'parens',
                               'braces',
+                              'token',
                               'tagged')
 
-parsers['source']    = Repeat(Choice('_gap', '_form'))
+parsers['source']    = Repeat(Choice('_gap', '_form', 'error', Named('error', Regex(r'.'))))
 
 def parse(string):
     return get_parser('source').parse(string, 0)

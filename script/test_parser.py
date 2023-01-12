@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-import os, sys, re
+import os, sys, random, re
 
 def print_table(titles, cols):
     cols = [col.split('\n') for col in cols]
@@ -59,14 +59,59 @@ if __name__ == '__main__':
             expr = match.group(2).strip('\n')
             expected = match.group(3).strip('\n')
             expected = "\n".join(line.rstrip(' ') for line in expected.split('\n'))
-            actual = clojure_parser.parse(expr).serialize(expr)
-            if actual != expected:
+            parsed = clojure_parser.parse(expr)
+            actual = parsed.serialize(expr)
+            if parsed.end < len(expr):
+                failed += 1
+                print("F", end = "")
+                failures.append((name, expr, "(source 0..{})".format(len(expr)), actual))
+            elif actual != expected:
                 failed += 1
                 print("F", end = "")
                 failures.append((name, expr, expected, actual))
             else:
                 print(".", end = "")
+            sys.stdout.flush()
         print("]")
         for (name, expr, expected, actual) in failures:
             print_table([name, "Expected", "Actual"], [expr, expected, actual])
-    print("Tests: {}, failed: {}".format(tests, failed))
+    print("Tests: {}, failed: {}".format(tests, failed), flush=True)
+
+    if failed == 0:
+        files = [file for file in os.listdir(dir) if file.endswith(".clj")]
+        width = max(len(file) for file in files)
+        tests = 0
+        failed = 0
+        for file in files:
+            with open(dir + file) as f:
+                expr = f.read()
+            print(file.ljust(width), end = "", flush = True)
+            tests += 1
+            parsed = clojure_parser.parse(expr)
+            if parsed.end < len(expr):
+                failed += 1
+                print(" [ FAIL ]", flush = True)
+                print(parsed.serialize(expr))
+                break
+            else:
+                print(" [ OK ]", flush = True)
+        print("Parsing clojure.core: {}, failed: {}".format(tests, failed), flush=True)
+    
+    if failed == 0:
+        alphabet = r'019`~!@#$%^&*()_+-=[]{}\\|;:\'",.<>/?aAeEmMnNxXzZ '
+        tests = 0
+        failed = 0
+        for i in range(0, 10000):
+            tests += 1
+            expr = "".join(random.choices(alphabet, k = random.randint(1, 50)))
+            parsed = clojure_parser.parse(expr)
+            # if i < 10:
+            #     actual = parsed.serialize(expr)
+            #     print_table(["Expr", "Actual"], ["'" + expr + "'", actual])
+            if parsed.end < len(expr):
+                failed += 1
+                actual = parsed.serialize(expr)
+                if failed == 1:
+                    print_table(["Expr", "Expected", "Actual"], [expr, "(source 0..{})".format(len(expr)), actual])
+        print("Randomized tests: {}, failed: {}".format(tests, failed), flush=True)
+
