@@ -1,5 +1,10 @@
 #! /usr/bin/env python3
-import os, sys, random, re
+import os, random, re, sys, time
+
+cwd = os.path.abspath(os.path.dirname(__file__))
+os.chdir(cwd + "/../src")
+sys.path.append(os.getcwd())
+import clojure_parser as parser
 
 def print_table(titles, cols):
     cols = [col.split('\n') for col in cols]
@@ -34,15 +39,6 @@ def print_table(titles, cols):
     print("\n")
 
 if __name__ == '__main__':
-  cwd = os.path.dirname(__file__)
-  os.chdir(cwd + "/../src")
-  sys.path.append(os.getcwd())
-  import clojure_parser
-
-  if len(sys.argv) > 1:
-    expr = sys.argv[1]
-    print(clojure_parser.parse(expr).serialize(expr))
-  else:
     dir = cwd + "/../test_parser/"
     files = [file for file in os.listdir(dir) if file.endswith(".txt")]
     width = max(len(file) for file in files)
@@ -59,7 +55,7 @@ if __name__ == '__main__':
             expr = match.group(2).strip('\n')
             expected = match.group(3).strip('\n')
             expected = "\n".join(line.rstrip(' ') for line in expected.split('\n'))
-            parsed = clojure_parser.parse(expr)
+            parsed = parser.parse(expr)
             actual = parsed.serialize(expr)
             if parsed.end < len(expr):
                 failed += 1
@@ -77,25 +73,25 @@ if __name__ == '__main__':
             print_table([name, "Expected", "Actual"], [expr, expected, actual])
     print("Tests: {}, failed: {}".format(tests, failed), flush=True)
 
-    if failed == 0:
-        files = [file for file in os.listdir(dir) if file.endswith(".clj")]
-        width = max(len(file) for file in files)
-        tests = 0
-        failed = 0
-        for file in files:
-            with open(dir + file) as f:
-                expr = f.read()
-            print(file.ljust(width), end = "", flush = True)
-            tests += 1
-            parsed = clojure_parser.parse(expr)
-            if parsed.end < len(expr):
-                failed += 1
-                print(" [ FAIL ]", flush = True)
-                print(parsed.serialize(expr))
-                break
-            else:
-                print(" [ OK ]", flush = True)
-        print("Parsing clojure.core: {}, failed: {}".format(tests, failed), flush=True)
+    files = [file for file in os.listdir(dir) if file.endswith(".clj")]
+    width = max(len(file) for file in files)
+    tests = 0
+    failed = 0
+    for file in files:
+        with open(dir + file) as f:
+            expr = f.read()
+        print(file.ljust(width), end = "", flush = True)
+        tests += 1
+        start = time.time()
+        parsed = parser.parse(expr)
+        if parsed.end < len(expr):
+            failed += 1
+            print(" [ FAIL ]", flush = True)
+            print(parsed.serialize(expr))
+            break
+        else:
+            print(" [ OK ] in {} ms".format((time.time() - start) * 1000), flush = True)
+    print("Parsing clojure.core: {}, failed: {}".format(tests, failed), flush=True)
     
     if failed == 0:
         alphabet = r'019`~!@#$%^&*()_+-=[]{}\\|;:\'",.<>/?aAeEmMnNxXzZ '
@@ -104,7 +100,7 @@ if __name__ == '__main__':
         for i in range(0, 10000):
             tests += 1
             expr = "".join(random.choices(alphabet, k = random.randint(1, 50)))
-            parsed = clojure_parser.parse(expr)
+            parsed = parser.parse(expr)
             # if i < 10:
             #     actual = parsed.serialize(expr)
             #     print_table(["Expr", "Actual"], ["'" + expr + "'", actual])
