@@ -180,7 +180,7 @@ To support such use cases, Clojure Sublimed allows you to bind arbitrary piece o
 ```
 {"keys": ["ctrl+t"],
  "command": "clojure_sublimed_eval_code",
- "args": {"code": "(clojure.test/run-all-tests)"}}
+ "args": {"code": "(clojure.test/run-all-tests (re-pattern (str *ns*))))"}}
 ```
 
 Then, whenever you press <key>Ctrl</key> + <key>T</key>, you’ll see the result in the status bar, like this:
