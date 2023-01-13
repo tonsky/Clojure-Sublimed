@@ -69,7 +69,7 @@ unresolved-symbol
 ; top-level forms
 true
 false
-symbol
+symbol -a +a
 :keyword
 :namespaced/keyword
 ::keyword
@@ -77,7 +77,7 @@ symbol
 \n
 \newline
 \o377
-100
+100 -1 +1
 100N
 100.0
 1/2

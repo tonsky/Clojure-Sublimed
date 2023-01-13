@@ -241,3 +241,15 @@ parsers['source'] = Repeat(Choice('_gap', '_form', AnyChar(name = "error")), nam
 
 def parse(string):
     return get_parser('source').parse(string, 0)
+
+def is_symbol(node):
+    if node.name == 'token' and node.text:
+        s = node.text
+        if s == 'true' or s == 'false' or s == 'nil':
+            return False
+        elif s == '/' or s == '-' or s == '+':
+            return True
+        elif s[0] == '+' or s[0] == '-':
+            return s[1] not in '0123456789'
+        else:
+            return s[0] not in '+-:\\0123456789'

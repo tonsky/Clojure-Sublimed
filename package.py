@@ -621,7 +621,7 @@ def handle_lookup(msg):
 def symbol_at_point(view, point):
     parsed = parse_tree(view)
     start = time.time()
-    if node := search_parsed(parsed, point, pred = lambda node: node.name == 'token'):
+    if node := search_parsed(parsed, point, pred = clojure_parser.is_symbol):
         region = sublime.Region(node.start, node.end)
         if settings().get("debug"):
             print("Found leaf node '{}' in {} ms".format(view.substr(region), (time.time() - start) * 1000))
