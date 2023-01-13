@@ -187,6 +187,8 @@ Then, whenever you press <key>Ctrl</key> + <key>T</key>, you’ll see the result
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_code.png" width="536" height="37" alt="Eval Code">
 
+Tip: use `(clojure.test/run-all-tests (re-pattern (str *ns*))))` to run tests in current namespace.
+
 ### Clearing results
 
 Finally, to clear evaluation results run `Clojure Sublimed: Clear Evaluation Results`.
