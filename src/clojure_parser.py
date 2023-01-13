@@ -26,15 +26,6 @@ class Node:
             if child.name == "." + name:
                 return child
 
-    def search(self, pred, depth = 0):
-        if pred(self, depth):
-            return [self]
-        elif self.children:
-            for child in self.children:
-                if res := child.search(pred, depth + 1):
-                    res.append(self)
-                    return res
-
 class Named:
     def __init__(self, name, parser_name):
         self.name = name
@@ -191,7 +182,7 @@ class Repeat1:
 
 ws = r" ,\n\r\t\f\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000"
 parsers['_ws'] = Regex(r'[' + ws + r']+')
-parsers['comment'] = Regex(r";[^\n]*\n?", name = "comment")
+parsers['comment'] = Regex(r";[^\n]*", name = "comment")
 parsers['discard'] = Seq(String("#_", name = "marker"), Repeat('_gap'), Named(".body", '_form'), name = "discard")
 parsers['_gap'] = Choice('_ws', 'comment', 'discard')
 

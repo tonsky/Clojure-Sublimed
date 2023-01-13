@@ -428,6 +428,20 @@ def parse_tree(view):
     parse_trees[id] = parsed
     return parsed
 
+def search_parsed(node, pos, pred = lambda x: True, max_depth = 1000):
+    if max_depth <= 0 or not node.children:
+        if pred(node):
+            return node
+        else:
+            return None
+    for child in node.children:
+        if child.start <= pos <= child.end:
+            if res := search_parsed(child, pos, pred = pred, max_depth = max_depth - 1):
+                return res
+        elif pos < child.start:
+            break
+
+
 def topmost_form(view, point):
     # move left to first non-space
     if point >= view.size() or view.substr(sublime.Region(point, point + 1)).isspace():
@@ -435,14 +449,13 @@ def topmost_form(view, point):
             point = point - 1
 
     parsed = parse_tree(view)
-    if path := parsed.search(lambda node, depth: depth == 1 and node.start <= point <= node.end):
-        node = path[-2]
+    if node := search_parsed(parsed, point, max_depth = 1):
         if body := node.body:
             if body.children:
                 first_form = body.children[0]
                 if first_form.name == "token" and first_form.text == "comment" and point > first_form.end:
-                    if path := body.search(lambda node, depth: depth == 1 and node.start <= point <= node.end):
-                        node = path[-2]
+                    if inner := search_parsed(body, point, max_depth = 1):
+                        node = inner
         return sublime.Region(node.start, node.end)
 
 class ClojureSublimedEval(sublime_plugin.TextCommand):
@@ -608,13 +621,13 @@ def handle_lookup(msg):
 def symbol_at_point(view, point):
     parsed = parse_tree(view)
     start = time.time()
-    for point in [point, point - 1] if point > 0 else [point]:
-        if path := parsed.search(lambda node, depth: node.start <= point < node.end and node.name == 'token'):
-            region = sublime.Region(path[0].start, path[0].end)
-            if settings().get("debug"):
-                print("Found leaf node '{}' on depth {} in {} ms".format(view.substr(region), len(path), (time.time() - start) * 1000))
-            return region
-    print("Found nothing in {} ms".format((time.time() - start) * 1000))
+    if node := search_parsed(parsed, point, pred = lambda node: node.name == 'token'):
+        region = sublime.Region(node.start, node.end)
+        if settings().get("debug"):
+            print("Found leaf node '{}' in {} ms".format(view.substr(region), (time.time() - start) * 1000))
+        return region
+    else:
+        print("Found nothing in {} ms".format((time.time() - start) * 1000))
 
 class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
     def run(self, edit):
