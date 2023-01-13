@@ -109,6 +109,7 @@ symbol
   (println "hello"))
 (comment "hello")
 (comment "hello" )
+(  comment "hello")
 
 ; column reports for Unicode
 "fhsjdfd\ufhjsdf"

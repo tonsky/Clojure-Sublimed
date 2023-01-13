@@ -1,6 +1,6 @@
 import html, json, os, re, socket, sublime, sublime_plugin, threading, time
 from collections import defaultdict
-from .src import bencode, clojure_parser as parser
+from .src import bencode, clojure_parser
 from typing import Any, Dict, Tuple
 import logging
 
@@ -411,18 +411,22 @@ def eval(view, region, code=None):
            "column": column,
            "file":   view.file_name()}
     eval_msg(view, region, msg)
-    
-def expand_until(view, point, scopes):
-    if view.scope_name(point) in scopes and point > 0:
-        point = point - 1
-    if view.scope_name(point) not in scopes:
-        begin = point
-        while begin > 0 and view.scope_name(begin - 1) not in scopes:
-            begin -= 1
-        end = point
-        while end < view.size() and view.scope_name(end) not in scopes:
-            end += 1
-        return sublime.Region(begin, end)
+
+def parse_tree(view):
+    global parse_trees
+    id = view.buffer_id()
+    if id in parse_trees:
+        return parse_trees[id]
+
+    start = time.time()
+    text = view.substr(sublime.Region(0, view.size()))
+    # if settings().get("debug"):
+    #     print("Retrieved {} chars in {} ms".format(len(text), (time.time() - start) * 1000))
+    parsed = clojure_parser.parse(text)
+    if settings().get("debug"):
+        print("Parsed {} chars in {} ms".format(len(text), (time.time() - start) * 1000))
+    parse_trees[id] = parsed
+    return parsed
 
 def topmost_form(view, point):
     # move left to first non-space
@@ -430,14 +434,16 @@ def topmost_form(view, point):
         while point > 0 and view.substr(sublime.Region(point - 1, point)).isspace():
             point = point - 1
 
-    region = expand_until(view, point, {'source.clojure '})
-    if region \
-       and view.substr(region).startswith("(comment") \
-       and point >= region.begin() + len("(comment ") \
-       and point < region.end():
-        return expand_until(view, point, {'source.clojure meta.parens.clojure ',
-                                          'source.clojure meta.parens.clojure punctuation.section.parens.end.clojure '})
-    return region
+    parsed = parse_tree(view)
+    if path := parsed.search(lambda node, depth: depth == 1 and node.start <= point <= node.end):
+        node = path[-2]
+        if body := node.body:
+            if body.children:
+                first_form = body.children[0]
+                if first_form.name == "token" and first_form.text == "comment" and point > first_form.end:
+                    if path := body.search(lambda node, depth: depth == 1 and node.start <= point <= node.end):
+                        node = path[-2]
+        return sublime.Region(node.start, node.end)
 
 class ClojureSublimedEval(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -599,27 +605,11 @@ def handle_lookup(msg):
         eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
         return True
 
-def parse_tree(view):
-    global parse_trees
-    id = view.buffer_id()
-    if id in parse_trees:
-        return parse_trees[id]
-
-    start = time.time()
-    text = view.substr(sublime.Region(0, view.size()))
-    # if settings().get("debug"):
-    #     print("Retrieved {} chars in {} ms".format(len(text), (time.time() - start) * 1000))
-    parsed = parser.parse(text)
-    if settings().get("debug"):
-        print("Parsed {} chars in {} ms".format(len(text), (time.time() - start) * 1000))
-    parse_trees[id] = parsed
-    return parsed
-
 def symbol_at_point(view, point):
     parsed = parse_tree(view)
     start = time.time()
     for point in [point, point - 1] if point > 0 else [point]:
-        if path := parsed.search(lambda node: node.start <= point < node.end and node.name == 'token'):
+        if path := parsed.search(lambda node, depth: node.start <= point < node.end and node.name == 'token'):
             region = sublime.Region(path[0].start, path[0].end)
             if settings().get("debug"):
                 print("Found leaf node '{}' on depth {} in {} ms".format(view.substr(region), len(path), (time.time() - start) * 1000))
@@ -1039,7 +1029,7 @@ class ClojureSublimedViewEventListener(sublime_plugin.TextChangeListener):
         id = self.buffer.id()
         if id in parse_trees:
             del parse_trees[id]
-            
+
         view = self.buffer.primary_view()
         changed = [sublime.Region(x.a.pt, x.b.pt) for x in changes]
         def should_erase(eval):

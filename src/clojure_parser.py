@@ -1,40 +1,41 @@
 import re
 
 class Node:
-    def __init__(self, start, end, children = [], name = None):
+    def __init__(self, start, end, children = [], name = None, text = None):
         self.start = start
         self.end = end
         self.children = children
         self.name = name
+        self.text = text
 
     def serialize(self, string, indent = ""):
         res = "{}({} {}..{}".format(indent, self.name, self.start, self.end)
+        if self.text:
+            res += " '" + self.text.replace("\n", "\\n") + "'"
         if self.children:
             for child in self.children:
                 res += "\n" + child.serialize(string, indent + "  ")
-        else:
-            res += " '" + string[self.start:self.end].replace("\n", "\\n") + "'"
         res += ")"
         return res
 
     def __str__(self):
-        return "Node({} {}..{} {} children)".format(self.name, self.start, self.end, len(self.children))
+        return "Node({} {}..{} children={} text={})".format(self.name, self.start, self.end, len(self.children), self.text)
 
     def __getattr__(self, name):
         for child in self.children:
-            if isinstance(child, Node) and child.name == name:
+            if child.name == "." + name:
                 return child
 
-    def search(self, pred):
-        if pred(self):
+    def search(self, pred, depth = 0):
+        if pred(self, depth):
             return [self]
         elif self.children:
             for child in self.children:
-                if res := child.search(pred):
+                if res := child.search(pred, depth + 1):
                     res.append(self)
                     return res
 
-class Alias:
+class Named:
     def __init__(self, name, parser_name):
         self.name = name
         self.parser_name = parser_name
@@ -75,7 +76,7 @@ class Regex:
 
     def parse(self, string, pos):
         if match := self.pattern.match(string, pos):
-            return Node(match.start(), match.end(), name = self.name)
+            return Node(pos, match.end(), name = self.name, text = match.group(0))
 
 class String:
     def __init__(self, str, name = None):
@@ -86,7 +87,7 @@ class String:
     def parse(self, string, pos):
         if pos + self.len <= len(string):
             if string[pos:pos + self.len] == self.str:
-                return Node(pos, pos + self.len, name = self.name)
+                return Node(pos, pos + self.len, name = self.name, text = self.str)
 
 class Char:
     def __init__(self, char, name = None):
@@ -95,7 +96,7 @@ class Char:
 
     def parse(self, string, pos):
         if pos < len(string) and string[pos] == self.char:
-            return Node(pos, pos + 1, name = self.name)
+            return Node(pos, pos + 1, name = self.name, text = self.char)
 
 class NotChar:
     def __init__(self, char, name = None):
@@ -105,7 +106,7 @@ class NotChar:
     def parse(self, string, pos):
         if pos < len(string):
             if string[pos] != self.char:
-                return Node(pos, pos + 1, name = self.name)
+                return Node(pos, pos + 1, name = self.name, text = string[pos])
 
 class AnyChar:
     def __init__(self, name = None):
@@ -113,7 +114,7 @@ class AnyChar:
 
     def parse(self, string, pos):
         if pos < len(string):
-            return Node(pos, pos + 1, name = self.name)
+            return Node(pos, pos + 1, name = self.name, text = string[pos])
 
 class Seq:
     def __init__(self, *parser_names, name = None):
@@ -190,20 +191,20 @@ class Repeat1:
 
 ws = r" ,\n\r\t\f\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000"
 parsers['_ws'] = Regex(r'[' + ws + r']+')
-parsers['comment'] = Seq(Char(';'), Regex(r"[^\n]*\n?"), name = "comment")
-parsers['discard'] = Seq(String("#_", name = "marker"), Repeat('_gap'), Alias(".body", '_form'), name = "discard")
+parsers['comment'] = Regex(r";[^\n]*\n?", name = "comment")
+parsers['discard'] = Seq(String("#_", name = "marker"), Repeat('_gap'), Named(".body", '_form'), name = "discard")
 parsers['_gap'] = Choice('_ws', 'comment', 'discard')
 
 parsers['meta'] = Seq(Repeat1(Seq(Regex(r'#?\^', name = ".marker"),
                                   Repeat('_gap'),
-                                  Alias(".meta", '_form'),
+                                  Named(".meta", '_form'),
                                   Repeat('_gap'))),
-                      Alias(".body", '_form'),
+                      Named(".body", '_form'),
                       name = "meta")
 
 parsers['wrap'] = Seq(Regex(r"(@|'|`|~@|~|#')", name = ".marker"),
                       Repeat('_gap'),
-                      Alias('.body', '_form'),
+                      Named('.body', '_form'),
                       name = "wrap")
 
 token = '[^' + r'()\[\]{}\"@~^;`#\'' + ws + '][^' + r'()\[\]{}\"@^;`' + ws + ']*'
@@ -231,9 +232,9 @@ parsers['braces'] = Seq(Regex(r"(#(:" + token + r")?)?\{", name = ".open"),
 
 parsers['tagged'] = Seq(Char("#"),
                         Repeat('_gap'),
-                        Alias('.tag', 'token'),
+                        Named('.tag', 'token'),
                         Repeat('_gap'),
-                        Alias('.body', '_form'),
+                        Named('.body', '_form'),
                         name = "tagged")
 
 parsers['_form'] = Choice('token',

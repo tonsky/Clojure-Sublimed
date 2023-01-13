@@ -13,7 +13,7 @@ if __name__ == '__main__':
         expr = f.read()
     parsed = parser.parse(expr)
     print("Parsed {}..{} in {} ms". format(parsed.start, parsed.end, (time.time() - start) * 1000))
-    if errors := parsed.search(lambda node: node.name == "error"):
+    if errors := parsed.search(lambda node, _: node.name == "error"):
         for node in errors[1:]:
             print("Node: ", str(node))
             print(expr[node.start:node.end])
