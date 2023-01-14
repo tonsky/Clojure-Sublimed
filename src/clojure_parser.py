@@ -8,18 +8,15 @@ class Node:
         self.name = name
         self.text = text
 
-    def serialize(self, string, indent = ""):
+    def __str__(self, indent = ""):
         res = "{}({} {}..{}".format(indent, self.name, self.start, self.end)
         if self.text:
             res += " '" + self.text.replace("\n", "\\n") + "'"
         if self.children:
             for child in self.children:
-                res += "\n" + child.serialize(string, indent + "  ")
+                res += "\n" + child.__str__(indent + "  ")
         res += ")"
         return res
-
-    def __str__(self):
-        return "Node({} {}..{} children={} text={})".format(self.name, self.start, self.end, len(self.children), self.text)
 
     def __getattr__(self, name):
         for child in self.children:

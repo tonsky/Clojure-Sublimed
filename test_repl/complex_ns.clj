@@ -3,10 +3,14 @@
 ;; by Nikita Prokopov
 ;; October 2021
 
+*ns*
+
 (ns ^{:doc "Hey!
 Nice namespace"
 :added ['asdas #"regexp"]
 :author "Niki Tonsky"}
+  ^:other-meta
+  
   sublime-clojure.test
   (:require
    [clojure.string :as str]))

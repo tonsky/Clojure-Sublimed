@@ -325,15 +325,20 @@ def handle_exception(msg):
 
 def namespace(view, point):
     ns = None
-    for region in view.find_by_selector("entity.name"):
-        if region.end() <= point:
-            begin = region.begin()
-            while begin > 0 and view.match_selector(begin - 1, 'meta.parens'):
-                begin -= 1
-            if re.match(r"\([\s,]*ns[\s,]", view.substr(sublime.Region(begin, region.begin()))):
-                ns = view.substr(region)
-        else:
+    parsed = parse_tree(view)
+    for child in parsed.children:
+        if child.end >= point:
             break
+        elif child.name == 'parens':
+            body = child.body
+            if len(body.children) >= 2:
+                first_form = body.children[0]
+                if first_form.name == 'token' and first_form.text == 'ns':
+                    second_form = body.children[1]
+                    while second_form.name == 'meta' and second_form.body:
+                        second_form = second_form.body.children[0]
+                    if clojure_parser.is_symbol(second_form):
+                        ns = second_form.text
     return ns
 
 class ProgressThread:

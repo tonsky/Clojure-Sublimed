@@ -38,7 +38,7 @@ def print_table(titles, cols):
         print("".join(['─'] * (width + 2)), end = "┴" if i < len(widths) - 1 else "┘")
     print("\n")
 
-if __name__ == '__main__':
+def test_parse_trees():
     dir = cwd + "/../test_parser/"
     files = [file for file in os.listdir(dir) if file.endswith(".txt")]
     width = max(len(file) for file in files)
@@ -56,7 +56,7 @@ if __name__ == '__main__':
             expected = match.group(3).strip('\n')
             expected = "\n".join(line.rstrip(' ') for line in expected.split('\n'))
             parsed = parser.parse(expr)
-            actual = parsed.serialize(expr)
+            actual = str(parsed)
             if parsed.end < len(expr):
                 failed += 1
                 print("F", end = "")
@@ -71,8 +71,10 @@ if __name__ == '__main__':
         print("]")
         for (name, expr, expected, actual) in failures:
             print_table([name, "Expected", "Actual"], [expr, expected, actual])
-    print("Tests: {}, failed: {}".format(tests, failed), flush=True)
+    print("Tests: {}, failed: {}\n".format(tests, failed), flush=True)
 
+def test_clojure():
+    dir = cwd + "/../test_parser/"
     files = [file for file in os.listdir(dir) if file.endswith(".clj")]
     width = max(len(file) for file in files)
     tests = 0
@@ -87,27 +89,31 @@ if __name__ == '__main__':
         if parsed.end < len(expr):
             failed += 1
             print(" [ FAIL ]", flush = True)
-            print(parsed.serialize(expr))
+            print(str(parsed))
             break
         else:
             print(" [ OK ] in {} ms".format((time.time() - start) * 1000), flush = True)
-    print("Parsing clojure.core: {}, failed: {}".format(tests, failed), flush=True)
+    print("Parsing *.clj: {}, failed: {}\n".format(tests, failed), flush=True)
     
-    if failed == 0:
-        alphabet = r'019`~!@#$%^&*()_+-=[]{}\\|;:\'",.<>/?aAeEmMnNxXzZ '
-        tests = 0
-        failed = 0
-        for i in range(0, 10000):
-            tests += 1
-            expr = "".join(random.choices(alphabet, k = random.randint(1, 50)))
-            parsed = parser.parse(expr)
-            # if i < 10:
-            #     actual = parsed.serialize(expr)
-            #     print_table(["Expr", "Actual"], ["'" + expr + "'", actual])
-            if parsed.end < len(expr):
-                failed += 1
-                actual = parsed.serialize(expr)
-                if failed == 1:
-                    print_table(["Expr", "Expected", "Actual"], [expr, "(source 0..{})".format(len(expr)), actual])
-        print("Randomized tests: {}, failed: {}".format(tests, failed), flush=True)
+def test_random():
+    alphabet = r'019`~!@#$%^&*()_+-=[]{}\\|;:\'",.<>/?aAeEmMnNxXzZ '
+    tests = 0
+    failed = 0
+    for i in range(0, 10000):
+        tests += 1
+        expr = "".join(random.choices(alphabet, k = random.randint(1, 50)))
+        parsed = parser.parse(expr)
+        # if i < 10:
+        #     actual = str(parsed)
+        #     print_table(["Expr", "Actual"], ["'" + expr + "'", actual])
+        if parsed.end < len(expr):
+            failed += 1
+            actual = str(parsed)
+            if failed == 1:
+                print_table(["Expr", "Expected", "Actual"], [expr, "(source 0..{})".format(len(expr)), actual])
+    print("Randomized tests: {}, failed: {}\n".format(tests, failed), flush=True)
 
+if __name__ == '__main__':
+    test_parse_trees()
+    test_clojure()
+    test_random()
