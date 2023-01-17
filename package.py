@@ -994,11 +994,10 @@ def reindent(view, edit, point, skip_blanks = True):
                 return line.begin() + indent + 1
     return line.begin()
 
-
 class ClojureSublimedReindentBufferOnSave(sublime_plugin.EventListener):
     def on_pre_save(self, view):
         if settings().get("format_on_save", False) and view.syntax().name == 'Clojure (Sublimed)':
-            view.window().run_command('clojure_sublimed_reindent_buffer')
+            view.run_command('clojure_sublimed_reindent_buffer')
 
 class ClojureSublimedReindentBufferCommand(sublime_plugin.TextCommand):
     def run(self, edit):
