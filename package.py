@@ -433,20 +433,6 @@ def parse_tree(view):
     parse_trees[id] = parsed
     return parsed
 
-def search_parsed(node, pos, pred = lambda x: True, max_depth = 1000):
-    if max_depth <= 0 or not node.children:
-        if pred(node):
-            return node
-        else:
-            return None
-    for child in node.children:
-        if child.start <= pos <= child.end:
-            if res := search_parsed(child, pos, pred = pred, max_depth = max_depth - 1):
-                return res
-        elif pos < child.start:
-            break
-
-
 def topmost_form(view, point):
     # move left to first non-space
     if point >= view.size() or view.substr(sublime.Region(point, point + 1)).isspace():
@@ -454,12 +440,12 @@ def topmost_form(view, point):
             point = point - 1
 
     parsed = parse_tree(view)
-    if node := search_parsed(parsed, point, max_depth = 1):
+    if node := clojure_parser.search(parsed, point, max_depth = 1):
         if body := node.body:
             if body.children:
                 first_form = body.children[0]
                 if first_form.name == "token" and first_form.text == "comment" and point > first_form.end:
-                    if inner := search_parsed(body, point, max_depth = 1):
+                    if inner := clojure_parser.search(body, point, max_depth = 1):
                         node = inner
         return sublime.Region(node.start, node.end)
 
@@ -626,7 +612,7 @@ def handle_lookup(msg):
 def symbol_at_point(view, point):
     parsed = parse_tree(view)
     start = time.time()
-    if node := search_parsed(parsed, point, pred = clojure_parser.is_symbol):
+    if node := clojure_parser.search(parsed, point, pred = clojure_parser.is_symbol):
         region = sublime.Region(node.start, node.end)
         if settings().get("debug"):
             print("Found leaf node '{}' in {} ms".format(view.substr(region), (time.time() - start) * 1000))
@@ -999,6 +985,38 @@ class ClojureSublimedReindentBufferOnSave(sublime_plugin.EventListener):
         if settings().get("format_on_save", False) and view.syntax().name == 'Clojure (Sublimed)':
             view.run_command('clojure_sublimed_reindent_buffer')
 
+def search_path(node, pos):
+    res = [node]
+    for child in node.children:
+        if child.start < pos < child.end:
+            res += search_path(child, pos)
+        elif pos < child.start:
+            break
+    return res
+
+def indent(view, point):
+    parsed = parse_tree(view)
+    if path := search_path(parsed, point):
+        node = None
+        for n in reversed(path):
+            if n.name in ['parens', 'braces', 'brackets']:
+                node = n
+                break
+        if not node:
+            return 0
+        _, col = view.rowcol(node.open.end)
+        # special case for when first element in form is parens/braces/brackets
+        offset = 0
+        if node.name == 'parens':
+            offset = 1
+            if body := node.body:
+                if body.children and (child := body.children[0]):
+                    if child.name in ['parens', 'braces', 'brackets']:
+                        offset = 0
+        # print("Point", point, "End", node.open.end, "Col", col, "Offset", offset, "Node", node)
+        return col + offset
+        
+
 class ClojureSublimedReindentBufferCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
@@ -1022,15 +1040,23 @@ class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         change_id_sel = view.change_id()
-        ends = []
+        def skip(point):
+            s = view.substr(sublime.Region(point, point + 1))
+            return s.isspace() and s not in ['\n', '\r']
+        replacements = []
         for sel in view.sel():
-            # sel = view.transform_region_from(sel, change_id_sel)
-            view.replace(edit, sel, "\n")
-            ends.append(reindent(view, edit, sel.begin() + 1, skip_blanks = False))
+            end = sel.end()
+            while end < view.size() and skip(end):
+                end = end + 1
+            i = indent(view, sel.begin())
+            replacements.append((sublime.Region(sel.begin(), end), "\n" + " " * i))
 
         view.sel().clear()
-        for end in ends:
-            view.sel().add(sublime.Region(end, end))
+        for region, string in replacements:
+            region = view.transform_region_from(region, change_id_sel)
+            point = region.begin() + len(string)
+            view.replace(edit, region, string)
+            view.sel().add(sublime.Region(point, point))        
 
 class ClojureSublimedEventListener(sublime_plugin.EventListener):
     def on_activated_async(self, view):

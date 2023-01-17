@@ -38,6 +38,12 @@ body)
 #{a b c
 d e f}
 
+#:ns{:key v}
+
+(abcdef abcde abcd abc ab a)
+
+(a ab abc abcd abcde abcdef)
+
   (abc)
 
   "asdasd

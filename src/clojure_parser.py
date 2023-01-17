@@ -250,3 +250,16 @@ def is_symbol(node):
             return s[1] not in '0123456789'
         else:
             return s[0] not in '+-:\\0123456789'
+
+def search(node, pos, pred = lambda x: True, max_depth = 1000):
+    if max_depth <= 0 or not node.children:
+        if pred(node):
+            return node
+        else:
+            return None
+    for child in node.children:
+        if child.start <= pos <= child.end:
+            if res := search(child, pos, pred = pred, max_depth = max_depth - 1):
+                return res
+        elif pos < child.start:
+            break
