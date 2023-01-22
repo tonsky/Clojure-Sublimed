@@ -1,6 +1,6 @@
 import html, json, os, re, socket, sublime, sublime_plugin, threading, time
 from collections import defaultdict
-from .src import bencode, clojure_parser
+from .src import bencode, common, clojure_parser, indent
 from typing import Any, Dict, Tuple
 import logging
 
@@ -8,11 +8,8 @@ ns = 'clojure-sublimed'
 
 _log = logging.getLogger(__name__)
 
-def settings():
-    return sublime.load_settings("Clojure Sublimed.sublime-settings")
-
 def format_time_taken(time_taken):
-    threshold = settings().get("elapsed_threshold_ms")
+    threshold = common.setting("elapsed_threshold_ms")
     if threshold != None and time_taken != None:
         elapsed = time_taken / 1000000000
         if elapsed * 1000 >= threshold:
@@ -229,7 +226,7 @@ class Connection:
             self.last_view = view
 
     def send(self, msg):
-        if settings().get("debug"):
+        if common.setting("debug"):
             print("SND", msg)
         self.socket.sendall(bencode.encode(msg).encode())
 
@@ -325,7 +322,7 @@ def handle_exception(msg):
 
 def namespace(view, point):
     ns = None
-    parsed = parse_tree(view)
+    parsed = clojure_parser.parse_tree(view)
     for child in parsed.children:
         if child.end >= point:
             break
@@ -417,29 +414,13 @@ def eval(view, region, code=None):
            "file":   view.file_name()}
     eval_msg(view, region, msg)
 
-def parse_tree(view):
-    global parse_trees
-    id = view.buffer_id()
-    if id in parse_trees:
-        return parse_trees[id]
-
-    start = time.time()
-    text = view.substr(sublime.Region(0, view.size()))
-    # if settings().get("debug"):
-    #     print("Retrieved {} chars in {} ms".format(len(text), (time.time() - start) * 1000))
-    parsed = clojure_parser.parse(text)
-    if settings().get("debug"):
-        print("Parsed {} chars in {} ms".format(len(text), (time.time() - start) * 1000))
-    parse_trees[id] = parsed
-    return parsed
-
 def topmost_form(view, point):
     # move left to first non-space
     if point >= view.size() or view.substr(sublime.Region(point, point + 1)).isspace():
         while point > 0 and view.substr(sublime.Region(point - 1, point)).isspace():
             point = point - 1
 
-    parsed = parse_tree(view)
+    parsed = clojure_parser.parse_tree(view)
     if node := clojure_parser.search(parsed, point, max_depth = 1):
         if body := node.body:
             if body.children:
@@ -610,15 +591,11 @@ def handle_lookup(msg):
         return True
 
 def symbol_at_point(view, point):
-    parsed = parse_tree(view)
+    parsed = clojure_parser.parse_tree(view)
     start = time.time()
     if node := clojure_parser.search(parsed, point, pred = clojure_parser.is_symbol):
         region = sublime.Region(node.start, node.end)
-        if settings().get("debug"):
-            print("Found leaf node '{}' in {} ms".format(view.substr(region), (time.time() - start) * 1000))
         return region
-    else:
-        print("Found nothing in {} ms".format((time.time() - start) * 1000))
 
 class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -730,7 +707,7 @@ def handle_connect(msg):
         return True
 
     elif 2 == msg.get("id") and msg.get("status") == ["done"]:
-        id = 3 if settings().get("eval_shared") else 4
+        id = 3 if common.setting("eval_shared") else 4
         conn.send({"op":               "add-middleware",
                    "middleware":       [f"{ns}.middleware/clone-and-eval",
                                         f"{ns}.middleware/time-eval",
@@ -744,7 +721,7 @@ def handle_connect(msg):
 
     elif 3 == msg.get("id") and msg.get("status") == ["done"]:
         conn.send({"op":      "eval",
-                   "code":    settings().get("eval_shared"), 
+                   "code":    common.setting("eval_shared"), 
                    "session": conn.session,
                    "id":      4})
 
@@ -759,7 +736,7 @@ def handle_done(msg):
             conn.erase_eval(eval)
 
 def handle_msg(msg):
-    if settings().get("debug"):
+    if common.setting("debug"):
         print("RCV", msg)
 
     for key in msg.get('nrepl.middleware.print/truncated-keys', []):
@@ -922,141 +899,26 @@ class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
     def is_enabled(self):
         return conn.socket != None
 
-def match_selectors(view, pos, selectors):
-    return any(view.match_selector(pos, selector) for selector in selectors)
-
-def reindent(view, edit, point, skip_blanks = True):
-    line = view.line(point)
-    text = view.substr(line)
-    prefix = re.match(r"\s*", text).group(0)
-    # Do not indent inside strings
-    if view.match_selector(line.begin(), 'string') and not view.match_selector(line.begin(), 'punctuation.definition.string.begin'):
-        pass
-    # Do not reindent blank lines
-    elif skip_blanks and len(prefix) == line.size():
-        pass
-    # Clear leading spaces at first line
-    elif line.begin() == 0:
-        if prefix:
-            view.erase(edit, sublime.Region(0, len(prefix)))
-    else:
-        stack = []
-        last_open = None
-        pos = line.begin()
-        while pos >= 0:
-            pos = pos - 1
-            ch = view.substr(pos)
-            if match_selectors(view, pos, ['string', 'comment.line', 'constant.character']):
-                pass
-            # Short-circuit if outside of any parens
-            elif not match_selectors(view, pos, ['meta.brackets', 'meta.braces', 'meta.parens']):
-                break
-            elif ch in [']', ')', '}']:
-                stack.append(ch)
-            elif ch not in ['(', '[', '{']:
-                pass
-            elif not stack:
-                last_open = pos
-                break
-            elif {'[': ']', '(': ')', '{': '}'}[ch] == stack[-1]:
-                stack.pop()
-            else:
-                pass
-
-        replace = sublime.Region(line.begin(), line.begin() + len(prefix))
-        # top-level form, everything before is balanced
-        if last_open is None:
-            view.replace(edit, replace, '')
-            return line.begin()
-        else:
-            indent = last_open - view.line(last_open).begin()
-            # list form that doesn’t start with paren. Indent to paren + 2
-            if view.substr(last_open) == '(' and (last_open + 1 >= line.begin() or view.substr(last_open + 1) not in ['(', '[', '{']):
-                view.replace(edit, replace, ' ' * (indent + 2))
-                return line.begin() + indent + 2
-            # everything else. Indent to paren + 1
-            else:
-                view.replace(edit, replace, ' ' * (indent + 1))
-                return line.begin() + indent + 1
-    return line.begin()
-
 class ClojureSublimedReindentBufferOnSave(sublime_plugin.EventListener):
     def on_pre_save(self, view):
-        if settings().get("format_on_save", False) and view.syntax().name == 'Clojure (Sublimed)':
+        if common.setting("format_on_save", False) and view.syntax().name == 'Clojure (Sublimed)':
             view.run_command('clojure_sublimed_reindent_buffer')
-
-def search_path(node, pos):
-    res = [node]
-    for child in node.children:
-        if child.start < pos < child.end:
-            res += search_path(child, pos)
-        elif pos < child.start:
-            break
-    return res
-
-def indent(view, point):
-    parsed = parse_tree(view)
-    if path := search_path(parsed, point):
-        node = None
-        for n in reversed(path):
-            if n.name in ['parens', 'braces', 'brackets']:
-                node = n
-                break
-        if not node:
-            return 0
-        _, col = view.rowcol(node.open.end)
-        # special case for when first element in form is parens/braces/brackets
-        offset = 0
-        if node.name == 'parens':
-            offset = 1
-            if body := node.body:
-                if body.children and (child := body.children[0]):
-                    if child.name in ['parens', 'braces', 'brackets']:
-                        offset = 0
-        # print("Point", point, "End", node.open.end, "Col", col, "Offset", offset, "Node", node)
-        return col + offset
-        
 
 class ClojureSublimedReindentBufferCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        lines = view.lines(sublime.Region(0, view.size()))
-        change_id = view.change_id()
-        for line in lines:
-            reindent(view, edit, view.transform_region_from(line, change_id).begin())
+        with common.Measure("clojure_sublimed_reindent_buffer {} chars", view.size()):
+            indent.indent_lines(view, [sublime.Region(0, view.size())], edit)
 
 class ClojureSublimedReindentLinesCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        change_id_sel = view.change_id()
-        for sel in view.sel():
-            sel = view.transform_region_from(sel, change_id_sel)
-            change_id_line = view.change_id()
-            for line in view.lines(sel):
-                line = view.transform_region_from(line, change_id_line)
-                reindent(view, edit, line.begin())
+        with common.Measure("clojure_sublimed_reindent_lines {}", view.sel()):
+            indent.indent_lines(view, view.sel(), edit)
 
 class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        view = self.view
-        change_id_sel = view.change_id()
-        def skip(point):
-            s = view.substr(sublime.Region(point, point + 1))
-            return s.isspace() and s not in ['\n', '\r']
-        replacements = []
-        for sel in view.sel():
-            end = sel.end()
-            while end < view.size() and skip(end):
-                end = end + 1
-            i = indent(view, sel.begin())
-            replacements.append((sublime.Region(sel.begin(), end), "\n" + " " * i))
-
-        view.sel().clear()
-        for region, string in replacements:
-            region = view.transform_region_from(region, change_id_sel)
-            point = region.begin() + len(string)
-            view.replace(edit, region, string)
-            view.sel().add(sublime.Region(point, point))        
+        indent.insert_newline(self.view, edit)
 
 class ClojureSublimedEventListener(sublime_plugin.EventListener):
     def on_activated_async(self, view):
@@ -1068,12 +930,9 @@ class ClojureSublimedEventListener(sublime_plugin.EventListener):
 
 class ClojureSublimedViewEventListener(sublime_plugin.TextChangeListener):
     def on_text_changed_async(self, changes):
-        global parse_trees
-        id = self.buffer.id()
-        if id in parse_trees:
-            del parse_trees[id]
-
         view = self.buffer.primary_view()
+
+        clojure_parser.invalidate_parse_tree(self)
         changed = [sublime.Region(x.a.pt, x.b.pt) for x in changes]
         def should_erase(eval):
             return not (reg := eval.region()) or any(reg.intersects(r) for r in changed) and view.substr(reg) != eval.code
@@ -1081,11 +940,11 @@ class ClojureSublimedViewEventListener(sublime_plugin.TextChangeListener):
 
 def on_settings_change():
     Eval.colors.clear()
-    progress_thread.update_phases(settings().get("progress_phases"), settings().get("progress_interval_ms"))
-    conn.eval_in_session = settings().get("eval_in_session", False)
+    progress_thread.update_phases(common.setting("progress_phases"), common.setting("progress_interval_ms"))
+    conn.eval_in_session = common.setting("eval_in_session", False)
 
 def plugin_loaded():
-    global package, conn, progress_thread, parse_trees
+    global package, conn, progress_thread
 
     package_path = os.path.dirname(os.path.abspath(__file__))
     if os.path.isfile(package_path):
@@ -1097,14 +956,12 @@ def plugin_loaded():
 
     conn = Connection()
     progress_thread = ProgressThread()
-    parse_trees = {}
 
     sublime.load_settings("Preferences.sublime-settings").add_on_change(ns, on_settings_change)
     settings().add_on_change(ns, on_settings_change)
     on_settings_change()
 
 def plugin_unloaded():
-    parse_trees = None
     progress_thread.stop()
     conn.disconnect()
     sublime.load_settings("Preferences.sublime-settings").clear_on_change(ns)

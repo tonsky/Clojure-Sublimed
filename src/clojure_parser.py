@@ -1,4 +1,4 @@
-import re
+import re, time
 
 class Node:
     def __init__(self, start, end, children = [], name = None, text = None):
@@ -196,7 +196,7 @@ parsers['wrap'] = Seq(Regex(r"(@|'|`|~@|~|#')", name = ".marker"),
                       name = "wrap")
 
 token = '[^' + r'()\[\]{}\"@~^;`#\'' + ws + '][^' + r'()\[\]{}\"@^;`' + ws + ']*'
-parsers['token'] = Regex(r'(##)?' + token, name = "token")
+parsers['token'] = Regex(r'(##)?(\\[()\[\]{}\"@^;`]|' + token + ")", name = "token")
 
 parsers['string'] = Seq(Regex(r'#?"', name=".open"),
                         Optional(Regex(r'([^"\\]+|\\.)+', name = ".body")),
@@ -263,3 +263,20 @@ def search(node, pos, pred = lambda x: True, max_depth = 1000):
                 return res
         elif pos < child.start:
             break
+
+parse_trees = {}
+
+def parse_tree(view):
+    import sublime
+    id = view.buffer_id()
+    if id in parse_trees:
+        return parse_trees[id]
+    text = view.substr(sublime.Region(0, view.size()))
+    parsed = parse(text)
+    parse_trees[id] = parsed
+    return parsed
+
+def invalidate_parse_tree(view):
+    id = view.buffer.id()
+    if id in parse_trees:
+        del parse_trees[id]

@@ -16,7 +16,7 @@ body)
   
 (defn many-args [a b c
 d e f]
-             
+
 body)
   
 (defn multi-arity
@@ -32,7 +32,7 @@ body)
 [1 2 3
 4 5 6]
 
-{:key-1 v1
+{::key-1 v1
 :key-2 v2}
  
 #{a b c
@@ -50,6 +50,8 @@ d e f}
  asdas
      aksjdlkj
 lkjdlk"
+
+"((([[[abc]]])))"
 
 (def x
 "asdasd
