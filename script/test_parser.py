@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
 import os, random, re, sys, time
 
-cwd = os.path.abspath(os.path.dirname(__file__))
-os.chdir(cwd + "/../src")
+cwd = os.path.dirname(__file__)
+os.chdir(os.path.abspath(cwd + "/.."))
 sys.path.append(os.getcwd())
-import clojure_parser as parser
+import cs_parser as parser
 
 def print_table(titles, cols):
     cols = [col.split('\n') for col in cols]

@@ -12,21 +12,6 @@ ns = 'clojure-sublimed'
 
 _log = logging.getLogger(__name__)
 
-def format_time_taken(time_taken):
-    threshold = common.setting("elapsed_threshold_ms")
-    if threshold != None and time_taken != None:
-        elapsed = time_taken / 1000000000
-        if elapsed * 1000 >= threshold:
-            if elapsed >= 10:
-                return f"({'{:,.0f}'.format(elapsed)} sec)"
-            elif elapsed >= 1:
-                return f"({'{:.1f}'.format(elapsed)} sec)"
-            elif elapsed >= 0.005:
-                return f"({'{:.0f}'.format(elapsed * 1000)} ms)"
-            else:
-                return f"({'{:.2f}'.format(elapsed * 1000)} ms)"
-
-
 def get_middleware_opts(conn):
     """Returns middleware options to send to nREPL as a dict.
     Currently only Clojure profile supports middleware.
@@ -105,7 +90,7 @@ class Eval:
         if region:
             scope, color = self.scope_color()
             if value:
-                if (self.status in {"success", "exception"}) and (time := format_time_taken(time_taken)):
+                if (self.status in {"success", "exception"}) and (time := common.format_time_taken(time_taken)):
                     value = time + " " + value
                 self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO, [self.escape(value)], color)
             else:
@@ -172,11 +157,11 @@ class StatusEval(Eval):
             if status in {"pending", "interrupt"}:
                 self.active_view().set_status(self.value_key(), "⏳ " + self.code)
             elif "success" == status:
-                if time := format_time_taken(time_taken):
+                if time := common.format_time_taken(time_taken):
                     value = time + ' ' + value
                 self.active_view().set_status(self.value_key(), "✅ " + value)
             elif "exception" == status:
-                if time := format_time_taken(time_taken):
+                if time := common.format_time_taken(time_taken):
                     value = time + ' ' + value
                 self.active_view().set_status(self.value_key(), "❌ " + value)
 
@@ -230,8 +215,7 @@ class Connection:
             self.last_view = view
 
     def send(self, msg):
-        if common.setting("debug"):
-            print("SND", msg)
+        _log.debug("SND %s", msg)
         self.socket.sendall(bencode.encode(msg).encode())
 
     def reset(self):
@@ -324,24 +308,6 @@ def handle_exception(msg):
         elif "status" in msg and "namespace-not-found" in msg["status"]:
             eval.update("exception", f'Namespace not found: {msg["ns"]}')
 
-def namespace(view, point):
-    ns = None
-    parsed = parser.parse_tree(view)
-    for child in parsed.children:
-        if child.end >= point:
-            break
-        elif child.name == 'parens':
-            body = child.body
-            if len(body.children) >= 2:
-                first_form = body.children[0]
-                if first_form.name == 'token' and first_form.text == 'ns':
-                    second_form = body.children[1]
-                    while second_form.name == 'meta' and second_form.body:
-                        second_form = second_form.body.children[0]
-                    if parser.is_symbol(second_form):
-                        ns = second_form.text
-    return ns
-
 class ProgressThread:
     def __init__(self):
         self.running = False
@@ -412,27 +378,11 @@ def eval(view, region, code=None):
     (line, column) = view.rowcol_utf16(region.begin())
     msg = {"op":     "eval" if (conn.profile == Profile.SHADOW_CLJS or conn.eval_in_session) else "clone-eval-close",
            "code":   view.substr(region) if code is None else code,
-           "ns":     namespace(view, region.begin()) or 'user',
+           "ns":     parser.namespace(view, region.begin()) or 'user',
            "line":   line + 1,
            "column": column,
            "file":   view.file_name()}
     eval_msg(view, region, msg)
-
-def topmost_form(view, point):
-    # move left to first non-space
-    if point >= view.size() or view.substr(sublime.Region(point, point + 1)).isspace():
-        while point > 0 and view.substr(sublime.Region(point - 1, point)).isspace():
-            point = point - 1
-
-    parsed = parser.parse_tree(view)
-    if node := parser.search(parsed, point, max_depth = 1):
-        if body := node.body:
-            if body.children:
-                first_form = body.children[0]
-                if first_form.name == "token" and first_form.text == "comment" and point > first_form.end:
-                    if inner := parser.search(body, point, max_depth = 1):
-                        node = inner
-        return sublime.Region(node.start, node.end)
 
 class ClojureSublimedEval(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -440,7 +390,7 @@ class ClojureSublimedEval(sublime_plugin.TextCommand):
         for sel in self.view.sel():
             if all([not sel.intersects(r) for r in covered]):
                 if sel.empty():
-                    region = topmost_form(self.view, sel.begin())
+                    region = parser.topmost_form(self.view, sel.begin())
                     if region:
                         covered.append(region)
                         eval(self.view, region)
@@ -470,7 +420,7 @@ class ClojureSublimedEvalCodeCommand(sublime_plugin.ApplicationCommand):
         conn.erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
         eval = StatusEval(code)
         if (not ns) and (view := eval.active_view()):
-            ns = namespace(view, view.size())
+            ns = parser.namespace(view, view.size())
         eval.msg = {"op": "eval",
                     "id": eval.id,
                     "ns": ns or 'user',
@@ -594,13 +544,6 @@ def handle_lookup(msg):
         eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
         return True
 
-def symbol_at_point(view, point):
-    parsed = parser.parse_tree(view)
-    start = time.time()
-    if node := parser.search(parsed, point, pred = parser.is_symbol):
-        region = sublime.Region(node.start, node.end)
-        return region
-
 class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
@@ -609,7 +552,7 @@ class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
             if eval and eval.phantom_id:
                 conn.erase_eval(eval)
             else:
-                if region := symbol_at_point(view, sel.begin()) if sel.empty() else sel:
+                if region := parser.symbol_at_point(view, sel.begin()) if sel.empty() else sel:
                     line = view.line(region)
                     conn.erase_evals(lambda eval: eval.region() and eval.region().intersects(line), view)
                     eval = Eval(view, region)
@@ -619,7 +562,7 @@ class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
                                "sym":     view.substr(region),
                                "session": conn.session,
                                "id":      eval.id,
-                               "ns":      namespace(view, region.begin()) or 'user'})
+                               "ns":      parser.namespace(view, region.begin()) or 'user'})
 
     def is_enabled(self):
         return conn.ready()
@@ -645,7 +588,7 @@ class ClojureSublimedRequireNamespaceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         for sel in view.sel():
-            region = symbol_at_point(view, sel.begin()) if sel.empty() else sel
+            region = parser.symbol_at_point(view, sel.begin()) if sel.empty() else sel
             # narrow down to the namespace part if present
             if region and (sym := view.substr(region).partition('/')[0]):
                 region = sublime.Region(region.a, region.a + len(sym))
@@ -740,8 +683,7 @@ def handle_done(msg):
             conn.erase_eval(eval)
 
 def handle_msg(msg):
-    if common.setting("debug"):
-        print("RCV", msg)
+    _log.debug("RCV %s", msg)
 
     for key in msg.get('nrepl.middleware.print/truncated-keys', []):
         msg[key] += '...'
@@ -903,27 +845,6 @@ class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
     def is_enabled(self):
         return conn.socket != None
 
-class ClojureSublimedReindentBufferOnSave(sublime_plugin.EventListener):
-    def on_pre_save(self, view):
-        if common.setting("format_on_save", False) and view.syntax().name == 'Clojure (Sublimed)':
-            view.run_command('clojure_sublimed_reindent_buffer')
-
-class ClojureSublimedReindentBufferCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-        with common.Measure("clojure_sublimed_reindent_buffer {} chars", view.size()):
-            indent.indent_lines(view, [sublime.Region(0, view.size())], edit)
-
-class ClojureSublimedReindentLinesCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-        with common.Measure("clojure_sublimed_reindent_lines {}", view.sel()):
-            indent.indent_lines(view, view.sel(), edit)
-
-class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        indent.insert_newline(self.view, edit)
-
 class ClojureSublimedEventListener(sublime_plugin.EventListener):
     def on_activated_async(self, view):
         conn.refresh_status()
@@ -946,6 +867,8 @@ def on_settings_change():
     Eval.colors.clear()
     progress_thread.update_phases(common.setting("progress_phases"), common.setting("progress_interval_ms"))
     conn.eval_in_session = common.setting("eval_in_session", False)
+    
+    _log.setLevel(level = logging.DEBUG if common.setting("debug") else logging.WARNING)
 
 def plugin_loaded():
     global package, conn, progress_thread
@@ -961,6 +884,7 @@ def plugin_loaded():
     conn = Connection()
     progress_thread = ProgressThread()
 
+    logging.basicConfig()
     sublime.load_settings("Preferences.sublime-settings").add_on_change(ns, on_settings_change)
     common.settings().add_on_change(ns, on_settings_change)
     on_settings_change()

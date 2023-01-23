@@ -1,4 +1,8 @@
 import re, time
+try:
+    from . import cs_common as common
+except ImportError:
+    import cs_common as common
 
 class Node:
     def __init__(self, start, end, children = [], name = None, text = None):
@@ -267,11 +271,10 @@ def search(node, pos, pred = lambda x: True, max_depth = 1000):
 parse_trees = {}
 
 def parse_tree(view):
-    import sublime
     id = view.buffer_id()
     if id in parse_trees:
         return parse_trees[id]
-    text = view.substr(sublime.Region(0, view.size()))
+    text = view.substr(common.region(0, view.size()))
     parsed = parse(text)
     parse_trees[id] = parsed
     return parsed
@@ -280,3 +283,43 @@ def invalidate_parse_tree(view):
     id = view.buffer.id()
     if id in parse_trees:
         del parse_trees[id]
+
+def symbol_at_point(view, point):
+    parsed = parse_tree(view)
+    start = time.time()
+    if node := search(parsed, point, pred = is_symbol):
+        return common.region(node.start, node.end)
+
+def topmost_form(view, point):
+    # move left to first non-space
+    if point >= view.size() or view.substr(common.region(point, point + 1)).isspace():
+        while point > 0 and view.substr(common.region(point - 1, point)).isspace():
+            point = point - 1
+
+    parsed = parse_tree(view)
+    if node := search(parsed, point, max_depth = 1):
+        if body := node.body:
+            if body.children:
+                first_form = body.children[0]
+                if first_form.name == "token" and first_form.text == "comment" and point > first_form.end:
+                    if inner := search(body, point, max_depth = 1):
+                        node = inner
+        return common.region(node.start, node.end)
+
+def namespace(view, point):
+    ns = None
+    parsed = parse_tree(view)
+    for child in parsed.children:
+        if child.end >= point:
+            break
+        elif child.name == 'parens':
+            body = child.body
+            if len(body.children) >= 2:
+                first_form = body.children[0]
+                if first_form.name == 'token' and first_form.text == 'ns':
+                    second_form = body.children[1]
+                    while second_form.name == 'meta' and second_form.body:
+                        second_form = second_form.body.children[0]
+                    if is_symbol(second_form):
+                        ns = second_form.text
+    return ns
