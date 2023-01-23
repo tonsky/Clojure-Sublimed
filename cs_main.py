@@ -1,8 +1,12 @@
-import html, json, os, re, socket, sublime, sublime_plugin, threading, time
+import html, json, logging, os, re, socket, threading, time
+import sublime, sublime_plugin
 from collections import defaultdict
-from .src import bencode, common, clojure_parser, indent
 from typing import Any, Dict, Tuple
-import logging
+
+from . import cs_bencode as bencode
+from . import cs_common as common
+from . import cs_parser as parser
+from . import cs_indent as indent
 
 ns = 'clojure-sublimed'
 
@@ -322,7 +326,7 @@ def handle_exception(msg):
 
 def namespace(view, point):
     ns = None
-    parsed = clojure_parser.parse_tree(view)
+    parsed = parser.parse_tree(view)
     for child in parsed.children:
         if child.end >= point:
             break
@@ -334,7 +338,7 @@ def namespace(view, point):
                     second_form = body.children[1]
                     while second_form.name == 'meta' and second_form.body:
                         second_form = second_form.body.children[0]
-                    if clojure_parser.is_symbol(second_form):
+                    if parser.is_symbol(second_form):
                         ns = second_form.text
     return ns
 
@@ -420,13 +424,13 @@ def topmost_form(view, point):
         while point > 0 and view.substr(sublime.Region(point - 1, point)).isspace():
             point = point - 1
 
-    parsed = clojure_parser.parse_tree(view)
-    if node := clojure_parser.search(parsed, point, max_depth = 1):
+    parsed = parser.parse_tree(view)
+    if node := parser.search(parsed, point, max_depth = 1):
         if body := node.body:
             if body.children:
                 first_form = body.children[0]
                 if first_form.name == "token" and first_form.text == "comment" and point > first_form.end:
-                    if inner := clojure_parser.search(body, point, max_depth = 1):
+                    if inner := parser.search(body, point, max_depth = 1):
                         node = inner
         return sublime.Region(node.start, node.end)
 
@@ -591,9 +595,9 @@ def handle_lookup(msg):
         return True
 
 def symbol_at_point(view, point):
-    parsed = clojure_parser.parse_tree(view)
+    parsed = parser.parse_tree(view)
     start = time.time()
-    if node := clojure_parser.search(parsed, point, pred = clojure_parser.is_symbol):
+    if node := parser.search(parsed, point, pred = parser.is_symbol):
         region = sublime.Region(node.start, node.end)
         return region
 
@@ -701,7 +705,7 @@ def handle_connect(msg):
         conn.session = msg["new-session"]
         conn.send({"op": "load-file",
                    "session": conn.session,
-                   "file": sublime.load_resource(f"Packages/{package}/src/middleware.clj"),
+                   "file": sublime.load_resource(f"Packages/{package}/cs_middleware.clj"),
                    "id": 2})
         conn.set_status("🌓 Uploading middlewares")
         return True
@@ -932,7 +936,7 @@ class ClojureSublimedViewEventListener(sublime_plugin.TextChangeListener):
     def on_text_changed_async(self, changes):
         view = self.buffer.primary_view()
 
-        clojure_parser.invalidate_parse_tree(self)
+        parser.invalidate_parse_tree(self)
         changed = [sublime.Region(x.a.pt, x.b.pt) for x in changes]
         def should_erase(eval):
             return not (reg := eval.region()) or any(reg.intersects(r) for r in changed) and view.substr(reg) != eval.code
@@ -958,11 +962,11 @@ def plugin_loaded():
     progress_thread = ProgressThread()
 
     sublime.load_settings("Preferences.sublime-settings").add_on_change(ns, on_settings_change)
-    settings().add_on_change(ns, on_settings_change)
+    common.settings().add_on_change(ns, on_settings_change)
     on_settings_change()
 
 def plugin_unloaded():
     progress_thread.stop()
     conn.disconnect()
     sublime.load_settings("Preferences.sublime-settings").clear_on_change(ns)
-    settings().clear_on_change(ns)
+    common.settings().clear_on_change(ns)

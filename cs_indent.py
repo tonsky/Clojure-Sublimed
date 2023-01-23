@@ -1,5 +1,5 @@
 import sublime
-from . import clojure_parser
+from . import cs_parser as parser
 
 def search_path(node, pos):
     res = [node]
@@ -11,7 +11,7 @@ def search_path(node, pos):
     return res
 
 def indent(view, point):
-    parsed = clojure_parser.parse_tree(view)
+    parsed = parser.parse_tree(view)
     if path := search_path(parsed, point):
         node = None
         first_form = None
