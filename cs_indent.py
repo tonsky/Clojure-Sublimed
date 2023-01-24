@@ -1,8 +1,11 @@
 import sublime, sublime_plugin
-from . import cs_common as common
-from . import cs_parser as parser
+from . import cs_common, cs_parser
 
 def search_path(node, pos):
+    """
+    Looks for the deepes node that wraps pos (start < pos < end).
+    Returns full path to that node from the top
+    """
     res = [node]
     for child in node.children:
         if child.start < pos < child.end:
@@ -12,7 +15,16 @@ def search_path(node, pos):
     return res
 
 def indent(view, point):
-    parsed = parser.parse_tree(view)
+    """
+    Given point, returns (tag, row, indent) for that line, where indent
+    is a correct indent based on the last unclosed paren before point.
+
+    Tag could be 'string' (don't change anything, we're inside string),
+    'top-level' (set to 0, we are at top level) or 'indent' (normal behaviour)
+
+    Row is row number of the token for which this indent is based on (row of open paren)
+    """
+    parsed = cs_parser.parse_tree(view)
     if path := search_path(parsed, point):
         node = None
         first_form = None
@@ -54,6 +66,10 @@ def indent(view, point):
         return ('indent', row, col + offset)
 
 def skip_spaces(view, point):
+    """
+    Starting from point, skips as much spaces as it can without going to the new line,
+    and returns new point
+    """
     def is_space(point):
         s = view.substr(sublime.Region(point, point + 1))
         return s.isspace() and s not in ['\n', '\r']    
@@ -61,38 +77,32 @@ def skip_spaces(view, point):
         point = point + 1
     return point
 
-def insert_newline(view, edit):
-    change_id_sel = view.change_id()
-    replacements = []
-    for sel in view.sel():
-        end = skip_spaces(view, sel.end())
-        _, _, i = indent(view, sel.begin())
-        replacements.append((sublime.Region(sel.begin(), end), "\n" + " " * i))
-
-    view.sel().clear()
-    for region, string in replacements:
-        region = view.transform_region_from(region, change_id_sel)
-        point = region.begin() + len(string)
-        view.replace(edit, region, string)
-        view.sel().add(sublime.Region(point, point))
-
 def indent_lines(view, selections, edit):
-    change_id = view.change_id()
+    """
+    Given set of sorted ranges (`selections`), indents all lines touched by those selections
+    """
+    # Calculate all replacements first
     replacements = {} # row -> (begin, delta_i)
     for sel in selections:
         for line in view.lines(sel):
-            begin  = line.begin()
-            end    = skip_spaces(view, begin)
-            if end == line.end(): # do not touch empty lines
+            begin = line.begin()
+            end   = skip_spaces(view, begin)
+            # do not touch empty lines
+            if end == line.end():
                 continue
             row, _ = view.rowcol(begin)
             type, base_row, i = indent(view, begin)
-            if type == 'string': # do not re-indent multiline strings
+            # do not re-indent multiline strings
+            if type == 'string':
                 continue
+            # if we moved line before and depend on it, take that into account
             _, base_delta_i = replacements.get(base_row, (0, 0))
             delta_i = i - (end - begin) + base_delta_i
             if delta_i != 0:
                 replacements[row] = (begin, delta_i)
+
+    # Now apply all replacements, recalculating begins as we go
+    change_id = view.change_id()
     for row in replacements:
         begin, delta_i = replacements[row]
         begin = view.transform_region_from(sublime.Region(begin, begin), change_id).begin()
@@ -103,21 +113,36 @@ def indent_lines(view, selections, edit):
 
 class ClojureSublimedReindentBufferOnSave(sublime_plugin.EventListener):
     def on_pre_save(self, view):
-        if common.setting("format_on_save", False) and view.syntax().name == 'Clojure (Sublimed)':
+        if cs_common.setting("format_on_save", False) and view.syntax().name == 'Clojure (Sublimed)':
             view.run_command('clojure_sublimed_reindent_buffer')
 
 class ClojureSublimedReindentBufferCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        with common.Measure("Reindent Buffer %d chars", view.size()):
+        with cs_common.Measure("Reindent Buffer {} chars", view.size()):
             indent_lines(view, [sublime.Region(0, view.size())], edit)
 
 class ClojureSublimedReindentLinesCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        with common.Measure("Reindent Lines %s", view.sel()):
+        with cs_common.Measure("Reindent Lines {}", view.sel()):
             indent_lines(view, view.sel(), edit)
 
 class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        insert_newline(self.view, edit)
+        # Calculate all replacements first
+        replacements = []
+        for sel in view.sel():
+            end = skip_spaces(view, sel.end())
+            _, _, i = indent(view, sel.begin())
+            replacements.append((sublime.Region(sel.begin(), end), "\n" + " " * i))
+
+        # Now apply them all at once
+        change_id_sel = view.change_id()
+        view.sel().clear()
+        for region, string in replacements:
+            region = view.transform_region_from(region, change_id_sel)
+            point = region.begin() + len(string)
+            view.replace(edit, region, string)
+            # Add selection at the end of newly inserted region
+            view.sel().add(sublime.Region(point, point))

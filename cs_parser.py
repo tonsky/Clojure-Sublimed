@@ -1,10 +1,12 @@
 import re, time
-try:
-    from . import cs_common as common
-except ImportError:
-    import cs_common as common
 
 class Node:
+    """
+    AST Node.
+    Start-end positions in string. Start included, end excluded.
+    Optional children. Name from Named ('token', 'string' etc).
+    Text is substring[start:end], only for terminal nodes like Regex or String
+    """
     def __init__(self, start, end, children = [], name = None, text = None):
         self.start = start
         self.end = end
@@ -28,6 +30,9 @@ class Node:
                 return child
 
 class Named:
+    """
+    Parser that assigns name to Node
+    """
     def __init__(self, name, parser_name):
         self.name = name
         self.parser_name = parser_name
@@ -48,19 +53,28 @@ class Named:
 parsers = {}
 
 def get_parser(x):
+    """
+    This is basically needed to postpone dependency resolution after all named parsers have been created, to allow for cyclic references
+    """
     if isinstance(x, str):
         return parsers[x]
     else:
         return x
 
-def append_children(msg, children, node):
+def append_children(children, node):
+    """
+    Append named nodes, but skip and splice children directly if no name
+    """
     if node.name:
         children.append(node)
     else:
         for child in node.children:
-            append_children(msg, children, child)
+            append_children(children, child)
 
 class Regex:
+    """
+    Terminal parser that matches regex
+    """
     def __init__(self, pattern_str, name = None):
         self.name = name
         self.pattern_str = pattern_str
@@ -71,6 +85,9 @@ class Regex:
             return Node(pos, match.end(), name = self.name, text = match.group(0))
 
 class String:
+    """
+    Terminal parser that matches exact string match
+    """
     def __init__(self, str, name = None):
         self.str = str
         self.len = len(str)
@@ -82,6 +99,9 @@ class String:
                 return Node(pos, pos + self.len, name = self.name, text = self.str)
 
 class Char:
+    """
+    Terminal parser that matches one char
+    """
     def __init__(self, char, name = None):
         self.char = char
         self.name = name
@@ -91,6 +111,9 @@ class Char:
             return Node(pos, pos + 1, name = self.name, text = self.char)
 
 class NotChar:
+    """
+    Terminal parser that matches any single char but one
+    """
     def __init__(self, char, name = None):
         self.char = char
         self.name = name
@@ -101,6 +124,9 @@ class NotChar:
                 return Node(pos, pos + 1, name = self.name, text = string[pos])
 
 class AnyChar:
+    """
+    Terminal parser that matches any single char
+    """
     def __init__(self, name = None):
         self.name = name
 
@@ -109,6 +135,9 @@ class AnyChar:
             return Node(pos, pos + 1, name = self.name, text = string[pos])
 
 class Seq:
+    """
+    Parser that matches a linear sequence of other parsers
+    """
     def __init__(self, *parser_names, name = None):
         self.parser_names = parser_names
         self.parsers = None
@@ -121,13 +150,16 @@ class Seq:
         end = pos
         for parser in self.parsers:
             if node := parser.parse(string, end):
-                append_children(self, children, node)
+                append_children(children, node)
                 end = node.end
             else:
                 return None
         return Node(pos, end, children, name = self.name)
 
 class Choice:
+    """
+    Parser that matches first matching of several parsers
+    """
     def __init__(self, *parser_names):
         self.parser_names = parser_names
         self.parsers = None
@@ -140,6 +172,9 @@ class Choice:
                 return node
 
 class Optional:
+    """
+    Parser that matches child parser or skips it altogether
+    """
     def __init__(self, parser_name):
         self.parser_name = parser_name
         self.parser = None
@@ -150,6 +185,9 @@ class Optional:
         return self.parser.parse(string, pos) or Node(pos, pos)
 
 class Repeat:
+    """
+    Parser that matches child parser zero or more times
+    """
     def __init__(self, parser_name, name = None):
         self.parser_name = parser_name
         self.parser = None
@@ -161,11 +199,14 @@ class Repeat:
         children = []
         end = pos
         while node := self.parser.parse(string, end):
-            append_children(self, children, node)
+            append_children(children, node)
             end = node.end
         return Node(pos, end, children, name = self.name if end > pos else None)
 
 class Repeat1:
+    """
+    Parser that matches child parser one or more times
+    """
     def __init__(self, parser_name):
         self.parser_name = parser_name
         self.parser = None
@@ -176,7 +217,7 @@ class Repeat1:
         children = []
         end = pos
         while node := self.parser.parse(string, end):
-            append_children(self, children, node)
+            append_children(children, node)
             end = node.end
         if children:
             return Node(pos, end, children)
@@ -238,12 +279,19 @@ parsers['_form'] = Choice('token',
                           'meta',                              
                           'tagged')
 
+# top-level parser
 parsers['source'] = Repeat(Choice('_gap', '_form', AnyChar(name = "error")), name = "source")
 
 def parse(string):
+    """
+    The main function that parses string and returns AST
+    """
     return get_parser('source').parse(string, 0)
 
 def is_symbol(node):
+    """
+    Utility functions that checks if AST node is a symbol
+    """
     if node.name == 'token' and node.text:
         s = node.text
         if s == 'true' or s == 'false' or s == 'nil':
@@ -256,6 +304,11 @@ def is_symbol(node):
             return s[0] not in '+-:\\0123456789'
 
 def search(node, pos, pred = lambda x: True, max_depth = 1000):
+    """
+    Search inside node what’s the deepest node that includes pos.
+    Stops at max_depth and if pred evals to true.
+    If two nodes touch around pos, checks both for pred.
+    """
     if max_depth <= 0 or not node.children:
         if pred(node):
             return node
@@ -268,32 +321,47 @@ def search(node, pos, pred = lambda x: True, max_depth = 1000):
         elif pos < child.start:
             break
 
-parse_trees = {}
+parsed_cache = {}
+
+if __package__:
+    import sublime, sublime_plugin
+
+    class TextChangeListener(sublime_plugin.TextChangeListener):
+        def on_text_changed_async(self, changes):
+            id = self.buffer.id()
+            if id in parsed_cache:
+                del parsed_cache[id]
 
 def parse_tree(view):
+    """
+    Parses current buffer content and return AST. Cached, evict on write
+    """
     id = view.buffer_id()
-    if id in parse_trees:
-        return parse_trees[id]
-    text = view.substr(common.region(0, view.size()))
+    if id in parsed_cache:
+        return parsed_cache[id]
+    text = view.substr(sublime.Region(0, view.size()))
     parsed = parse(text)
-    parse_trees[id] = parsed
+    parsed_cache[id] = parsed
     return parsed
 
-def invalidate_parse_tree(view):
-    id = view.buffer.id()
-    if id in parse_trees:
-        del parse_trees[id]
-
 def symbol_at_point(view, point):
+    """
+    Returns symbol left/right/around cursor 
+    """
     parsed = parse_tree(view)
     start = time.time()
     if node := search(parsed, point, pred = is_symbol):
-        return common.region(node.start, node.end)
+        return sublime.Region(node.start, node.end)
 
 def topmost_form(view, point):
+    """
+    Find topmost form under cursor, or left to the cursor.
+    If inside (comment), finds second-topmost form
+    """
+
     # move left to first non-space
-    if point >= view.size() or view.substr(common.region(point, point + 1)).isspace():
-        while point > 0 and view.substr(common.region(point - 1, point)).isspace():
+    if point >= view.size() or view.substr(sublime.Region(point, point + 1)).isspace():
+        while point > 0 and view.substr(sublime.Region(point - 1, point)).isspace():
             point = point - 1
 
     parsed = parse_tree(view)
@@ -304,9 +372,12 @@ def topmost_form(view, point):
                 if first_form.name == "token" and first_form.text == "comment" and point > first_form.end:
                     if inner := search(body, point, max_depth = 1):
                         node = inner
-        return common.region(node.start, node.end)
+        return sublime.Region(node.start, node.end)
 
 def namespace(view, point):
+    """
+    Finds name of last namespace defined in buffer up to the point
+    """
     ns = None
     parsed = parse_tree(view)
     for child in parsed.children:
@@ -323,3 +394,6 @@ def namespace(view, point):
                     if is_symbol(second_form):
                         ns = second_form.text
     return ns
+
+def plugin_unloaded():
+    parsed_cache = {}
