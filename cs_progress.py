@@ -1,5 +1,5 @@
-import sublime, threading, time
-from . import cs_common
+import sublime, sublime_plugin, threading, time
+from . import cs_common, cs_eval
 
 class ProgressThread:
     """
@@ -31,11 +31,10 @@ class ProgressThread:
                 break
             time.sleep(self.interval / 1000.0)
             updated = False
-            if 'conn' in dir(cs_common) and (window := sublime.active_window()) and (view := window.active_view()):
-                for eval in list(cs_common.conn.evals_by_view[view.id()].values()):
-                    if eval.status == "pending":
-                        eval.update(eval.status, self.phase())
-                        updated = True
+            if (window := sublime.active_window()) and (view := window.active_view()):
+                for eval in cs_eval.by_status(view, 'pending'):
+                    eval.update(eval.status, self.phase())
+                    updated = True
             if updated:
                 self.phase_idx = (self.phase_idx + 1) % len(self.phases)
             else:
@@ -64,6 +63,13 @@ def phase():
 
 def wake():
     thread.wake()
+
+class EventListener(sublime_plugin.EventListener):
+    def on_activated_async(self, view):
+        """
+        On active view change
+        """
+        thread.wake()
 
 def on_settings_change(settings):
     thread.update_phases(settings["progress_phases"], settings["progress_interval_ms"])

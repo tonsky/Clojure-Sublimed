@@ -6,8 +6,6 @@ class Connection:
     host: str
     port: str
     status: str
-    evals: Dict[int, cs_eval.Eval]
-    evals_by_view: Dict[int, Dict[int, cs_eval.Eval]]
     last_view: sublime.View
     session: str
     profile: cs_common.Profile
@@ -16,8 +14,6 @@ class Connection:
     def __init__(self):
         self.host = 'localhost'
         self.port = None
-        self.evals = {}
-        self.evals_by_view = collections.defaultdict(dict)
         self.reset()
         self.last_view = window.active_view() if (window := sublime.active_window()) else None
         self.session = None
@@ -35,12 +31,7 @@ class Connection:
                     view.set_status(cs_common.ns, self.status)
                 else:
                     view.erase_status(cs_common.ns)
-                for eval in self.evals.values():
-                    if isinstance(eval, cs_eval.StatusEval):
-                        if self.last_view and view != self.last_view:
-                            self.last_view.erase_status(eval.value_key())
-                        eval.update(eval.status, eval.value)
-            self.last_view = view
+                self.last_view = view
 
     def send(self, msg):
         cs_common.debug("SND {}", msg)
@@ -51,52 +42,23 @@ class Connection:
         self.reader = None
         self.session = None
         self.set_status(None)
-        for id, eval in self.evals.items():
-            eval.erase()
-        self.evals.clear()
-        self.evals_by_view.clear()
-
-    def add_eval(self, eval):
-        self.evals[eval.id] = eval
-        if view := eval.view:
-            self.evals_by_view[view.id()][eval.id] = eval
-
-    def erase_eval(self, eval):
-        eval.erase()
-        del self.evals[eval.id]
-        if view := eval.view:
-            del self.evals_by_view[view.id()][eval.id]
-        if eval.status == "pending" and eval.session:
-            cs_common.conn.send({"op": "interrupt", "interrupt-id": eval.id, "session": eval.session})
-
-    def find_eval(self, view, region):
-        for eval in self.evals_by_view[view.id()].values():
-            if cs_common.regions_touch(eval.region(), region):
-                return eval
-
-    def erase_evals(self, predicate, view = None):
-        evals = list(self.evals.items()) if view is None else list(self.evals_by_view[view.id()].items())
-        for id, eval in evals:
-            if predicate(eval):
-                self.erase_eval(eval)
 
     def disconnect(self):
         if self.socket:
             self.socket.close()
             self.reset()
+            cs_eval.erase_evals()
 
     def ready(self):
         return bool(self.socket and self.session)
 
 def handle_new_session(msg):
-    if "new-session" in msg and "id" in msg and msg["id"] in cs_common.conn.evals:
-        eval = cs_common.conn.evals[msg["id"]]
+    if "new-session" in msg and "id" in msg and (eval := cs_eval.by_id(msg["id"])):
         eval.session = msg["new-session"]
         return True
 
 def handle_value(msg):
-    if "value" in msg and "id" in msg and msg["id"] in cs_common.conn.evals:
-        eval = cs_common.conn.evals[msg["id"]]
+    if "value" in msg and "id" in msg and (eval := cs_eval.by_id(msg["id"])):
         eval.update("success", msg.get("value"), time_taken = msg.get(f'{cs_common.ns}.middleware/time-taken'))
         return True
 
@@ -107,8 +69,7 @@ def set_selection(view, region):
     view.show(region.a, show_surrounds = True, keep_to_left = True, animate = True)
 
 def handle_exception(msg):
-    if "id" in msg and msg["id"] in cs_common.conn.evals:
-        eval = cs_common.conn.evals[msg["id"]]
+    if "id" in msg and (eval := cs_eval.by_id(msg["id"])):
         present = lambda key: (cs_common.ns + ".middleware/" + key) in msg
         get = lambda key: msg.get(cs_common.ns + ".middleware/" + key)
         if get("root-ex-class") and get("root-ex-msg"):
@@ -135,20 +96,6 @@ def handle_exception(msg):
             return True        
         elif "status" in msg and "namespace-not-found" in msg["status"]:
             eval.update("exception", f'Namespace not found: {msg["ns"]}')
-
-class ClojureSublimedToggleTraceCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-        point = view.sel()[0].begin()
-        for eval in cs_common.conn.evals_by_view[view.id()].values():
-            if eval.view == view:
-                region = eval.region()
-                if region and region.contains(point):
-                    eval.toggle_trace()
-                    break
-        
-    def is_enabled(self):
-        return cs_common.conn.ready() and len(self.view.sel()) == 1
 
 def format_lookup(view, info):
     settings = view.settings()
@@ -201,54 +148,13 @@ def format_lookup(view, info):
     return body
 
 def handle_lookup(msg):
-    if "info" in msg and "id" in msg and msg["id"] in cs_common.conn.evals:
-        eval = cs_common.conn.evals[msg["id"]]
+    if "info" in msg and "id" in msg and (eval := cs_eval.by_id(msg["id"])):
         eval.update("lookup", None)
         view = eval.view
         body = format_lookup(view, msg["info"])
         point = view.line(eval.region().end()).begin()
         eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
         return True
-
-class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-        for sel in view.sel():
-            eval = cs_common.conn.find_eval(view, sel)
-            if eval and eval.phantom_id:
-                cs_common.conn.erase_eval(eval)
-            else:
-                if region := cs_parser.symbol_at_point(view, sel.begin()) if sel.empty() else sel:
-                    line = view.line(region)
-                    cs_common.conn.erase_evals(lambda eval: eval.region() and eval.region().intersects(line), view)
-                    eval = cs_eval.Eval(view, region)
-                    cs_progress.wake()
-                    cs_common.conn.add_eval(eval)
-                    cs_common.conn.send({"op":      "lookup",
-                               "sym":     view.substr(region),
-                               "session": cs_common.conn.session,
-                               "id":      eval.id,
-                               "ns":      cs_parser.namespace(view, region.begin()) or 'user'})
-
-    def is_enabled(self):
-        return cs_common.conn.ready()
-
-class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-        for sel in view.sel():
-            eval = cs_common.conn.find_eval(view, sel)
-            if eval and eval.status == "exception":
-                view.run_command("clojure_sublimed_toggle_trace", {})
-            elif eval and eval.status == "success":
-                if eval := cs_common.conn.find_eval(view, sel):
-                    eval.toggle_pprint()
-                    break
-            else:
-                view.run_command("clojure_sublimed_toggle_symbol", {})
-
-    def is_enabled(self):
-        return cs_common.conn.ready()
 
 def get_shadow_repl_init_cmd(build):
     """Returns the command to initialise shadow-repl."""
@@ -312,10 +218,9 @@ def handle_connect(msg):
         return True
 
 def handle_done(msg):
-    if "id" in msg and msg["id"] in cs_common.conn.evals and "status" in msg and "done" in msg["status"]:
-        eval = cs_common.conn.evals[msg["id"]]
+    if "id" in msg and (eval := cs_eval.by_id(msg["id"])) and "status" in msg and "done" in msg["status"]:
         if eval.status not in {"success", "exception"}:
-            cs_common.conn.erase_eval(eval)
+            eval.erase()
 
 def handle_msg(msg):
     cs_common.debug("RCV {}", msg)
@@ -479,18 +384,6 @@ class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
 class EventListener(sublime_plugin.EventListener):
     def on_activated_async(self, view):
         cs_common.conn.refresh_status()
-        cs_progress.wake()
-
-    def on_close(self, view):
-        cs_common.conn.erase_evals(lambda eval: True, view)
-
-class TextChangeListener(sublime_plugin.TextChangeListener):
-    def on_text_changed_async(self, changes):
-        view = self.buffer.primary_view()
-        changed = [sublime.Region(x.a.pt, x.b.pt) for x in changes]
-        def should_erase(eval):
-            return not (reg := eval.region()) or any(reg.intersects(r) for r in changed) and view.substr(reg) != eval.code
-        cs_common.conn.erase_evals(should_erase, view)
 
 def plugin_loaded():
     global package

@@ -130,6 +130,8 @@ class ClojureSublimedReindentLinesCommand(sublime_plugin.TextCommand):
 
 class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
     def run(self, edit):
+        view = self.view
+        
         # Calculate all replacements first
         replacements = []
         for sel in view.sel():
