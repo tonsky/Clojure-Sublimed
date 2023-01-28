@@ -96,6 +96,7 @@ def handle_exception(msg):
             return True        
         elif "status" in msg and "namespace-not-found" in msg["status"]:
             eval.update("exception", f'Namespace not found: {msg["ns"]}')
+            return True
 
 def format_lookup(view, info):
     settings = view.settings()
@@ -237,8 +238,7 @@ def handle_msg(msg):
 
 def read_loop():
     try:
-        cs_common.conn.pending_id = 1
-        cs_common.conn.send({"op": "clone", "id": cs_common.conn.pending_id})
+        cs_common.conn.send({"op": "clone", "id": 1})
         cs_common.conn.set_status(f"🌒 Cloning session")
         for msg in cs_bencode.decode_file(cs_common.SocketIO(cs_common.conn.socket)):
             handle_msg(msg)
@@ -366,13 +366,6 @@ class ClojureSublimedConnectCommand(sublime_plugin.ApplicationCommand):
     def is_enabled(self):
         return cs_common.conn.socket == None
 
-class ClojureSublimedDisconnectCommand(sublime_plugin.ApplicationCommand):
-    def run(self):
-        cs_common.conn.disconnect()
-
-    def is_enabled(self):
-        return cs_common.conn.socket != None
-
 class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
     def run(self):
         cs_common.conn.disconnect()
@@ -380,10 +373,6 @@ class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
 
     def is_enabled(self):
         return cs_common.conn.socket != None
-
-class EventListener(sublime_plugin.EventListener):
-    def on_activated_async(self, view):
-        cs_common.conn.refresh_status()
 
 def plugin_loaded():
     global package

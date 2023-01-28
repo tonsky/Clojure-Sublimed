@@ -1,4 +1,4 @@
-import sublime, time, traceback
+import re, socket, sublime, time, traceback
 
 ns = 'clojure-sublimed'
 
@@ -107,6 +107,16 @@ class SocketIO:
         end = min(begin + n, len(self.buffer))
         self.pos = end
         return self.buffer[begin:end]
+
+def socket_connect(addr):
+    if match := re.fullmatch(r'\s*([^:]+):(\d+)\s*', addr):
+        host, port = match.groups()
+        port = int(port)
+        return socket.create_connection((host, port))
+    else: # path == unix domain socket
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(addr)
+        return s
 
 class Profile:
     CLOJURE = 'clojure'

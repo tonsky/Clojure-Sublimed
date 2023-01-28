@@ -4,6 +4,10 @@
         "command": "clojure_sublimed_connect"
     },
     {
+        "caption": "Clojure Sublimed: Connect to raw nREPL",
+        "command": "clojure_sublimed_connect_nrepl_raw"
+    },
+    {
         "caption": "Clojure Sublimed: Connect shadow-cljs",
         "command": "clojure_sublimed_connect_shadow_cljs"
     },

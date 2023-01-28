@@ -2,8 +2,8 @@ import collections, html, os, re, sublime, sublime_plugin
 from typing import Any, Dict, Tuple
 from . import cs_common, cs_parser, cs_progress
 
-evals: Dict[int, Eval] = {}
-evals_by_view: Dict[int, Dict[int, Eval]] = collections.defaultdict(dict)
+evals = {} # Dict[int, Eval]
+evals_by_view = collections.defaultdict(dict) # Dict[int, Dict[int, Eval]]
 last_view: sublime.View = None
 
 class Eval:
