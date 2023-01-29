@@ -1,6 +1,6 @@
 import collections, html, os, re, sublime, sublime_plugin
 from typing import Any, Dict, Tuple
-from . import cs_common, cs_parser, cs_progress
+from . import cs_common, cs_conn, cs_parser, cs_progress
 
 evals = {} # Dict[int, Eval]
 evals_by_view = collections.defaultdict(dict) # Dict[int, Dict[int, Eval]]
@@ -178,40 +178,39 @@ def erase_evals(predicate = lambda x: True, view = None):
         if predicate(eval):
             eval.erase()
 
-def get_middleware_opts(conn):
-    """Returns middleware options to send to nREPL as a dict.
-    Currently only Clojure profile supports middleware.
-    """
-    if conn and conn.profile == cs_common.Profile.CLOJURE:
-        return {
-            "nrepl.middleware.caught/caught": f"{cs_common.ns}.middleware/print-root-trace",
-            "nrepl.middleware.print/print": f"{cs_common.ns}.middleware/pprint",
-            "nrepl.middleware.print/quota": 4096
-        }
-    return {}
+def on_success(id, value):
+    if (eval := by_id(id)):
+        eval.update('success', value)
 
-def eval_msg(view, region, msg):
+def on_exception(id, value):
+    if (eval := by_id(id)):
+        eval.update('exception', value)
+
+# def get_middleware_opts(conn):
+#     """Returns middleware options to send to nREPL as a dict.
+#     Currently only Clojure profile supports middleware.
+#     """
+#     if conn and conn.profile == cs_common.Profile.CLOJURE:
+#         return {
+#             "nrepl.middleware.caught/caught": f"{cs_common.ns}.middleware/print-root-trace",
+#             "nrepl.middleware.print/print": f"{cs_common.ns}.middleware/pprint",
+#             "nrepl.middleware.print/quota": 4096
+#         }
+#     return {}
+
+def eval(view, region):
     extended_region = view.line(region)
     erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
     eval = Eval(view, region)
-    cs_progress.wake()
-    eval.msg = {k: v for k, v in msg.items() if v}
-    eval.msg["id"] = eval.id
-    eval.msg["session"] = cs_common.conn.session
-    eval.msg.update(get_middleware_opts(cs_common.conn))
-
-    cs_common.conn.send(eval.msg)
-    eval.update("pending", cs_progress.phase())
-
-def eval(view, region, code=None):
+    id   = eval.id
+    code = view.substr(region)
+    ns   = cs_parser.namespace(view, region.begin()) or 'user'
     (line, column) = view.rowcol_utf16(region.begin())
-    msg = {"op":     "eval" if (cs_common.conn.profile == cs_common.Profile.SHADOW_CLJS or cs_common.setting("eval_in_session")) else "clone-eval-close",
-           "code":   view.substr(region) if code is None else code,
-           "ns":     cs_parser.namespace(view, region.begin()) or 'user',
-           "line":   line + 1,
-           "column": column,
-           "file":   view.file_name()}
-    eval_msg(view, region, msg)
+    line = line + 1
+    file = view.file_name()
+    cs_conn.conn.eval(id, code, ns, line, column, file)
+    eval.update('pending', cs_progress.phase())
+    cs_progress.wake()
 
 class ClojureSublimedEval(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -228,38 +227,38 @@ class ClojureSublimedEval(sublime_plugin.TextCommand):
                     eval(self.view, sel)
 
     def is_enabled(self):
-        return cs_common.conn.ready()
+        return cs_conn.ready()
 
-class ClojureSublimedEvalBufferCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-        region = sublime.Region(0, view.size())
-        file_name = view.file_name()
-        msg = {"op":        "load-file",
-               "file":      view.substr(region),
-               "file-path": file_name,
-               "file-name": os.path.basename(file_name) if file_name else "NO_SOURCE_FILE.cljc"}
-        eval_msg(view, region, msg)
+# class ClojureSublimedEvalBufferCommand(sublime_plugin.TextCommand):
+#     def run(self, edit):
+#         view = self.view
+#         region = sublime.Region(0, view.size())
+#         file_name = view.file_name()
+#         msg = {"op":        "load-file",
+#                "file":      view.substr(region),
+#                "file-path": file_name,
+#                "file-name": os.path.basename(file_name) if file_name else "NO_SOURCE_FILE.cljc"}
+#         eval_msg(view, region, msg)
         
-    def is_enabled(self):
-        return cs_common.conn.ready()
+#     def is_enabled(self):
+#         return cs_common.conn.ready()
 
-class ClojureSublimedEvalCodeCommand(sublime_plugin.ApplicationCommand):
-    def run(self, code, ns = None):
-        erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
-        eval = StatusEval(code)
-        if (not ns) and (view := eval.active_view()):
-            ns = cs_parser.namespace(view, view.size())
-        eval.msg = {"op":   "eval",
-                    "id":   eval.id,
-                    "ns":   ns or 'user',
-                    "code": code}
-        eval.msg.update(get_middleware_opts(cs_common.conn))        
-        cs_common.conn.send(eval.msg)
-        eval.update("pending", cs_progress.phase())
+# class ClojureSublimedEvalCodeCommand(sublime_plugin.ApplicationCommand):
+#     def run(self, code, ns = None):
+#         erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
+#         eval = StatusEval(code)
+#         if (not ns) and (view := eval.active_view()):
+#             ns = cs_parser.namespace(view, view.size())
+#         eval.msg = {"op":   "eval",
+#                     "id":   eval.id,
+#                     "ns":   ns or 'user',
+#                     "code": code}
+#         eval.msg.update(get_middleware_opts(cs_common.conn))        
+#         cs_common.conn.send(eval.msg)
+#         eval.update("pending", cs_progress.phase())
 
-    def is_enabled(self):
-        return cs_common.conn.ready()
+#     def is_enabled(self):
+#         return cs_common.conn.ready()
 
 class ClojureSublimedCopyCommand(sublime_plugin.TextCommand):
     def eval(self):
@@ -282,27 +281,27 @@ class ClojureSublimedToggleTraceCommand(sublime_plugin.TextCommand):
     def is_enabled(self):
         return cs_common.conn.ready() and len(self.view.sel()) == 1
 
-class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-        sel = view.sel()[0]
-        eval = by_region(view, sel)
-        if eval and eval.phantom_id:
-            erase_eval(eval)
-        else:
-            if region := cs_parser.symbol_at_point(view, region.begin()) if region.empty() else sel:
-                line = view.line(region)
-                erase_evals(lambda eval: eval.region() and eval.region().intersects(line), view)
-                eval = Eval(view, region)
-                cs_progress.wake()
-                cs_common.conn.send({"op":      "lookup",
-                                     "sym":     view.substr(region),
-                                     "session": cs_common.conn.session,
-                                     "id":      eval.id,
-                                     "ns":      cs_parser.namespace(view, region.begin()) or 'user'})
+# class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
+#     def run(self, edit):
+#         view = self.view
+#         sel = view.sel()[0]
+#         eval = by_region(view, sel)
+#         if eval and eval.phantom_id:
+#             erase_eval(eval)
+#         else:
+#             if region := cs_parser.symbol_at_point(view, region.begin()) if region.empty() else sel:
+#                 line = view.line(region)
+#                 erase_evals(lambda eval: eval.region() and eval.region().intersects(line), view)
+#                 eval = Eval(view, region)
+#                 cs_progress.wake()
+#                 cs_common.conn.send({"op":      "lookup",
+#                                      "sym":     view.substr(region),
+#                                      "session": cs_common.conn.session,
+#                                      "id":      eval.id,
+#                                      "ns":      cs_parser.namespace(view, region.begin()) or 'user'})
 
-    def is_enabled(self):
-        return cs_common.conn.ready() and len(self.view.sel()) == 1
+#     def is_enabled(self):
+#         return cs_common.conn.ready() and len(self.view.sel()) == 1
 
 class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -324,31 +323,31 @@ class ClojureSublimedClearEvalsCommand(sublime_plugin.TextCommand):
         erase_evals(lambda eval: eval.status not in {"pending", "interrupt"}, self.view)
         erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
 
-class ClojureSublimedInterruptEvalCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        for eval in evals_by_view[self.view.id()].values():
-            if eval.status == "pending":
-                cs_common.conn.send({"op":           "interrupt",
-                                     "session":      eval.session,
-                                     "interrupt-id": eval.id})
-                eval.update("interrupt", "Interrupting...")
+# class ClojureSublimedInterruptEvalCommand(sublime_plugin.TextCommand):
+#     def run(self, edit):
+#         for eval in evals_by_view[self.view.id()].values():
+#             if eval.status == "pending":
+#                 cs_common.conn.send({"op":           "interrupt",
+#                                      "session":      eval.session,
+#                                      "interrupt-id": eval.id})
+#                 eval.update("interrupt", "Interrupting...")
 
-    def is_enabled(self):
-        return cs_common.conn.ready()
+#     def is_enabled(self):
+#         return cs_common.conn.ready()
 
-class ClojureSublimedRequireNamespaceCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-        for sel in view.sel():
-            region = cs_parser.symbol_at_point(view, sel.begin()) if sel.empty() else sel
-            # narrow down to the namespace part if present
-            if region and (sym := view.substr(region).partition('/')[0]):
-                region = sublime.Region(region.a, region.a + len(sym))
-            if region:
-                eval(view, region, code=f"(require '{sym})")
+# class ClojureSublimedRequireNamespaceCommand(sublime_plugin.TextCommand):
+#     def run(self, edit):
+#         view = self.view
+#         for sel in view.sel():
+#             region = cs_parser.symbol_at_point(view, sel.begin()) if sel.empty() else sel
+#             # narrow down to the namespace part if present
+#             if region and (sym := view.substr(region).partition('/')[0]):
+#                 region = sublime.Region(region.a, region.a + len(sym))
+#             if region:
+#                 eval(view, region, code=f"(require '{sym})")
 
-    def is_enabled(self):
-        return cs_common.conn.ready()
+#     def is_enabled(self):
+#         return cs_common.conn.ready()
 
 def move_status_evals(view):
     global last_view

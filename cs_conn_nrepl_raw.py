@@ -1,5 +1,5 @@
 import sublime, sublime_plugin, threading
-from . import cs_bencode, cs_common, cs_conn
+from . import cs_bencode, cs_common, cs_conn, cs_eval
 
 class ConnectionNreplRaw(cs_conn.Connection):
     def __init__(self, addr):
@@ -8,28 +8,19 @@ class ConnectionNreplRaw(cs_conn.Connection):
         self.socket    = None
         self.reader    = None
         self.session   = None
-        self.callbacks = {}
         self.closing   = False
 
-    def connect(self):
-        try:
-            self.set_status(0, 'Connecting to {}', self.addr)
-            self.socket = cs_common.socket_connect(self.addr)
-            self.reader = threading.Thread(daemon=True, target=self.read_loop)
-            self.reader.start()
-        except Exception as e:
-            cs_common.error('Failed to connect to {}', self.addr)
-            self.disconnect()
-            if window := sublime.active_window():
-                window.status_message(f'Failed to connect to {self.addr}')
-        cs_conn.Connection.connect(self)
+    def connect_impl(self):
+        self.set_status(0, 'Connecting to {}', self.addr)
+        self.socket = cs_common.socket_connect(self.addr)
+        self.reader = threading.Thread(daemon=True, target=self.read_loop)
+        self.reader.start()
 
     def disconnect_impl(self):
         if self.session:
             self.send({'op': 'close', 'session': self.session})
         self.socket.close()
         self.socket = None
-        self.callbacks.clear()
 
     def read_loop(self):
         try:
@@ -51,8 +42,7 @@ class ConnectionNreplRaw(cs_conn.Connection):
         cs_common.debug('SND {}', msg)
         self.socket.sendall(cs_bencode.encode(msg).encode())
 
-    def eval(self, id, code, on_success, on_error, ns = 'user', line = None, column = None, file = None):
-        self.callbacks[id] = (on_success, on_error)
+    def eval_impl(self, id, code, ns = 'user', line = None, column = None, file = None):
         msg = {'id':      id,
                'session': self.session,
                'op':      'eval',
@@ -67,9 +57,8 @@ class ConnectionNreplRaw(cs_conn.Connection):
         self.send(msg)
 
     def handle_value(self, msg):
-        if 'value' in msg and (id := msg.get('id')) and (on_success, _ := self.callbacks.get(id)):
-            on_success(msg.get('value'))
-            del self.callbacks[id]
+        if 'value' in msg and (id := msg.get('id')):
+            cs_eval.on_success(id, msg.get('value'))
             return True
 
     def handle_exception(self, msg):
@@ -77,9 +66,8 @@ class ConnectionNreplRaw(cs_conn.Connection):
             error = msg.get('root-ex') or msg.get('ex')
             if not error and 'status' in msg and 'namespace-not-found' in msg['status']:
                 error = 'Namespace not found: ' + msg['ns']
-            if error and (_, on_error := self.callbacks.get(id)):
-                on_error(error)
-                del self.callbacks[id]
+            if error:
+                cs_eval.on_exception(id, error)
                 return True
 
     def handle_msg(self, msg):

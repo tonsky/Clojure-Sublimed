@@ -1,5 +1,5 @@
 import os, re, sublime, sublime_plugin
-from . import cs_common
+from . import cs_common, cs_eval
 
 conn = None
 status_key = 'clojure-sublimed-conn'
@@ -11,16 +11,35 @@ def erase_status():
         if view := window.active_view():
             view.erase_status(status_key)
 
+def ready():
+    return bool(conn and conn.status and conn.status[0] == phases[4])
+
 class Connection:
     def __init__(self):
         self.status = None
         self.disconnecting = False
 
+    def connect_impl(self):
+        pass
+
     def connect(self):
         global conn
-        conn = self
+        try:
+            self.connect_impl()
+            conn = self
+        except Exception as e:
+            cs_common.error('Connection failed')
+            self.disconnect()
+            if window := sublime.active_window():
+                window.status_message(f'Connection failed')
 
-    def eval(self, id, code, on_success, on_error, ns = 'user', line = None, column = None, file = None):
+    def eval_impl(self, id, code, ns = 'user', line = None, column = None, file = None):
+        pass
+
+    def eval(self, id, code, ns = 'user', line = None, column = None, file = None):
+        self.eval_impl(id, code, ns, line, column, file)
+
+    def disconnect_impl(self):
         pass
 
     def disconnect(self):
@@ -31,12 +50,7 @@ class Connection:
         global conn
         conn = None
         erase_status()
-
-    def disconnect_impl(self):
-        pass
-
-    def ready(self):
-        return self.status and self.status[0] == phases[4]
+        cs_eval.erase_evals()
 
     def set_status(self, phase, message, *args):
         self.status = phases[phase] + ' ' + message.format(*args)
