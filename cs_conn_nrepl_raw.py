@@ -27,7 +27,7 @@ class ConnectionNreplRaw(cs_conn.Connection):
 
     def read_loop(self):
         try:
-            self.set_status(2, 'Cloning session')
+            self.set_status(1, 'Cloning session')
             self.send({'op': 'clone', 'id': 1})
             for msg in cs_bencode.decode_file(cs_common.SocketIO(self.socket)):
                 self.handle_msg(msg)
@@ -93,6 +93,8 @@ class ConnectionNreplRaw(cs_conn.Connection):
             error = msg.get('root-ex') or msg.get('ex')
             if not error and 'status' in msg and 'namespace-not-found' in msg['status']:
                 error = 'Namespace not found: ' + msg['ns']
+            if not error and 'status' in msg and 'unknown-op' in msg['status']:
+                error = 'Unknown op: ' + msg['op']
             if error:
                 cs_eval.on_exception(id, error)
                 return True

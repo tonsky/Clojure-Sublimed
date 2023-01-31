@@ -95,6 +95,9 @@ class Connection:
         cs_common.set_status(status_key, status)
 
 class AddressInputHandler(sublime_plugin.TextInputHandler):
+    def __init__(self, next_input = None):
+        self.next = next_input
+
     """
     Reusable InputHandler that remembers last address and can also look for .nrepl-port file
     """
@@ -134,6 +137,9 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
             return int(port) in range(1, 65536)
         else:
             return os.path.isfile(text)
+
+    def next_input(self, args):
+        return self.next
 
 class ClojureSublimedDisconnectCommand(sublime_plugin.ApplicationCommand):
     def run(self):
