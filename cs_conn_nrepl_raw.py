@@ -6,12 +6,13 @@ class ConnectionNreplRaw(cs_conn.Connection):
     Raw nREPL connection: no extensions, no options, nothing. Bare-bones nREPL
     """
     def __init__(self, addr):
-        cs_conn.Connection.__init__(self)
+        super().__init__()
         self.addr      = addr
         self.socket    = None
         self.reader    = None
         self.session   = None
         self.closing   = False
+        self.eval_op   = 'eval'
 
     def connect_impl(self):
         self.set_status(0, 'Connecting to {}', self.addr)
@@ -22,8 +23,9 @@ class ConnectionNreplRaw(cs_conn.Connection):
     def disconnect_impl(self):
         if self.session:
             self.send({'op': 'close', 'session': self.session})
-        self.socket.close()
-        self.socket = None
+        if self.socket:
+            self.socket.close()
+            self.socket = None
 
     def read_loop(self):
         try:
@@ -42,7 +44,7 @@ class ConnectionNreplRaw(cs_conn.Connection):
     def eval_impl(self, id, code, ns = 'user', line = None, column = None, file = None):
         msg = {'id':      id,
                'session': self.session,
-               'op':      'eval',
+               'op':      self.eval_op,
                'code':    code,
                'ns':      ns}
         if line is not None:
@@ -71,7 +73,7 @@ class ConnectionNreplRaw(cs_conn.Connection):
                'ns':      ns}
         self.send(msg)
 
-    def interrupt(self, id):
+    def interrupt_impl(self, id):
         msg = {'session':      self.session,
                'op':           'interrupt',
                'interrupt-id': id}
@@ -112,17 +114,22 @@ class ConnectionNreplRaw(cs_conn.Connection):
             print(msg['err'], end = '')
             return True
 
+    def handle_done(self, msg):
+        if (id := msg.get('id')) and (status := msg.get('status')) and 'done' in status:
+            cs_eval.on_done(id)
+
     def handle_msg(self, msg):
         cs_common.debug('RCV {}', msg)
         self.handle_connect(msg) \
         or self.handle_value(msg) \
         or self.handle_exception(msg) \
         or self.handle_lookup(msg) \
-        or self.handle_out(msg)
+        or self.handle_out(msg) \
+        or self.handle_done(msg)
 
 class ClojureSublimedConnectNreplRawCommand(sublime_plugin.ApplicationCommand):
     def run(self, address):
-        if address == "auto":
+        if address == 'auto':
             address = cs_conn.AddressInputHandler().initial_text()
         ConnectionNreplRaw(address).connect()
 

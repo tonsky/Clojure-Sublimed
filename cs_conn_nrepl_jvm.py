@@ -1,0 +1,111 @@
+import os, sublime, sublime_plugin
+from . import cs_common, cs_conn, cs_conn_nrepl_raw, cs_eval
+
+class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
+    """
+    Enhanced nREPL connection that only will work on JVM
+    """
+    def __init__(self, addr):
+        super().__init__(addr)
+        self.eval_op = 'clone-eval-close'
+
+    def send(self, msg):
+        ns = cs_common.ns + '.middleware'
+        msg['nrepl.middleware.caught/caught'] = ns + '/print-root-trace'
+        msg['nrepl.middleware.print/print']   = ns + '/pprint'
+        msg['nrepl.middleware.print/quota']   = 4096
+        super().send(msg)
+
+    def interrupt_impl(self, id):
+        eval = cs_eval.by_id(id)
+        msg = {'session':      eval.session or self.session,
+               'op':           'interrupt',
+               'interrupt-id': id}
+        self.send(msg)
+
+    def handle_connect(self, msg):
+        if 1 == msg.get('id') and 'new-session' in msg:
+            self.set_status(2, 'Uploading middleware')
+            self.session = msg['new-session']
+            middleware = sublime.load_resource(f'Packages/{cs_common.package}/cs_middleware.clj')
+            self.send({'id':      2,
+                       'session': self.session,
+                       'op':      'load-file',
+                       'file':    middleware})
+            return True
+
+        elif 2 == msg.get('id') and msg.get('status') == ['done']:
+            self.set_status(2, 'Adding middlewares')
+            eval_shared = cs_common.setting('eval_shared')
+            ns = cs_common.ns + '.middleware'
+            self.send({'id':               3 if eval_shared else 4,
+                       'session':          self.session,
+                       'op':               'add-middleware',
+                       'middleware':       [ns + '/clone-and-eval',
+                                            ns + '/time-eval',
+                                            ns + '/wrap-errors',
+                                            ns + '/wrap-output'],
+                       'extra-namespaces': [ns]})
+            return True
+
+        elif 3 == msg.get('id') and msg.get('status') == ['done']:
+            self.set_status(3, 'Evaluating session code')
+            eval_shared = cs_common.setting('eval_shared')
+            self.send({'id':      4,
+                       'session': self.session,
+                       'op':      'eval',
+                       'code':    eval_shared})
+            return True
+
+        elif 4 == msg.get('id') and msg.get('status') == ['done']:
+            self.set_status(4, self.addr)
+            return True
+
+    def handle_new_session(self, msg):
+        if 'new-session' in msg and (id := msg.get('id')) and (eval := cs_eval.by_id(id)):
+            eval.session = msg['new-session']
+            return True
+
+    def handle_exception(self, msg):
+        if (id := msg.get('id')):
+            ns = cs_common.ns + '.middleware/'
+            present = lambda key: (ns + key) in msg
+            get = lambda key: msg.get(ns + key)
+            if get('root-ex-class') and get('root-ex-msg'):
+                text = get('root-ex-class') + ': ' + get('root-ex-msg')
+                line = None
+                column = None
+                if get('root-ex-data'):
+                    text += ' ' + get('root-ex-data')
+                if present('line') and present('column') and get('source'):
+                    line   = get('line') - 1
+                    column = get('column')
+                    text   += ' ({}:{}:{})'.format(get('source'), get('line'), get('column'))
+                cs_eval.on_exception(id, text, line = line, column = column, trace = get('trace'))
+                return True
+            else:
+                return super().handle_exception(msg)
+
+    def handle_msg(self, msg):
+        cs_common.debug('RCV {}', msg)
+
+        for key in msg.get('nrepl.middleware.print/truncated-keys', []):
+            msg[key] += '...'
+
+        self.handle_connect(msg) \
+        or self.handle_new_session(msg) \
+        or self.handle_value(msg) \
+        or self.handle_exception(msg) \
+        or self.handle_lookup(msg)
+
+class ClojureSublimedConnectNreplJvmCommand(sublime_plugin.ApplicationCommand):
+    def run(self, address):
+        if address == 'auto':
+            address = cs_conn.AddressInputHandler().initial_text()
+        ConnectionNreplJvm(address).connect()
+
+    def input(self, args):
+        return cs_conn.AddressInputHandler()
+
+    def is_enabled(self):
+        return cs_conn.conn is None

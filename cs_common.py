@@ -1,9 +1,10 @@
-import re, socket, sublime, sublime_plugin, time, traceback
+import os, re, socket, sublime, sublime_plugin, time, traceback
 
 ns = 'clojure-sublimed'
 
 statuses = {}
 last_view = None
+package = None
 
 def settings():
     """
@@ -156,6 +157,16 @@ class EventListener(sublime_plugin.EventListener):
                 if (value := statuses.get(key)) is not None:
                     view.set_status(key, value)
             last_view = view
+
+def plugin_loaded():
+    global package
+    package_path = os.path.dirname(os.path.abspath(__file__))
+    if os.path.isfile(package_path):
+        # Package is a .sublime-package so get its filename
+        package, _ = os.path.splitext(os.path.basename(package_path))
+    elif os.path.isdir(package_path):
+        # Package is a directory, so get its basename
+        package = os.path.basename(package_path)
 
 def plugin_unloaded():
     global statuses, last_view

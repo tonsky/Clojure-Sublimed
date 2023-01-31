@@ -126,15 +126,15 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
 
     def preview(self, text):
         if not self.validate(text):
-            return "Expected <host>:<port> or <path>"
+            return 'Expected <host>:<port> or <path>'
 
     def validate(self, text):
         text = text.strip()
-        if "auto" == text:
+        if 'auto' == text:
             return True
         elif match := re.fullmatch(r'([a-zA-Z0-9\.]+):(\d{1,5})', text):
             _, port = match.groups()
-            return int(port) in range(1, 65536)
+            return 1 <= int(port) and int(port) < 65536
         else:
             return os.path.isfile(text)
 

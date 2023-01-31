@@ -1,9 +1,9 @@
-import os, sublime, sublime_plugin, threading
-from . import cs_bencode, cs_common, cs_conn, cs_conn_nrepl_raw, cs_eval
+import os, sublime, sublime_plugin
+from . import cs_common, cs_conn, cs_conn_nrepl_raw, cs_eval
 
-class ConnectionShadowCLJS(cs_conn_nrepl_raw.ConnectionNreplRaw):
+class ConnectionShadowCljs(cs_conn_nrepl_raw.ConnectionNreplRaw):
     """
-    Raw nREPL connection: no extensions, no options, nothing. Bare-bones nREPL
+    Shadow CLJS connnection. Requires an additional argument: build
     """
     def __init__(self, addr, build):
         super().__init__(addr)
@@ -51,10 +51,10 @@ class ClojureSublimedConnectShadowCljsCommand(sublime_plugin.ApplicationCommand)
         ConnectionShadowCLJS(address, build).connect()
 
     def input(self, args):
-        # if 'build' not in args:
-        return cs_conn.AddressInputHandler(BuildInputHandler())
-        # else:
-        #     return cs_conn.AddressInputHandler()
+        if 'build' not in args:
+            return cs_conn.AddressInputHandler(BuildInputHandler())
+        else:
+            return cs_conn.AddressInputHandler()
 
     def is_enabled(self):
         return cs_conn.conn is None

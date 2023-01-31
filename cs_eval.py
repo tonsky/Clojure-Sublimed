@@ -166,7 +166,7 @@ def on_success(id, value):
     if (eval := by_id(id)):
         eval.update('success', value)
 
-def on_exception(id, value, trace = None):
+def on_exception(id, value, line = None, column = None, trace = None):
     """
     Callback to be called after conn.eval, conn.load_file or conn.interrupt
     """
@@ -235,17 +235,9 @@ def on_lookup(id, value):
         point = view.line(eval.region().end()).begin()
         eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
 
-# def get_middleware_opts(conn):
-#     """Returns middleware options to send to nREPL as a dict.
-#     Currently only Clojure profile supports middleware.
-#     """
-#     if conn and conn.profile == cs_common.Profile.CLOJURE:
-#         return {
-#             "nrepl.middleware.caught/caught": f"{cs_common.ns}.middleware/print-root-trace",
-#             "nrepl.middleware.print/print": f"{cs_common.ns}.middleware/pprint",
-#             "nrepl.middleware.print/quota": 4096
-#         }
-#     return {}
+def on_done(id):
+    if (eval := by_id(id)) and eval.status not in {"success", "exception"}:
+        eval.erase()
 
 def eval(view, region, code = None):
     eval = Eval(view, region)
@@ -374,12 +366,13 @@ class ClojureSublimedInterruptEvalCommand(sublime_plugin.TextCommand):
     Interrupt first pending eval in current view
     """
     def run(self, edit):
-        es = by_status(self.view, 'pending')
+        es = list(by_status(self.view, 'pending'))
         if (eval := cs_eval_status.status_eval) and eval.status not in {"pending", "interrupt"}:
-            es = list(es) + [eval]
-        if eval := min(es, key = lambda eval: eval.id):
-            cs_conn.conn.interrupt(eval.id)
-            eval.update('interrupt', "Interrupting...")
+            es += [eval]
+        if len(es) > 0:
+            if eval := min(es, key = lambda eval: eval.id):
+                cs_conn.conn.interrupt(eval.id)
+                eval.update('interrupt', "Interrupting...")
 
     def is_enabled(self):
         return cs_conn.ready()
