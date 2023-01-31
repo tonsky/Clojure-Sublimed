@@ -1,12 +1,15 @@
 import collections, html, os, re, sublime, sublime_plugin
 from typing import Any, Dict, Tuple
-from . import cs_common, cs_conn, cs_parser, cs_progress
+from . import cs_common, cs_conn, cs_eval_status, cs_parser, cs_progress
 
 evals = {} # Dict[int, Eval]
 evals_by_view = collections.defaultdict(dict) # Dict[int, Dict[int, Eval]]
-last_view: sublime.View = None
 
 class Eval:
+    """
+    A region of evaluation, including symbol lookups.
+    Has short .value region and longer .trace phantom and can toggle between them
+    """
     # class
     next_id: int = 10
     colors:  Dict[str, Tuple[str, str]] = {}
@@ -17,24 +20,28 @@ class Eval:
     status:     str # "pending" | "interrupt" | "success" | "exception" | "lookup"
     code:       str
     session:    str
-    msg:        Dict[str, Any]
     trace:      str
     phantom_id: int
     
     def __init__(self, view, region):
+        extended_region = view.line(region)
+        erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
+        
         id = Eval.next_id
         self.id = id
         self.view = view
         self.code = view.substr(region)
         self.session = None
-        self.msg = None
         self.trace = None
         self.phantom_id = None
         self.value = None
+        
         Eval.next_id += 1
-        self.update("pending", None, region)
         evals[id] = self
         evals_by_view[view.id()][id] = self
+
+        self.update("pending", cs_progress.phase(), region)
+        cs_progress.wake()        
 
     def value_key(self):
         return f"{cs_common.ns}.eval-{self.id}"
@@ -116,75 +123,117 @@ class Eval:
         if self.status == "pending" and self.session:
             cs_common.conn.send({"op": "interrupt", "interrupt-id": self.id, "session": self.session})
 
-class StatusEval(Eval):
-    def __init__(self, code):
-        id = Eval.next_id
-        self.id = id
-        self.view = None
-        self.code = code
-        self.session = None
-        self.msg = None
-        self.trace = None
-        Eval.next_id += 1
-        self.update("pending", None)
-        evals[id] = self
-
-    def region(self):
-        return None
-
-    def active_view(self):
-        if window := sublime.active_window():
-            return window.active_view()
-
-    def update(self, status, value, region = None, time_taken = None):
-        self.status = status
-        self.value = value
-        if self.active_view():
-            if status in {"pending", "interrupt"}:
-                self.active_view().set_status(self.value_key(), "⏳ " + self.code)
-            elif "success" == status:
-                if time := cs_common.format_time_taken(time_taken):
-                    value = time + ' ' + value
-                self.active_view().set_status(self.value_key(), "✅ " + value)
-            elif "exception" == status:
-                if time := cs_common.format_time_taken(time_taken):
-                    value = time + ' ' + value
-                self.active_view().set_status(self.value_key(), "❌ " + value)
-
-    def erase(self):
-        if self.active_view():
-            self.active_view().erase_status(self.value_key())
-        del evals[self.id]
-        if self.status == "pending" and self.session:
-            cs_common.conn.send({"op": "interrupt", "interrupt-id": self.id, "session": self.session})
-
 def by_id(id):
+    """
+    Find an eval by id. Might return status_eval
+    """
+    if (eval := cs_eval_status.status_eval) and id == eval.id:
+        return eval
     return evals.get(id, None)
 
 def by_region(view, region):
+    """
+    Find an eval touching region
+    """
     for eval in evals_by_view[view.id()].values():
         if cs_common.regions_touch(eval.region(), region):
             return eval
 
 def by_status(view, status):
+    """
+    Find evals by status
+    """
     return (eval for eval in evals_by_view[view.id()].values() if eval.status == status)
 
 def erase_evals(predicate = lambda x: True, view = None):
+    """
+    Kill evals based on predicate
+    """
     if view:
-        es = evals_by_view[view.id()].items()
+        es = list(evals_by_view[view.id()].items())
     else:
-        es = evals.items()
-    for id, eval in list(es):
+        es = list(evals.items())
+        if eval := cs_eval_status.status_eval:
+            es += [(eval.id, eval)]
+    for id, eval in es:
         if predicate(eval):
             eval.erase()
 
 def on_success(id, value):
+    """
+    Callback to be called after conn.eval or conn.load_file
+    """
     if (eval := by_id(id)):
         eval.update('success', value)
 
-def on_exception(id, value):
+def on_exception(id, value, trace = None):
+    """
+    Callback to be called after conn.eval, conn.load_file or conn.interrupt
+    """
     if (eval := by_id(id)):
+        eval.trace = trace
         eval.update('exception', value)
+
+def format_lookup(view, info):
+    settings = view.settings()
+    top = settings.get('line_padding_top', 0)
+    bottom = settings.get('line_padding_bottom', 0)
+    body = f"""<body id='clojure-sublimed'>
+        {cs_common.basic_styles(view)}
+        .dark body  {{ background-color: color(var(--background) blend(#FFF 90%)); }}
+        .light body {{ background-color: color(var(--background) blend(#000 95%)); }}
+        a           {{ text-decoration: none; }}
+        .arglists   {{ color: color(var(--foreground) alpha(0.5)); }}
+    </style>"""
+
+    if not info:
+        body += "<p>Not found</p>"
+    else:
+        ns = info.get('ns')
+        name = info['name']
+        file = info.get('file')
+        arglists = info.get('arglists')
+        forms = info.get('forms')
+        doc = info.get('doc')
+
+        body += "<p>"
+        if file:
+            body += f"<a href='{file}'>"
+        if ns:
+            body += html.escape(ns) + "/"
+        body += html.escape(name)
+        if file:
+            body += f"</a>"
+        body += "</p>"
+
+        if arglists:
+            body += f'<p class="arglists">{html.escape(arglists.strip("()"))}</p>'
+
+        if forms:
+            def format_form(form):
+                if isinstance(form, str):
+                    return form
+                else:
+                    return "(" + " ".join([format_form(x) for x in form]) + ")"
+            body += '<p class="arglists">'
+            body += html.escape(" ".join([format_form(form) for form in forms]))
+            body += "</p>"
+
+        if doc:
+            body += "<p>" + "</p><p>".join(html.escape(doc).split("\n")) + "</p>"
+    body += "</div>"
+    return body
+
+def on_lookup(id, value):
+    """
+    Callback to be called after conn.lookup
+    """
+    if (eval := by_id(id)):
+        eval.update('lookup', None)
+        view = eval.view
+        body = format_lookup(view, value)
+        point = view.line(eval.region().end()).begin()
+        eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
 
 # def get_middleware_opts(conn):
 #     """Returns middleware options to send to nREPL as a dict.
@@ -198,21 +247,20 @@ def on_exception(id, value):
 #         }
 #     return {}
 
-def eval(view, region):
-    extended_region = view.line(region)
-    erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
+def eval(view, region, code = None):
     eval = Eval(view, region)
-    id   = eval.id
-    code = view.substr(region)
+    if not code:
+        code = view.substr(region)
     ns   = cs_parser.namespace(view, region.begin()) or 'user'
     (line, column) = view.rowcol_utf16(region.begin())
     line = line + 1
     file = view.file_name()
-    cs_conn.conn.eval(id, code, ns, line, column, file)
-    eval.update('pending', cs_progress.phase())
-    cs_progress.wake()
+    cs_conn.conn.eval(eval.id, code, ns, line, column, file)
 
 class ClojureSublimedEval(sublime_plugin.TextCommand):
+    """
+    Eval selected code or topmost form is selection is collapsed
+    """
     def run(self, edit):
         covered = []
         for sel in self.view.sel():
@@ -229,49 +277,39 @@ class ClojureSublimedEval(sublime_plugin.TextCommand):
     def is_enabled(self):
         return cs_conn.ready()
 
-# class ClojureSublimedEvalBufferCommand(sublime_plugin.TextCommand):
-#     def run(self, edit):
-#         view = self.view
-#         region = sublime.Region(0, view.size())
-#         file_name = view.file_name()
-#         msg = {"op":        "load-file",
-#                "file":      view.substr(region),
-#                "file-path": file_name,
-#                "file-name": os.path.basename(file_name) if file_name else "NO_SOURCE_FILE.cljc"}
-#         eval_msg(view, region, msg)
+class ClojureSublimedEvalBufferCommand(sublime_plugin.TextCommand):
+    """
+    Eval whole buffer
+    """
+    def run(self, edit):
+        view = self.view
+        region = sublime.Region(0, view.size())
+        eval = Eval(view, region)
+        file = view.substr(region)
+        path = view.file_name()
+        cs_conn.conn.load_file(eval.id, file, path)
         
-#     def is_enabled(self):
-#         return cs_common.conn.ready()
-
-# class ClojureSublimedEvalCodeCommand(sublime_plugin.ApplicationCommand):
-#     def run(self, code, ns = None):
-#         erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
-#         eval = StatusEval(code)
-#         if (not ns) and (view := eval.active_view()):
-#             ns = cs_parser.namespace(view, view.size())
-#         eval.msg = {"op":   "eval",
-#                     "id":   eval.id,
-#                     "ns":   ns or 'user',
-#                     "code": code}
-#         eval.msg.update(get_middleware_opts(cs_common.conn))        
-#         cs_common.conn.send(eval.msg)
-#         eval.update("pending", cs_progress.phase())
-
-#     def is_enabled(self):
-#         return cs_common.conn.ready()
+    def is_enabled(self):
+        return cs_conn.ready()
 
 class ClojureSublimedCopyCommand(sublime_plugin.TextCommand):
+    """
+    Copy .value of eval under cursor to clipboard
+    """
     def eval(self):
         view = self.view
         return by_region(view, view.sel()[0])
 
     def run(self, edir):
-        if cs_common.conn.ready() and len(self.view.sel()) == 1 and self.view.sel()[0].empty() and (eval := self.eval()) and eval.value:
+        if cs_conn.ready() and len(self.view.sel()) == 1 and self.view.sel()[0].empty() and (eval := self.eval()) and eval.value:
             sublime.set_clipboard(eval.value)
         else:
             self.view.run_command("copy", {})
 
 class ClojureSublimedToggleTraceCommand(sublime_plugin.TextCommand):
+    """
+    Show/hide extended stacktrace
+    """
     def run(self, edit):
         view = self.view
         sel = view.sel()[0]
@@ -279,31 +317,33 @@ class ClojureSublimedToggleTraceCommand(sublime_plugin.TextCommand):
             eval.toggle_trace()
         
     def is_enabled(self):
-        return cs_common.conn.ready() and len(self.view.sel()) == 1
+        return cs_conn.ready() and len(self.view.sel()) == 1
 
-# class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
-#     def run(self, edit):
-#         view = self.view
-#         sel = view.sel()[0]
-#         eval = by_region(view, sel)
-#         if eval and eval.phantom_id:
-#             erase_eval(eval)
-#         else:
-#             if region := cs_parser.symbol_at_point(view, region.begin()) if region.empty() else sel:
-#                 line = view.line(region)
-#                 erase_evals(lambda eval: eval.region() and eval.region().intersects(line), view)
-#                 eval = Eval(view, region)
-#                 cs_progress.wake()
-#                 cs_common.conn.send({"op":      "lookup",
-#                                      "sym":     view.substr(region),
-#                                      "session": cs_common.conn.session,
-#                                      "id":      eval.id,
-#                                      "ns":      cs_parser.namespace(view, region.begin()) or 'user'})
+class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
+    """
+    Show/hide symbol info
+    """
+    def run(self, edit):
+        view = self.view
+        sel = view.sel()[0]
+        eval = by_region(view, sel)
+        if eval and eval.phantom_id:
+            eval.erase()
+        else:
+            if region := cs_parser.symbol_at_point(view, sel.begin()) if sel.empty() else sel:
+                symbol = view.substr(region)
+                ns = cs_parser.namespace(view, region.begin()) or 'user'
+                eval = Eval(view, region)
+                cs_conn.conn.lookup(eval.id, symbol, ns)
 
-#     def is_enabled(self):
-#         return cs_common.conn.ready() and len(self.view.sel()) == 1
+    def is_enabled(self):
+        return cs_conn.ready() and len(self.view.sel()) == 1
 
 class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
+    """
+    Universal show/hide, depends on where it was called. Can expand stacktrace,
+    successfull eval or look up symbol
+    """
     def run(self, edit):
         view = self.view
         sel = view.sel()[0]
@@ -312,56 +352,56 @@ class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
                 eval.toggle_trace()
             elif eval.status == "success":
                 eval.toggle_pprint()
+            elif eval.status == 'lookup':
+                eval.erase()
         else:
             view.run_command("clojure_sublimed_toggle_symbol", {})
 
     def is_enabled(self):
-        return cs_common.conn.ready() and len(self.view.sel()) == 1
+        return cs_conn.ready() and len(self.view.sel()) == 1
 
 class ClojureSublimedClearEvalsCommand(sublime_plugin.TextCommand):
+    """
+    Clear all completed evals in current view
+    """
     def run(self, edit):
         erase_evals(lambda eval: eval.status not in {"pending", "interrupt"}, self.view)
-        erase_evals(lambda eval: isinstance(eval, StatusEval) and eval.status not in {"pending", "interrupt"})
+        if (eval := cs_eval_status.status_eval) and eval.status not in {"pending", "interrupt"}:
+            eval.erase()
 
-# class ClojureSublimedInterruptEvalCommand(sublime_plugin.TextCommand):
-#     def run(self, edit):
-#         for eval in evals_by_view[self.view.id()].values():
-#             if eval.status == "pending":
-#                 cs_common.conn.send({"op":           "interrupt",
-#                                      "session":      eval.session,
-#                                      "interrupt-id": eval.id})
-#                 eval.update("interrupt", "Interrupting...")
+class ClojureSublimedInterruptEvalCommand(sublime_plugin.TextCommand):
+    """
+    Interrupt first pending eval in current view
+    """
+    def run(self, edit):
+        es = by_status(self.view, 'pending')
+        if (eval := cs_eval_status.status_eval) and eval.status not in {"pending", "interrupt"}:
+            es = list(es) + [eval]
+        if eval := min(es, key = lambda eval: eval.id):
+            cs_conn.conn.interrupt(eval.id)
+            eval.update('interrupt', "Interrupting...")
 
-#     def is_enabled(self):
-#         return cs_common.conn.ready()
+    def is_enabled(self):
+        return cs_conn.ready()
 
-# class ClojureSublimedRequireNamespaceCommand(sublime_plugin.TextCommand):
-#     def run(self, edit):
-#         view = self.view
-#         for sel in view.sel():
-#             region = cs_parser.symbol_at_point(view, sel.begin()) if sel.empty() else sel
-#             # narrow down to the namespace part if present
-#             if region and (sym := view.substr(region).partition('/')[0]):
-#                 region = sublime.Region(region.a, region.a + len(sym))
-#             if region:
-#                 eval(view, region, code=f"(require '{sym})")
+class ClojureSublimedRequireNamespaceCommand(sublime_plugin.TextCommand):
+    """
+    On namespace-qualified symbol, require its namespace
+    """
+    def run(self, edit):
+        view = self.view
+        for sel in view.sel():
+            region = cs_parser.symbol_at_point(view, sel.begin()) if sel.empty() else sel
+            # narrow down to the namespace part if present
+            if region and (sym := view.substr(region).partition('/')[0]):
+                region = sublime.Region(region.a, region.a + len(sym))
+            if region:
+                eval(view, region, code=f"(require '{sym})")
 
-#     def is_enabled(self):
-#         return cs_common.conn.ready()
-
-def move_status_evals(view):
-    global last_view
-    if last_view and view != last_view:
-        for eval in evals.values():
-            if isinstance(eval, StatusEval):
-                last_view.erase_status(eval.value_key())
-            eval.update(eval.status, eval.value)
-    last_view = view
+    def is_enabled(self):
+        return cs_conn.ready()
 
 class EventListener(sublime_plugin.EventListener):
-    def on_activated_async(self, view):
-        move_status_evals(view)
-
     def on_close(self, view):
         erase_evals(view = view)
 

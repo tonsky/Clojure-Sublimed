@@ -98,56 +98,6 @@ def handle_exception(msg):
             eval.update("exception", f'Namespace not found: {msg["ns"]}')
             return True
 
-def format_lookup(view, info):
-    settings = view.settings()
-    top = settings.get('line_padding_top', 0)
-    bottom = settings.get('line_padding_bottom', 0)
-    body = f"""<body id='clojure-sublimed'>
-        {cs_common.basic_styles(view)}
-        .dark body  {{ background-color: color(var(--background) blend(#FFF 90%)); }}
-        .light body {{ background-color: color(var(--background) blend(#000 95%)); }}
-        a           {{ text-decoration: none; }}
-        .arglists   {{ color: color(var(--foreground) alpha(0.5)); }}
-    </style>"""
-
-    if not info:
-        body += "<p>Not found</p>"
-    else:
-        ns = info.get('ns')
-        name = info['name']
-        file = info.get('file')
-        arglists = info.get('arglists')
-        forms = info.get('forms')
-        doc = info.get('doc')
-
-        body += "<p>"
-        if file:
-            body += f"<a href='{file}'>"
-        if ns:
-            body += html.escape(ns) + "/"
-        body += html.escape(name)
-        if file:
-            body += f"</a>"
-        body += "</p>"
-
-        if arglists:
-            body += f'<p class="arglists">{html.escape(arglists.strip("()"))}</p>'
-
-        if forms:
-            def format_form(form):
-                if isinstance(form, str):
-                    return form
-                else:
-                    return "(" + " ".join([format_form(x) for x in form]) + ")"
-            body += '<p class="arglists">'
-            body += html.escape(" ".join([format_form(form) for form in forms]))
-            body += "</p>"
-
-        if doc:
-            body += "<p>" + "</p><p>".join(html.escape(doc).split("\n")) + "</p>"
-    body += "</div>"
-    return body
-
 def handle_lookup(msg):
     if "info" in msg and "id" in msg and (eval := cs_eval.by_id(msg["id"])):
         eval.update("lookup", None)
@@ -349,30 +299,30 @@ class ClojureSublimedConnectShadowCljsCommand(sublime_plugin.ApplicationCommand)
     def is_enabled(self):
         return cs_common.conn.socket == None
 
-class ClojureSublimedConnectCommand(sublime_plugin.ApplicationCommand):
-    def run(self, clojure_sublimed_host_port):
-        try:
-            if clojure_sublimed_host_port == "auto":
-                clojure_sublimed_host_port = ClojureSublimedHostPortInputHandler().initial_text()
-            host, port = clojure_sublimed_host_port.strip().split(':', 1)
-            port = int(port)
-        except ValueError:
-            host, port = None, clojure_sublimed_host_port
-        connect(host, port)
+# class ClojureSublimedConnectCommand(sublime_plugin.ApplicationCommand):
+#     def run(self, clojure_sublimed_host_port):
+#         try:
+#             if clojure_sublimed_host_port == "auto":
+#                 clojure_sublimed_host_port = ClojureSublimedHostPortInputHandler().initial_text()
+#             host, port = clojure_sublimed_host_port.strip().split(':', 1)
+#             port = int(port)
+#         except ValueError:
+#             host, port = None, clojure_sublimed_host_port
+#         connect(host, port)
 
-    def input(self, args):
-        return ClojureSublimedHostPortInputHandler()
+#     def input(self, args):
+#         return ClojureSublimedHostPortInputHandler()
 
-    def is_enabled(self):
-        return cs_common.conn.socket == None
+#     def is_enabled(self):
+#         return cs_common.conn.socket == None
 
-class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
-    def run(self):
-        cs_common.conn.disconnect()
-        connect(cs_common.conn.host, cs_common.conn.port, cs_common.conn.profile, cs_common.conn.cljs_build)
+# class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
+#     def run(self):
+#         cs_common.conn.disconnect()
+#         connect(cs_common.conn.host, cs_common.conn.port, cs_common.conn.profile, cs_common.conn.cljs_build)
 
-    def is_enabled(self):
-        return cs_common.conn.socket != None
+#     def is_enabled(self):
+#         return cs_common.conn.socket != None
 
 def plugin_loaded():
     global package

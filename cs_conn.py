@@ -1,17 +1,17 @@
 import os, re, sublime, sublime_plugin
 from . import cs_common, cs_eval
 
+# Global connection instance
 conn = None
+
 status_key = 'clojure-sublimed-conn'
 phases = ['🌑', '🌒', '🌓', '🌔', '🌕']
 last_addr = 'localhost:'
 
-def erase_status():
-    if window := sublime.active_window():
-        if view := window.active_view():
-            view.erase_status(status_key)
-
 def ready():
+    """
+    When connection is fully initialized
+    """
     return bool(conn and conn.status and conn.status[0] == phases[4])
 
 class Connection:
@@ -23,6 +23,9 @@ class Connection:
         pass
 
     def connect(self):
+        """
+        Connect to address specified during construction
+        """
         global conn
         try:
             self.connect_impl()
@@ -37,31 +40,64 @@ class Connection:
         pass
 
     def eval(self, id, code, ns = 'user', line = None, column = None, file = None):
+        """
+        Eval code and call `cs_eval.on_success(id, value)` or `cs_eval.on_exception(id, value, trace)`
+        """
         self.eval_impl(id, code, ns, line, column, file)
+
+    def load_file_impl(self, id, file, path):
+        pass
+
+    def load_file(self, id, file, path):
+        """
+        Load whole file (~load-file nREPL command). Same callbacks as `eval`
+        """
+        self.load_file_impl(id, file, path)
+
+    def lookup_impl(self, id, symbol, ns):
+        pass
+
+    def lookup(self, id, symbol, ns = 'user'):
+        """
+        Look symbol up and call `cs_eval.on_lookup(id, value)`
+        """
+        self.lookup_impl(id, symbol, ns)
+
+    def interrupt_impl(self, id):
+        pass
+
+    def interrupt(self, id):
+        """
+        Interrupt currently executing eval with id = id.
+        Will probably call `cs_eval.on_exception(id, value, trace)` on interruption
+        """
+        self.interrupt_impl(id)
 
     def disconnect_impl(self):
         pass
 
     def disconnect(self):
+        """
+        Disconnect from REPL
+        """
         if self.disconnecting:
             return
         self.disconnecting = True
         self.disconnect_impl()
         global conn
         conn = None
-        erase_status()
+        cs_common.set_status(status_key, None)
         cs_eval.erase_evals()
 
     def set_status(self, phase, message, *args):
-        self.status = phases[phase] + ' ' + message.format(*args)
-        self.refresh_status()
-
-    def refresh_status(self):
-        if window := sublime.active_window():
-            if view := window.active_view():
-                view.set_status(status_key, self.status)
+        status = phases[phase] + ' ' + message.format(*args)
+        self.status = status
+        cs_common.set_status(status_key, status)
 
 class AddressInputHandler(sublime_plugin.TextInputHandler):
+    """
+    Reusable InputHandler that remembers last address and can also look for .nrepl-port file
+    """
     def placeholder(self):
         return "host:port or /path/to/nrepl.sock"
 
@@ -107,14 +143,6 @@ class ClojureSublimedDisconnectCommand(sublime_plugin.ApplicationCommand):
     def is_enabled(self):
         global conn
         return conn is not None
-
-class EventListener(sublime_plugin.EventListener):
-    def on_activated_async(self, view):
-        global conn
-        if conn:
-            conn.refresh_status()
-        else:
-            erase_status()
 
 def plugin_unloaded():
     global conn

@@ -1,7 +1,10 @@
-import sublime, sublime_plugin, threading
+import os, sublime, sublime_plugin, threading
 from . import cs_bencode, cs_common, cs_conn, cs_eval
 
 class ConnectionNreplRaw(cs_conn.Connection):
+    """
+    Raw nREPL connection: no extensions, no options, nothing. Bare-bones nREPL
+    """
     def __init__(self, addr):
         cs_conn.Connection.__init__(self)
         self.addr      = addr
@@ -32,12 +35,6 @@ class ConnectionNreplRaw(cs_conn.Connection):
             pass
         self.disconnect()
 
-    def handle_connect(self, msg):
-        if 1 == msg.get('id') and 'new-session' in msg:
-            self.session = msg['new-session']
-            self.set_status(4, self.addr)
-            return True
-
     def send(self, msg):
         cs_common.debug('SND {}', msg)
         self.socket.sendall(cs_bencode.encode(msg).encode())
@@ -56,6 +53,36 @@ class ConnectionNreplRaw(cs_conn.Connection):
             msg['file'] = file
         self.send(msg)
 
+    def load_file_impl(self, id, file, path):
+        msg = {'id':        id,
+               'session':   self.session,
+               'op':        'load-file',
+               'file':      file,
+               'file-name': os.path.basename(path) if path else "NO_SOURCE_FILE.cljc"}
+        if path:
+            msg['file-path'] = path
+        self.send(msg)
+
+    def lookup_impl(self, id, symbol, ns):
+        msg = {'id':      id,
+               'session': self.session,
+               'op':      'lookup',
+               'sym':     symbol,
+               'ns':      ns}
+        self.send(msg)
+
+    def interrupt(self, id):
+        msg = {'session':      self.session,
+               'op':           'interrupt',
+               'interrupt-id': id}
+        self.send(msg)
+
+    def handle_connect(self, msg):
+        if 1 == msg.get('id') and 'new-session' in msg:
+            self.session = msg['new-session']
+            self.set_status(4, self.addr)
+            return True
+
     def handle_value(self, msg):
         if 'value' in msg and (id := msg.get('id')):
             cs_eval.on_success(id, msg.get('value'))
@@ -70,11 +97,26 @@ class ConnectionNreplRaw(cs_conn.Connection):
                 cs_eval.on_exception(id, error)
                 return True
 
+    def handle_lookup(self, msg):
+        if 'info' in msg and (id := msg.get('id')):
+            cs_eval.on_lookup(id, msg['info'])
+            return True
+
+    def handle_out(self, msg):
+        if 'out' in msg:
+            print(msg['out'], end = '')
+            return True
+        elif 'err' in msg:
+            print(msg['err'], end = '')
+            return True
+
     def handle_msg(self, msg):
         cs_common.debug('RCV {}', msg)
         self.handle_connect(msg) \
         or self.handle_value(msg) \
-        or self.handle_exception(msg)
+        or self.handle_exception(msg) \
+        or self.handle_lookup(msg) \
+        or self.handle_out(msg)
 
 class ClojureSublimedConnectNreplRawCommand(sublime_plugin.ApplicationCommand):
     def run(self, address):

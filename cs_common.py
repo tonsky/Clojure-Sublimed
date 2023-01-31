@@ -1,6 +1,9 @@
-import re, socket, sublime, time, traceback
+import re, socket, sublime, sublime_plugin, time, traceback
 
 ns = 'clojure-sublimed'
+
+statuses = {}
+last_view = None
 
 def settings():
     """
@@ -90,6 +93,10 @@ def basic_styles(view):
         p {{ margin: 0; padding: {top}px 0 {bottom}px 0; }}
     """
 
+def active_view():
+    if window := sublime.active_window():
+        return window.active_view()
+
 class SocketIO:
     """
     Simple buffered interface around socket that let you read N bytes at a time
@@ -121,3 +128,37 @@ def socket_connect(addr):
 class Profile:
     CLOJURE = 'clojure'
     SHADOW_CLJS = 'shadow-cljs'
+
+def set_status(key, value):
+    """
+    Sets persistent status that will travel when changing views.
+    Pass value = None to erase
+    """
+    global statuses, last_view
+    if view := active_view():
+        if value is None:
+            view.erase_status(key)
+        else:
+            view.set_status(key, value)
+        statuses[key] = value
+        if not last_view:
+            last_view = view
+
+class EventListener(sublime_plugin.EventListener):
+    def on_activated_async(self, view):
+        """
+        When swithing to another view
+        """
+        global statuses, last_view
+        if view != last_view:
+            for key in statuses:
+                last_view.erase_status(key)
+                if (value := statuses.get(key)) is not None:
+                    view.set_status(key, value)
+            last_view = view
+
+def plugin_unloaded():
+    global statuses, last_view
+    if view := last_view:
+        for key in statuses:
+            view.erase_status(key)
