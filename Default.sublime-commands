@@ -12,6 +12,10 @@
         "command": "clojure_sublimed_connect_shadow_cljs"
     },
     {
+        "caption": "Clojure Sublimed: Connect to Socket REPL",
+        "command": "clojure_sublimed_connect_socket_repl"
+    },
+    {
         "caption": "Clojure Sublimed: Disconnect",
         "command": "clojure_sublimed_disconnect"
     },

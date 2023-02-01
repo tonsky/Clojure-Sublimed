@@ -126,10 +126,6 @@ def socket_connect(addr):
         s.connect(addr)
         return s
 
-class Profile:
-    CLOJURE = 'clojure'
-    SHADOW_CLJS = 'shadow-cljs'
-
 def set_status(key, value):
     """
     Sets persistent status that will travel when changing views.

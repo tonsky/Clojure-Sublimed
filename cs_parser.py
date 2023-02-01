@@ -303,6 +303,43 @@ def is_symbol(node):
         else:
             return s[0] not in '+-:\\0123456789'
 
+def partition(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
+def as_obj(node, string):
+    if 'token' == node.name and node.text:
+        s = node.text
+        if 'true' == s:
+            return True
+        elif 'false' == s:
+            return False
+        elif 'nil' == s:
+            return None
+        elif ':' == s[0]:
+            return s
+        elif re.fullmatch(r'[+-]?[0-9]*\.[0-9]*([eE][+-]?\d+)?', s):
+            return float(s)
+        elif re.fullmatch(r'[+-]?[0-9]+', s):
+            return int(s)
+    elif 'string' == node.name:
+        return node.body.text if node.body else ''
+    return string[node.start:node.end]
+
+def parse_as_dict(string, opaque_keys=set()):
+    parsed = parse(string)
+    braces = parsed.children[0]
+    assert 'braces' == braces
+    dict = {}
+    for key, val in partition(braces.body.children, 2):
+        key = as_obj(key, string)
+        if key in opaque_keys:
+            val = string[val.start:val.end]
+        else:
+            val = as_obj(val, string)
+        dict[key] = val
+    return dict
+
 def search(node, pos, pred = lambda x: True, max_depth = 1000):
     """
     Search inside node what’s the deepest node that includes pos.

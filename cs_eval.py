@@ -209,7 +209,9 @@ def format_lookup(view, info):
         if arglists:
             body += f'<p class="arglists">{html.escape(arglists.strip("()"))}</p>'
 
-        if forms:
+        if forms and isinstance(forms, str):
+            body += f'<p class="arglists">{html.escape(forms.strip("[]"))}</p>'
+        elif forms:
             def format_form(form):
                 if isinstance(form, str):
                     return form

@@ -2,6 +2,8 @@
 (+ 1 2)
  (+ 1 2) 
 
+(str 1 '\newline 2)
+
 ; long value
 (range 300)
 
