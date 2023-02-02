@@ -12,7 +12,7 @@ def ready():
     """
     When connection is fully initialized
     """
-    return bool(conn and conn.status and conn.status[0] == phases[4])
+    return bool(conn and conn.ready())
 
 class Connection:
     def __init__(self):
@@ -35,6 +35,9 @@ class Connection:
             self.disconnect()
             if window := sublime.active_window():
                 window.status_message(f'Connection failed')
+
+    def ready(self):
+        return bool(self.status and self.status[0] == phases[4])
 
     def eval_impl(self, id, code, ns = 'user', line = None, column = None, file = None):
         pass

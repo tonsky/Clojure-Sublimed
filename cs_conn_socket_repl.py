@@ -40,9 +40,8 @@ class ConnectionSocketRepl(cs_conn.Connection):
     def read_loop(self):
         try:
             self.set_status(1, 'Upgrading REPL')
-            blob = sublime.load_resource(f'Packages/{cs_common.package}/cs_socket_repl.clj')
-            blob = re.sub(r'(?m)^\s+', '', blob).strip() + '\n(repl)\n'
-            self.socket.sendall(blob.encode())
+            self.socket.sendall(cs_common.clojure_source('exception.clj').encode())
+            self.socket.sendall(cs_common.clojure_source('socket_repl.clj').encode())
             started = False
             for line in lines(self.socket):
                 print("RCV", started, line)
@@ -93,15 +92,8 @@ class ConnectionSocketRepl(cs_conn.Connection):
 
     def handle_exception(self, msg):
         if ':ex' == msg[':tag'] and (id := msg.get(':id')):
-            error = msg[':val']
-            # error = msg.get('root-ex') or msg.get('ex')
-            # if not error and 'status' in msg and 'namespace-not-found' in msg['status']:
-            #     error = 'Namespace not found: ' + msg['ns']
-            # if not error and 'status' in msg and 'unknown-op' in msg['status']:
-            #     error = 'Unknown op: ' + msg['op']
-            if error:
-                cs_eval.on_exception(id, error)
-                return True
+            cs_eval.on_exception(id, msg.get(':val'), line = msg.get(':line'), column = msg.get(':column'), trace = msg.get(':trace'))
+            return True
 
     def handle_lookup(self, msg):
         if ':lookup' == msg[':tag'] and (id := msg.get(':id')):

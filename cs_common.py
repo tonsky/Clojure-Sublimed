@@ -94,6 +94,10 @@ def basic_styles(view):
         p {{ margin: 0; padding: {top}px 0 {bottom}px 0; }}
     """
 
+def clojure_source(file):
+    file = sublime.load_resource(f'Packages/{package}/src_clojure/clojure_sublimed/' + file)
+    return re.sub(r'(?m)^\s+', '', file).strip() + '\n'
+
 def active_view():
     if window := sublime.active_window():
         return window.active_view()

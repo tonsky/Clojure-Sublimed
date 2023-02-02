@@ -9,6 +9,7 @@
 (defn h []
   (g))
 
+(g)
 (h)
 
 (meta #'h)

@@ -1,6 +1,7 @@
 (ns clojure-sublimed.socket-repl
   (:require
-    [clojure.string :as str])
+    [clojure.string :as str]
+    [clojure-sublimed.exception :as exception])
   (:import
     [java.io Writer]))
 
@@ -92,8 +93,31 @@
                 :lookup (lookup-symbol form)
                 (throw (Exception. (str "Unknown op: " (:op form)))))
               true)
-            (catch Throwable e
-              (when-not (-> e ex-data ::stop)
-                (*out-fn* (merge {:tag :ex, :val (pr-str e)} @*context*))
-                true))))
+            (catch Throwable t
+              (when-not (-> t ex-data ::stop)
+                (let [root  ^Throwable (exception/root-cause t)
+                      {:clojure.error/keys [source line column]} (ex-data root)
+                      cause ^Throwable (or (some-> root .getCause) root)
+                      data  (ex-data cause)
+                      class (.getSimpleName (class cause))
+                      msg   (.getMessage cause)
+                      val   (cond-> (str class ": " msg)
+                              data
+                              (str " " (pr-str data))
+                              
+                              (and source line column) 
+                              (str " (" source ":" line ":" column ")"))
+                      trace (exception/trace-str root)]
+                  (*out-fn*
+                    (merge
+                      {:tag    :ex
+                       :val    val
+                       :trace  trace
+                       :source source
+                       :line   line
+                       :column column}
+                      @*context*))
+                  true)))))
         (recur)))))
+
+(repl)

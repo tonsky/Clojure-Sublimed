@@ -322,9 +322,14 @@ def as_obj(node, string):
             return float(s)
         elif re.fullmatch(r'[+-]?[0-9]+', s):
             return int(s)
+        else:
+            text = string[node.start:node.end]
     elif 'string' == node.name:
-        return node.body.text if node.body else ''
-    return string[node.start:node.end]
+        text = node.body.text if node.body else ''
+    else:
+        text = string[node.start:node.end]
+    text = text.replace('\\n', '\n').replace('\\t', '\t')
+    return text
 
 def parse_as_dict(string, opaque_keys=set()):
     parsed = parse(string)

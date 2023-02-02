@@ -15,7 +15,7 @@ class ConnectionNreplRaw(cs_conn.Connection):
         self.eval_op   = 'eval'
 
     def connect_impl(self):
-        self.set_status(0, 'Connecting to {}', self.addr)
+        self.set_status(0, 'Connecting to {}...', self.addr)
         self.socket = cs_common.socket_connect(self.addr)
         self.reader = threading.Thread(daemon=True, target=self.read_loop)
         self.reader.start()

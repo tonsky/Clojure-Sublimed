@@ -10,10 +10,11 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
         self.eval_op = 'clone-eval-close'
 
     def send(self, msg):
-        ns = cs_common.ns + '.middleware'
-        msg['nrepl.middleware.caught/caught'] = ns + '/print-root-trace'
-        msg['nrepl.middleware.print/print']   = ns + '/pprint'
-        msg['nrepl.middleware.print/quota']   = 4096
+        if self.ready():
+            ns = cs_common.ns + '.middleware'
+            msg['nrepl.middleware.caught/caught'] = ns + '/print-root-trace'
+            msg['nrepl.middleware.print/print']   = ns + '/pprint'
+            msg['nrepl.middleware.print/quota']   = 4096
         super().send(msg)
 
     def interrupt_impl(self, id):
@@ -25,39 +26,48 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
 
     def handle_connect(self, msg):
         if 1 == msg.get('id') and 'new-session' in msg:
-            self.set_status(2, 'Uploading middleware')
+            self.set_status(2, 'Uploading middleware 1/2...')
             self.session = msg['new-session']
-            middleware = sublime.load_resource(f'Packages/{cs_common.package}/cs_middleware.clj')
+            file = cs_common.clojure_source('exception.clj')
             self.send({'id':      2,
                        'session': self.session,
                        'op':      'load-file',
-                       'file':    middleware})
+                       'file':    file})
             return True
 
-        elif 2 == msg.get('id') and msg.get('status') == ['done']:
-            self.set_status(2, 'Adding middlewares')
+        if 2 == msg.get('id') and 'done' in msg.get('status', []):
+            self.set_status(2, 'Uploading middleware 2/2...')
+            file = cs_common.clojure_source('middleware.clj')
+            self.send({'id':      3,
+                       'session': self.session,
+                       'op':      'load-file',
+                       'file':    file})
+            return True
+
+        elif 3 == msg.get('id') and 'done' in msg.get('status', []):
+            self.set_status(2, 'Adding middlewares...')
             eval_shared = cs_common.setting('eval_shared')
             ns = cs_common.ns + '.middleware'
-            self.send({'id':               3 if eval_shared else 4,
+            self.send({'id':               4 if eval_shared else 5,
                        'session':          self.session,
                        'op':               'add-middleware',
                        'middleware':       [ns + '/clone-and-eval',
                                             ns + '/time-eval',
                                             ns + '/wrap-errors',
                                             ns + '/wrap-output'],
-                       'extra-namespaces': [ns]})
+                       'extra-namespaces': [cs_common.ns + '.exception', ns]})
             return True
 
-        elif 3 == msg.get('id') and msg.get('status') == ['done']:
-            self.set_status(3, 'Evaluating session code')
+        elif 4 == msg.get('id') and 'done' in msg.get('status', []):
+            self.set_status(3, 'Evaluating session code...')
             eval_shared = cs_common.setting('eval_shared')
-            self.send({'id':      4,
+            self.send({'id':      5,
                        'session': self.session,
                        'op':      'eval',
                        'code':    eval_shared})
             return True
 
-        elif 4 == msg.get('id') and msg.get('status') == ['done']:
+        elif 5 == msg.get('id') and 'done' in msg.get('status', []):
             self.set_status(4, self.addr)
             return True
 
@@ -80,7 +90,7 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
                 if present('line') and present('column') and get('source'):
                     line   = get('line') - 1
                     column = get('column')
-                    text   += ' ({}:{}:{})'.format(get('source'), get('line'), get('column'))
+                    text   += f' ({get('source')}:{get('line')}:{get('column')})'
                 cs_eval.on_exception(id, text, line = line, column = column, trace = get('trace'))
                 return True
             else:
