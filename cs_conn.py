@@ -123,9 +123,9 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
         text = self.initial_text()
         end = len(text)
         if ':' in text:
-            return [text.rfind(':') + 1, end]
+            return [(text.rfind(':') + 1, end)]
         elif '/' in text:
-            return [text.rfind('/') + 1, end]
+            return [(text.rfind('/') + 1, end)]
 
     def preview(self, text):
         if not self.validate(text):
@@ -140,6 +140,10 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
             return 1 <= int(port) and int(port) < 65536
         else:
             return os.path.isfile(text)
+
+    def confirm(self, text):
+        global last_addr
+        last_addr = text.strip()
 
     def next_input(self, args):
         return self.next
