@@ -94,7 +94,9 @@ class Eval:
                     { styles }
                 </style>"""
                 for line in self.escape(text).splitlines():
-                    body += "<p>" + re.sub(r"(?<!\\)\\n", "<br>", line) + "</p>"
+                    line = re.sub(r"(?<!\\)\\n", "<br>", line)
+                    line = re.sub(r"(?<!\\)\\t", "&nbsp;&nbsp;", line)
+                    body += "<p>" + line + "</p>"
                 body += "</body>"
                 region = self.region()
                 if region:

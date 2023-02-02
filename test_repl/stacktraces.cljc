@@ -12,13 +12,15 @@
 (g)
 (h)
 
+(/ 1 0)
+
 (meta #'h)
 
 (try
   (h)
   (catch Exception e
     (with-out-str
-      (.printStackTrace e))))
+      (.printStackTrace e (java.io.PrintWriter. *out*)))))
 
 (defn -main [& args]
   (h))

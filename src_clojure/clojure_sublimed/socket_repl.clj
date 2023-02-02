@@ -5,9 +5,11 @@
   (:import
     [java.io Writer]))
 
-(def ^:dynamic *out-fn*)
+(def ^:dynamic *out-fn*
+  prn)
 
-(def ^:dynamic *context*)
+(def ^:dynamic *context*
+  nil)
 
 (defn stop! []
   (throw (ex-info "Stop" {::stop true})))
@@ -24,15 +26,39 @@
     
     form))
 
+(defn reader [code line column]
+  (let [reader (clojure.lang.LineNumberingPushbackReader. (java.io.StringReader. code))]
+    (when line
+      (.setLineNumber reader (int line)))
+    (when column
+      (when-some [field (->> clojure.lang.LineNumberingPushbackReader
+                          (.getDeclaredFields)
+                          (filter #(= "_columnNumber" (.getName ^java.lang.reflect.Field %)))
+                          first)]
+        (doto ^java.lang.reflect.Field field
+          (.setAccessible true)
+          (.set reader (int column)))))
+    reader))
+
 (defn eval-code [form]
   (let [{:keys [id op code ns line column file]} form
-        code' (binding [*read-eval* false]
-                (read-string {:read-cond :preserve} code))
-        start (System/nanoTime)
-        ret   (eval `(do (in-ns '~(or ns 'user)) ~code'))
-        time  (-> (System/nanoTime)
-                (- start)
-                (quot 1000000))]
+        ; code' (binding [*read-eval* false]
+        ;         (read-string {:read-cond :preserve} code))
+        start  (System/nanoTime)
+        ns     (or ns 'user)
+        ns-obj (or
+                 (find-ns ns)
+                 (do
+                   (require ns)
+                   (find-ns ns)))
+        name   (last (str/split file #"[/\\]"))
+        ; ret   (eval `(do (in-ns '~(or ns 'user)) ~code'))
+        ret    (binding [*read-eval* false
+                         *ns*        ns-obj]
+                 (clojure.lang.Compiler/load (reader code line column) file name))
+        time   (-> (System/nanoTime)
+                 (- start)
+                 (quot 1000000))]
     (*out-fn*
       {:tag  :ret
        :id   id
@@ -103,11 +129,8 @@
                       msg   (.getMessage cause)
                       val   (cond-> (str class ": " msg)
                               data
-                              (str " " (pr-str data))
-                              
-                              (and source line column) 
-                              (str " (" source ":" line ":" column ")"))
-                      trace (exception/trace-str root)]
+                              (str " " (pr-str data)))
+                      trace (exception/trace-str root {:location? false})]
                   (*out-fn*
                     (merge
                       {:tag    :ex

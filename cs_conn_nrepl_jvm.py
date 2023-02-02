@@ -90,7 +90,7 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
                 if present('line') and present('column') and get('source'):
                     line   = get('line') - 1
                     column = get('column')
-                    text   += f' ({get('source')}:{get('line')}:{get('column')})'
+                    text   += f" ({get('source')}:{get('line')}:{get('column')})"
                 cs_eval.on_exception(id, text, line = line, column = column, trace = get('trace'))
                 return True
             else:

@@ -57,24 +57,28 @@
       (map #(format format-str (:method %) (:file %) (:line %)))
       (str/join "\n"))))
 
-(defn trace-str [^Throwable t]
-  (let [{:clojure.error/keys [source line column]} (ex-data t)
-        cause (or (.getCause t) t)]
-    (str
-      "\n"
-      (->> (.getStackTrace cause)
-        (take-while #(not (#{"clojure.lang.Compiler" "clojure.lang.LispReader"}
-                           (.getClassName ^StackTraceElement %))))
-        (remove #(#{"clojure.lang.RestFn" "clojure.lang.AFn"} (.getClassName ^StackTraceElement %)))
-        (clear-duplicates)
-        (map trace-element)
-        (reverse)
-        (as-table))
-      "\n>>> "
-      (.getSimpleName (class cause))
-      ": "
-      (.getMessage cause)
-      (when (or source line column)
-        (str " (" source ":" line ":" column ")"))
-      (when-some [data (ex-data cause)]
-        (str " " (pr-str data))))))
+(defn trace-str
+  ([t]
+   (trace-str t nil))
+  ([^Throwable t opts]
+   (let [{:clojure.error/keys [source line column]} (ex-data t)
+         cause (or (.getCause t) t)]
+     (str
+       "\n"
+       (->> (.getStackTrace cause)
+         (take-while #(not (#{"clojure.lang.Compiler" "clojure.lang.LispReader"}
+                            (.getClassName ^StackTraceElement %))))
+         (remove #(#{"clojure.lang.RestFn" "clojure.lang.AFn"} (.getClassName ^StackTraceElement %)))
+         (clear-duplicates)
+         (map trace-element)
+         (reverse)
+         (as-table))
+       "\n>>> "
+       (.getSimpleName (class cause))
+       ": "
+       (.getMessage cause)
+       (when (:location? opts true)
+         (when (or source line column)
+           (str " (" source ":" line ":" column ")")))
+       (when-some [data (ex-data cause)]
+         (str " " (pr-str data)))))))
