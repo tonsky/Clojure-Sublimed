@@ -4,6 +4,8 @@
 
 (str 1 '\newline 2)
 
+"xxx\nyyy\"zzz\\aaa\t"
+
 ; long value
 (range 300)
 

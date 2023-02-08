@@ -1,9 +1,7 @@
 (ns clojure-sublimed.socket-repl
   (:require
     [clojure.string :as str]
-    [clojure-sublimed.exception :as exception])
-  (:import
-    [java.io Writer]))
+    [clojure-sublimed.exception :as exception]))
 
 (def ^:dynamic *out-fn*
   prn)
@@ -62,7 +60,7 @@
     (*out-fn*
       {:tag  :ret
        :id   id
-       :val  ret
+       :val  (exception/bounded-pr-str ret)
        :time time})))
 
 (def safe-meta?
@@ -129,7 +127,7 @@
                       msg   (.getMessage cause)
                       val   (cond-> (str class ": " msg)
                               data
-                              (str " " (pr-str data)))
+                              (str " " (exception/bounded-pr-str data)))
                       trace (exception/trace-str root {:location? false})]
                   (*out-fn*
                     (merge
@@ -142,5 +140,3 @@
                       @*context*))
                   true)))))
         (recur)))))
-
-(repl)

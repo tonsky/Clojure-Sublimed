@@ -42,11 +42,12 @@ class ConnectionSocketRepl(cs_conn.Connection):
             self.set_status(1, 'Upgrading REPL')
             self.socket.sendall(cs_common.clojure_source('exception.clj').encode())
             self.socket.sendall(cs_common.clojure_source('socket_repl.clj').encode())
+            self.socket.sendall("(repl)\n".encode())
             started = False
             for line in lines(self.socket):
                 print("RCV", started, line)
                 if started:
-                    msg = cs_parser.parse_as_dict(line, opaque_keys = {':val'})
+                    msg = cs_parser.parse_as_dict(line)
                     self.handle_msg(msg)
                 else:
                     if '{:tag :started}' in line:

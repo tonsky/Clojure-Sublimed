@@ -2,7 +2,51 @@
   (:require
     [clojure.string :as str])
   (:import
-    [clojure.lang Compiler Compiler$CompilerException ExceptionInfo LispReader$ReaderException]))
+    [clojure.lang Compiler Compiler$CompilerException ExceptionInfo LispReader$ReaderException]
+    [java.io Writer]))
+
+(def ^:dynamic *print-quota*
+  1024)
+
+(defn- to-char-array ^chars [x]
+  (cond
+    (string? x)  (.toCharArray ^String x)
+    (integer? x) (char-array [(char x)])
+    :else        x))
+
+;; modified from nrepl.middleware.print/with-quota-writer
+(defn bounded-writer
+  "java.io.Writer that wraps throws once it has written more than `quota` bytes"
+  ^Writer [^Writer writer quota]
+  (let [total (volatile! 0)]
+    (proxy [Writer] []
+      (toString []
+        (.toString writer))
+      (write
+        ([x]
+         (let [cbuf (to-char-array x)]
+           (.write ^Writer this cbuf (int 0) (count cbuf))))
+        ([x off len]
+         (locking total
+           (let [cbuf (to-char-array x)
+                 rem (- quota @total)]
+             (vswap! total + len)
+             (.write writer cbuf ^int off ^int (min len rem))
+             (when (neg? (- rem len))
+               (throw (ex-info "Quota exceeded" {})))))))
+      (flush []
+        (.flush writer))
+      (close []
+        (.close writer)))))
+
+(defn bounded-pr-str [x]
+  (let [writer (bounded-writer (java.io.StringWriter.) *print-quota*)]
+    (try
+      (binding [*out* writer]
+        (pr x))
+      (str writer)
+      (catch Exception e
+        (str writer "...")))))
 
 ;; CompilerException has location info, but its cause RuntimeException has the message ¯\_(ツ)_/¯
 (defn root-cause [^Throwable t]
@@ -64,7 +108,6 @@
    (let [{:clojure.error/keys [source line column]} (ex-data t)
          cause (or (.getCause t) t)]
      (str
-       "\n"
        (->> (.getStackTrace cause)
          (take-while #(not (#{"clojure.lang.Compiler" "clojure.lang.LispReader"}
                             (.getClassName ^StackTraceElement %))))
@@ -81,4 +124,4 @@
          (when (or source line column)
            (str " (" source ":" line ":" column ")")))
        (when-some [data (ex-data cause)]
-         (str " " (pr-str data)))))))
+         (str " " (bounded-pr-str data)))))))

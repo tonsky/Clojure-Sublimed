@@ -307,6 +307,23 @@ def partition(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
+def unescape(m):
+    s = m.group(0)
+    if '\\\\' == s:
+        return '\\'
+    elif '\\"' == s:
+        return '"'
+    elif '\\n' == s:
+        return '\n'
+    elif '\\t' == s:
+        return '\t'
+    elif '\\r' == s:
+        return '\r'
+    elif '\\f' == s:
+        return '\f'
+    elif '\\b' == s:
+        return '\b'
+
 def as_obj(node, string):
     if 'token' == node.name and node.text:
         s = node.text
@@ -324,24 +341,22 @@ def as_obj(node, string):
             return int(s)
         else:
             text = string[node.start:node.end]
+    elif 'string' == node.name and node.body:
+        text = re.sub(r'\\[\\"rntfb]', unescape, node.body.text)
     elif 'string' == node.name:
-        text = node.body.text if node.body else ''
+        text = ''
     else:
         text = string[node.start:node.end]
-    text = text.replace('\\n', '\n').replace('\\t', '\t')
     return text
 
-def parse_as_dict(string, opaque_keys=set()):
+def parse_as_dict(string):
     parsed = parse(string)
     braces = parsed.children[0]
     assert 'braces' == braces
     dict = {}
     for key, val in partition(braces.body.children, 2):
         key = as_obj(key, string)
-        if key in opaque_keys:
-            val = string[val.start:val.end]
-        else:
-            val = as_obj(val, string)
+        val = as_obj(val, string)
         dict[key] = val
     return dict
 
