@@ -52,6 +52,7 @@ cond
 *out*
 *warn-on-reflection*
 *print-namespace-maps*
+(keys @clojure-sublimed.socket-repl/*evals)
 set!
 clojure.set/join
 find-keyword

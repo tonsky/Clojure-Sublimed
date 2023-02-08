@@ -9,6 +9,9 @@
 (def ^:dynamic *context*
   nil)
 
+(defonce *evals
+  (atom {}))
+
 (defn stop! []
   (throw (ex-info "Stop" {::stop true})))
 
@@ -23,6 +26,27 @@
       (throw (Exception. "Unexpected form")))
     
     form))
+
+(defn report-throwable [^Throwable t]
+  (let [root  ^Throwable (exception/root-cause t)
+        {:clojure.error/keys [source line column]} (ex-data root)
+        cause ^Throwable (or (some-> root .getCause) root)
+        data  (ex-data cause)
+        class (.getSimpleName (class cause))
+        msg   (.getMessage cause)
+        val   (cond-> (str class ": " msg)
+                data
+                (str " " (exception/bounded-pr-str data)))
+        trace (exception/trace-str root {:location? false})]
+    (*out-fn*
+      (merge
+        {:tag    :ex
+         :val    val
+         :trace  trace
+         :source source
+         :line   line
+         :column column}
+        @*context*))))
 
 (defn reader [code line column]
   (let [reader (clojure.lang.LineNumberingPushbackReader. (java.io.StringReader. code))]
@@ -62,6 +86,22 @@
        :id   id
        :val  (exception/bounded-pr-str ret)
        :time time})))
+
+(defn fork-eval [{:keys [id] :as form}]
+  (let [f (future
+            (try
+              (eval-code form)
+              (catch Throwable t
+                (try
+                  (report-throwable t)
+                  (catch Throwable t
+                    :ignore))))
+            (swap! *evals dissoc id))]
+    (swap! *evals assoc id f)))
+
+(defn interrupt [{:keys [id]}]
+  (when-some [f (@*evals id)]
+    (future-cancel f)))
 
 (def safe-meta?
   #{:ns :name :doc :file :arglists :forms :macro :special-form :protocol :line :column :added :deprecated :resource})
@@ -110,33 +150,17 @@
             (let [form (read-command *in*)]
               (when-some [id (:id form)]
                 (vswap! *context* assoc :id id))
-                
               (case (:op form)
-                :close  (stop!)
-                :eval   (eval-code form)
-                :lookup (lookup-symbol form)
+                :close     (stop!)
+                :eval      (fork-eval form)
+                :interrupt (interrupt form)
+                :lookup    (lookup-symbol form)
                 (throw (Exception. (str "Unknown op: " (:op form)))))
               true)
             (catch Throwable t
               (when-not (-> t ex-data ::stop)
-                (let [root  ^Throwable (exception/root-cause t)
-                      {:clojure.error/keys [source line column]} (ex-data root)
-                      cause ^Throwable (or (some-> root .getCause) root)
-                      data  (ex-data cause)
-                      class (.getSimpleName (class cause))
-                      msg   (.getMessage cause)
-                      val   (cond-> (str class ": " msg)
-                              data
-                              (str " " (exception/bounded-pr-str data)))
-                      trace (exception/trace-str root {:location? false})]
-                  (*out-fn*
-                    (merge
-                      {:tag    :ex
-                       :val    val
-                       :trace  trace
-                       :source source
-                       :line   line
-                       :column column}
-                      @*context*))
-                  true)))))
-        (recur)))))
+                (report-throwable t)
+                true))))
+        (recur)))
+    (doseq [[id f] @*evals]
+      (future-cancel f))))

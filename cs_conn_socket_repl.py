@@ -82,11 +82,9 @@ class ConnectionSocketRepl(cs_conn.Connection):
         msg = f'{{:id {id}, :op :lookup, :symbol "{symbol}", :ns {ns}}}'
         self.send(msg)
 
-    # def interrupt_impl(self, id):
-    #     msg = {'session':      self.session,
-    #            'op':           'interrupt',
-    #            'interrupt-id': id}
-    #     self.send(msg)
+    def interrupt_impl(self, id):
+        msg = f'{{:id {id}, :op :interrupt}}'
+        self.send(msg)
 
     def handle_value(self, msg):
         if ':ret' == msg[':tag'] and (id := msg.get(':id')):
