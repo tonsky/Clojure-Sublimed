@@ -51,6 +51,7 @@ if
 cond
 *out*
 *warn-on-reflection*
+*print-namespace-maps*
 set!
 clojure.set/join
 find-keyword

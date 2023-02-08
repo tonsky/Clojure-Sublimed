@@ -42,6 +42,8 @@ class ConnectionSocketRepl(cs_conn.Connection):
             self.set_status(1, 'Upgrading REPL')
             self.socket.sendall(cs_common.clojure_source('exception.clj').encode())
             self.socket.sendall(cs_common.clojure_source('socket_repl.clj').encode())
+            if shared := cs_common.setting('eval_shared'):
+                self.socket.sendall(shared.encode())
             self.socket.sendall("(repl)\n".encode())
             started = False
             for line in lines(self.socket):
