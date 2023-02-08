@@ -245,22 +245,22 @@ parsers['token'] = Regex(r'(##)?(\\[()\[\]{}\"@^;`]|' + token + ")", name = "tok
 
 parsers['string'] = Seq(Regex(r'#?"', name=".open"),
                         Optional(Regex(r'([^"\\]+|\\.)+', name = ".body")),
-                        Char('"', name = ".close"),
+                        Optional(Char('"', name = ".close")),
                         name = "string")
 
 parsers['brackets'] = Seq(Char("[", name = ".open"),
                           Repeat(Choice('_gap', '_form', NotChar(r"]", name = "error")), name = ".body"),
-                          Char("]", name = ".close"),
+                          Optional(Char("]", name = ".close")),
                           name = "brackets")
 
 parsers['parens'] = Seq(Regex(r"(#\?@|#\?|#=|#)?\(", name = ".open"),
                         Repeat(Choice('_gap', '_form', NotChar(r")", name = "error")), name = ".body"),
-                        Char(")", name = ".close"),
+                        Optional(Char(")", name = ".close")),
                         name = "parens")
 
 parsers['braces'] = Seq(Regex(r"(#(:" + token + r")?)?\{", name = ".open"),
                         Repeat(Choice('_gap', '_form', NotChar(r"}", name = "error")), name = ".body"),
-                        Char("}", name = ".close"),
+                        Optional(Char("}", name = ".close")),
                         name = "braces")
 
 parsers['tagged'] = Seq(Char("#"),
