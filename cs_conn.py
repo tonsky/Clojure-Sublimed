@@ -6,7 +6,7 @@ conn = None
 
 status_key = 'clojure-sublimed-conn'
 phases = ['🌑', '🌒', '🌓', '🌔', '🌕']
-last_addr = 'localhost:'
+last_conn = None
 
 def ready():
     """
@@ -117,7 +117,7 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
                         if re.fullmatch(r'[1-9][0-9]*', content):
                             return f'localhost:{content}'
 
-        return last_addr
+        return last_conn[1]['address'] if last_conn else 'localhost:'
 
     def initial_selection(self):
         text = self.initial_text()
@@ -141,12 +141,17 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
         else:
             return os.path.isfile(text)
 
-    def confirm(self, text):
-        global last_addr
-        last_addr = text.strip()
-
     def next_input(self, args):
         return self.next
+
+class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
+    def run(self):
+        if conn:
+            sublime.run_command('clojure_sublimed_disconnect', {})
+        sublime.run_command(*last_conn)
+
+    def is_enabled(self):
+        return last_conn is not None
 
 class ClojureSublimedDisconnectCommand(sublime_plugin.ApplicationCommand):
     def run(self):

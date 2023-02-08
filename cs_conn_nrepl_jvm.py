@@ -110,6 +110,7 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
 
 class ClojureSublimedConnectNreplJvmCommand(sublime_plugin.ApplicationCommand):
     def run(self, address):
+        cs_conn.last_conn = ('clojure_sublimed_connect_nrepl_jvm', {'address': address})
         if address == 'auto':
             address = cs_conn.AddressInputHandler().initial_text()
         ConnectionNreplJvm(address).connect()

@@ -112,8 +112,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
 
 class ClojureSublimedConnectSocketReplCommand(sublime_plugin.ApplicationCommand):
     def run(self, address):
-        if address == 'auto':
-            address = cs_conn.AddressInputHandler().initial_text()
+        cs_conn.last_conn = ('clojure_sublimed_connect_socket_repl', {'address': address})
         ConnectionSocketRepl(address).connect()
 
     def input(self, args):
