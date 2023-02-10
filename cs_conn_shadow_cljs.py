@@ -49,7 +49,7 @@ class BuildInputHandler(sublime_plugin.TextInputHandler):
 class ClojureSublimedConnectShadowCljsCommand(sublime_plugin.ApplicationCommand):
     def run(self, address, build):
         cs_conn.last_conn = ('clojure_sublimed_connect_shadow_cljs', {'address': address, 'build': build})
-        ConnectionShadowCLJS(address, build).connect()
+        ConnectionShadowCljs(address, build).connect()
 
     def input(self, args):
         if 'build' not in args:

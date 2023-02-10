@@ -73,7 +73,7 @@
                  (do
                    (require ns)
                    (find-ns ns)))
-        name   (last (str/split file #"[/\\]"))
+        name   (some-> file (str/split #"[/\\]") last)
         ; ret   (eval `(do (in-ns '~(or ns 'user)) ~code'))
         ret    (binding [*read-eval* false
                          *ns*        ns-obj]
