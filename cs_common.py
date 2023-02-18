@@ -6,6 +6,15 @@ statuses = {}
 last_view = None
 package = None
 
+class Form:
+    def __init__(self, id, code, ns = 'user', line = None, column = None, file = None):
+        self.id     = id
+        self.code   = code
+        self.ns     = ns
+        self.line   = line
+        self.column = column
+        self.file   = file
+
 def settings():
     """
     Plugin settings

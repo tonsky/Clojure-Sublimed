@@ -1,5 +1,5 @@
 import os, re, sublime, sublime_plugin
-from . import cs_common, cs_eval
+from . import cs_common, cs_eval, cs_parser
 
 # Global connection instance
 conn = None
@@ -39,23 +39,38 @@ class Connection:
     def ready(self):
         return bool(self.status and self.status[0] == phases[4])
 
-    def eval_impl(self, id, code, ns = 'user', line = None, column = None, file = None):
+    def eval_impl(self, form):
         pass
 
-    def eval(self, id, code, ns = 'user', line = None, column = None, file = None):
+    def eval(self, view, sel):
         """
         Eval code and call `cs_eval.on_success(id, value)` or `cs_eval.on_exception(id, value, trace)`
         """
-        self.eval_impl(id, code, ns, line, column, file)
+        for region in sel:
+            if region.empty():
+                region = cs_parser.topmost_form(view, region.begin())
+            eval = cs_eval.Eval(view, region)
+            (line, column) = view.rowcol_utf16(region.begin())
+            line = line + 1
+            form = cs_common.Form(
+                    id     = eval.id,
+                    code   = view.substr(region),
+                    ns     = cs_parser.namespace(view, region.begin()) or 'user',
+                    line   = line,
+                    column = column,
+                    file   = view.file_name())
+            self.eval_impl(form)
 
     def load_file_impl(self, id, file, path):
         pass
 
-    def load_file(self, id, file, path):
+    def load_file(self, view):
         """
         Load whole file (~load-file nREPL command). Same callbacks as `eval`
         """
-        self.load_file_impl(id, file, path)
+        region = sublime.Region(0, view.size())
+        eval = cs_eval.Eval(view, region)
+        self.load_file_impl(eval.id, view.substr(region), view.file_name())
 
     def lookup_impl(self, id, symbol, ns):
         pass
@@ -66,15 +81,15 @@ class Connection:
         """
         self.lookup_impl(id, symbol, ns)
 
-    def interrupt_impl(self, id):
+    def interrupt_impl(self, batch_id, id):
         pass
 
-    def interrupt(self, id):
+    def interrupt(self, batch_id, id):
         """
         Interrupt currently executing eval with id = id.
         Will probably call `cs_eval.on_exception(id, value, trace)` on interruption
         """
-        self.interrupt_impl(id)
+        self.interrupt_impl(batch_id, id)
 
     def disconnect_impl(self):
         pass
@@ -98,7 +113,8 @@ class Connection:
         cs_common.set_status(status_key, status)
 
 class AddressInputHandler(sublime_plugin.TextInputHandler):
-    def __init__(self, next_input = None):
+    def __init__(self, search_nrepl = True, next_input = None):
+        self.search_nrepl = search_nrepl
         self.next = next_input
 
     """
@@ -109,7 +125,7 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
 
     def initial_text(self):
         # .nrepl-port file present
-        if window := sublime.active_window():
+        if self.search_nrepl and (window := sublime.active_window()):
             for folder in window.folders():
                 if os.path.exists(folder + "/.nrepl-port"):
                     with open(folder + "/.nrepl-port", "rt") as f:

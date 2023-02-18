@@ -47,7 +47,6 @@ class ConnectionSocketRepl(cs_conn.Connection):
             self.socket.sendall("(repl)\n".encode())
             started = False
             for line in lines(self.socket):
-                print("RCV", started, line)
                 if started:
                     msg = cs_parser.parse_as_dict(line)
                     self.handle_msg(msg)
@@ -63,27 +62,55 @@ class ConnectionSocketRepl(cs_conn.Connection):
         cs_common.debug('SND {}', msg)
         self.socket.sendall(msg.encode())
 
-    def eval_impl(self, id, code, ns = 'user', line = None, column = None, file = None):
-        code = code.replace('\\', '\\\\').replace('"', '\\"')
-        msg = f'{{:id {id}, :op :eval, :code "{code}", :ns {ns}'
-        if line is not None:
-            msg += f', :line {line}'
-        if column is not None:
-            msg += f', :column {column}'
-        if file is not None:
-            msg += f', :file "{file}"'
-        msg += f"}}"
+    def eval(self, view, sel):
+        regions = []
+        for region in sel:
+            if region.empty():
+                region = cs_parser.topmost_form(view, region.begin())
+                regions.append(region)
+            else:
+                start = region.begin()
+                parsed = cs_parser.parse(view.substr(region))
+                regions += [sublime.Region(start + child.start, start + child.end) for child in parsed.children]
+
+        forms = []
+        batch_id = cs_eval.Eval.next_id()
+        for region in regions:
+            eval = cs_eval.Eval(view, region, batch_id = batch_id)
+            (line, column) = view.rowcol_utf16(region.begin())
+            line = line + 1
+            form = cs_common.Form(
+                    id     = eval.id,
+                    code   = view.substr(region),
+                    ns     = cs_parser.namespace(view, region.begin()) or 'user',
+                    line   = line,
+                    column = column,
+                    file   = view.file_name())
+            forms.append(form)
+
+        msg = f'{{:id {batch_id}, :op :eval, :forms ['
+        for form in forms:
+            code = form.code.replace('\\', '\\\\').replace('"', '\\"')
+            msg += f'{{:id {form.id}, :code "{code}", :ns {form.ns}'
+            if (line := form.line) is not None:
+                msg += f', :line {line}'
+            if (column := form.column) is not None:
+                msg += f', :column {column}'
+            if (file := form.file) is not None:
+                msg += f', :file "{file}"'
+            msg += f'}}, '
+        msg += f"]}}"
         self.send(msg)
 
-    def load_file(self, id, file, path):
-        self.eval(id, file, file = path)
+    def load_file(self, view):
+        self.eval(view, [sublime.Region(0, view.size())])
 
     def lookup_impl(self, id, symbol, ns):
         msg = f'{{:id {id}, :op :lookup, :symbol "{symbol}", :ns {ns}}}'
         self.send(msg)
 
-    def interrupt_impl(self, id):
-        msg = f'{{:id {id}, :op :interrupt}}'
+    def interrupt_impl(self, batch_id, id):
+        msg = f'{{:id {batch_id}, :op :interrupt}}'
         self.send(msg)
 
     def handle_value(self, msg):
@@ -96,6 +123,10 @@ class ConnectionSocketRepl(cs_conn.Connection):
             cs_eval.on_exception(id, msg.get(':val'), line = msg.get(':line'), column = msg.get(':column'), trace = msg.get(':trace'))
             return True
 
+    def handle_done(self, msg):
+        if ':done' == msg[':tag'] and (batch_id := msg.get(':id')):
+            cs_eval.on_done(batch_id)
+
     def handle_lookup(self, msg):
         if ':lookup' == msg[':tag'] and (id := msg.get(':id')):
             val = cs_parser.parse_as_dict(msg[':val'])
@@ -106,6 +137,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
         cs_common.debug('MSG {}', msg)
         self.handle_value(msg) \
         or self.handle_exception(msg) \
+        or self.handle_done(msg) \
         or self.handle_lookup(msg)
 
 class ClojureSublimedConnectSocketReplCommand(sublime_plugin.ApplicationCommand):
@@ -114,7 +146,7 @@ class ClojureSublimedConnectSocketReplCommand(sublime_plugin.ApplicationCommand)
         ConnectionSocketRepl(address).connect()
 
     def input(self, args):
-        return cs_conn.AddressInputHandler()
+        return cs_conn.AddressInputHandler(search_nrepl = False)
 
     def is_enabled(self):
         return cs_conn.conn is None

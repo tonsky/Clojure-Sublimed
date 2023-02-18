@@ -20,10 +20,10 @@
     (when (= ::eof form)
       (stop!))
     
-    (vswap! *context* assoc :form s)
+    ; (vswap! *context* assoc :form s)
     
     (when-not (map? form)
-      (throw (Exception. "Unexpected form")))
+      (throw (Exception. (str "Unexpected form: " (pr-str form)))))
     
     form))
 
@@ -87,18 +87,23 @@
        :val  (exception/bounded-pr-str ret)
        :time time})))
 
-(defn fork-eval [{:keys [id] :as form}]
+(defn fork-eval [{:keys [id forms]}]
   (let [f (future
             (try
-              (eval-code form)
+              (doseq [form forms]
+                (vswap! *context* assoc :id (:id form))
+                (eval-code form))
               (catch Throwable t
                 (try
                   (report-throwable t)
                   (catch Throwable t
                     :ignore))))
-            (swap! *evals dissoc id))]
+            (swap! *evals dissoc id)
+            (vswap! *context* assoc :id id)
+            (*out-fn*
+              (merge @*context* {:tag :done})))]
     (swap! *evals assoc id f)))
-
+ 
 (defn interrupt [{:keys [id]}]
   (when-some [f (@*evals id)]
     (future-cancel f)))

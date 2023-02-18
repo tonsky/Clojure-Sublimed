@@ -173,10 +173,9 @@ if __name__ == '__main__':
 
     def read_loop(conn):
         while msg := conn.recv(4096):
-            # print("RCV RAW", msg.decode())
             payload = msg.decode()
             parsed = next(decode(payload))
-            print("RCV", json.dumps(parsed))
+            cs_common.debug("RCV", json.dumps(parsed))
     threading.Thread(daemon=True, target=read_loop, args=(conn,)).start()
 
     for line in sys.stdin:

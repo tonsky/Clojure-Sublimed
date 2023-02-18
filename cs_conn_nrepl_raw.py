@@ -41,17 +41,17 @@ class ConnectionNreplRaw(cs_conn.Connection):
         cs_common.debug('SND {}', msg)
         self.socket.sendall(cs_bencode.encode(msg).encode())
 
-    def eval_impl(self, id, code, ns = 'user', line = None, column = None, file = None):
-        msg = {'id':      id,
+    def eval_impl(self, form):
+        msg = {'id':      form.id,
                'session': self.session,
                'op':      self.eval_op,
-               'code':    code,
-               'ns':      ns}
-        if line is not None:
+               'code':    form.code,
+               'ns':      form.ns}
+        if (line := form.line) is not None:
             msg['line'] = line
-        if column is not None:
+        if (column := form.column) is not None:
             msg['column'] = column
-        if file is not None:
+        if (file := form.file) is not None:
             msg['file'] = file
         self.send(msg)
 
@@ -73,7 +73,7 @@ class ConnectionNreplRaw(cs_conn.Connection):
                'ns':      ns}
         self.send(msg)
 
-    def interrupt_impl(self, id):
+    def interrupt_impl(self, batch_id, id):
         msg = {'session':      self.session,
                'op':           'interrupt',
                'interrupt-id': id}

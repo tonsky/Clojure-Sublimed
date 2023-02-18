@@ -11,24 +11,30 @@ class Eval:
     Has short .value region and longer .trace phantom and can toggle between them
     """
     # class
-    next_id: int = 10
+    last_id: int = 9
     colors:  Dict[str, Tuple[str, str]] = {}
 
     # instance
-    id:         int
-    view:       sublime.View
-    status:     str # "pending" | "interrupt" | "success" | "exception" | "lookup"
-    code:       str
-    session:    str
-    trace:      str
-    phantom_id: int
+    id:           int
+    batch_id:     int
+    view:         sublime.View
+    status:       str # "pending" | "interrupt" | "success" | "exception" | "lookup"
+    code:         str
+    session:      str
+    trace:        str
+    phantom_id:   int
+
+    def next_id():
+        Eval.last_id += 1
+        return Eval.last_id
     
-    def __init__(self, view, region):
+    def __init__(self, view, region, batch_id = None):
         extended_region = view.line(region)
         erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
         
-        id = Eval.next_id
+        id = Eval.next_id()
         self.id = id
+        self.batch_id = batch_id or id
         self.view = view
         self.code = view.substr(region)
         self.session = None
@@ -36,7 +42,6 @@ class Eval:
         self.phantom_id = None
         self.value = None
         
-        Eval.next_id += 1
         evals[id] = self
         evals_by_view[view.id()][id] = self
 
@@ -115,14 +120,14 @@ class Eval:
             .dark body  { background-color: hsl(0, 100%, 10%); }
         """)
 
-    def erase(self):
+    def erase(self, interrupt = True):
         self.view.erase_regions(self.value_key())
         if self.phantom_id:
             self.view.erase_phantom_by_id(self.phantom_id)
 
         del evals[self.id]
         del evals_by_view[self.view.id()][self.id]
-        if self.status == "pending" and self.session:
+        if interrupt and self.status == "pending" and self.session:
             cs_common.conn.send({"op": "interrupt", "interrupt-id": self.id, "session": self.session})
 
 def by_id(id):
@@ -175,6 +180,15 @@ def on_exception(id, value, line = None, column = None, trace = None):
     if (eval := by_id(id)):
         eval.trace = trace
         eval.update('exception', value)
+
+def on_done(id):
+    if (eval := by_id(id)):
+        es = [eval]
+    else:
+        es = [eval for eval in evals.values() if eval.batch_id == id]
+    for eval in es:
+        if eval.status not in {"success", "exception"}:
+            eval.erase()
 
 def format_lookup(view, info):
     settings = view.settings()
@@ -239,36 +253,12 @@ def on_lookup(id, value):
         point = view.line(eval.region().end()).begin()
         eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
 
-def on_done(id):
-    if (eval := by_id(id)) and eval.status not in {"success", "exception"}:
-        eval.erase()
-
-def eval(view, region, code = None):
-    eval = Eval(view, region)
-    if not code:
-        code = view.substr(region)
-    ns   = cs_parser.namespace(view, region.begin()) or 'user'
-    (line, column) = view.rowcol_utf16(region.begin())
-    line = line + 1
-    file = view.file_name()
-    cs_conn.conn.eval(eval.id, code, ns, line, column, file)
-
 class ClojureSublimedEval(sublime_plugin.TextCommand):
     """
     Eval selected code or topmost form is selection is collapsed
     """
     def run(self, edit):
-        covered = []
-        for sel in self.view.sel():
-            if all([not sel.intersects(r) for r in covered]):
-                if sel.empty():
-                    region = cs_parser.topmost_form(self.view, sel.begin())
-                    if region:
-                        covered.append(region)
-                        eval(self.view, region)
-                else:
-                    covered.append(sel)
-                    eval(self.view, sel)
+        cs_conn.conn.eval(self.view, self.view.sel())
 
     def is_enabled(self):
         return cs_conn.ready()
@@ -278,12 +268,7 @@ class ClojureSublimedEvalBufferCommand(sublime_plugin.TextCommand):
     Eval whole buffer
     """
     def run(self, edit):
-        view = self.view
-        region = sublime.Region(0, view.size())
-        eval = Eval(view, region)
-        file = view.substr(region)
-        path = view.file_name()
-        cs_conn.conn.load_file(eval.id, file, path)
+        cs_conn.conn.load_file(self.view)
         
     def is_enabled(self):
         return cs_conn.ready()
@@ -374,26 +359,11 @@ class ClojureSublimedInterruptEvalCommand(sublime_plugin.TextCommand):
         if (eval := cs_eval_status.status_eval) and eval.status not in {"pending", "interrupt"}:
             es += [eval]
         if len(es) > 0:
-            if eval := min(es, key = lambda eval: eval.id):
-                cs_conn.conn.interrupt(eval.id)
-                eval.update('interrupt', "Interrupting...")
-
-    def is_enabled(self):
-        return cs_conn.ready()
-
-class ClojureSublimedRequireNamespaceCommand(sublime_plugin.TextCommand):
-    """
-    On namespace-qualified symbol, require its namespace
-    """
-    def run(self, edit):
-        view = self.view
-        for sel in view.sel():
-            region = cs_parser.symbol_at_point(view, sel.begin()) if sel.empty() else sel
-            # narrow down to the namespace part if present
-            if region and (sym := view.substr(region).partition('/')[0]):
-                region = sublime.Region(region.a, region.a + len(sym))
-            if region:
-                eval(view, region, code=f"(require '{sym})")
+            eval = min(es, key = lambda e: e.batch_id)
+            cs_conn.conn.interrupt(eval.batch_id, eval.id)
+            for e in es:
+                if e.batch_id == eval.batch_id:
+                    e.update('interrupt', "Interrupting...")
 
     def is_enabled(self):
         return cs_conn.ready()

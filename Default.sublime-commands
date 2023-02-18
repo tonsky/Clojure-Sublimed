@@ -56,10 +56,6 @@
         "command": "clojure_sublimed_clear_evals"
     },
     {
-        "caption": "Clojure Sublimed: Require Namespace",
-        "command": "clojure_sublimed_require_namespace"
-    },
-    {
         "caption": "Clojure Sublimed: Reindent Lines",
         "command": "clojure_sublimed_reindent_lines"
     },

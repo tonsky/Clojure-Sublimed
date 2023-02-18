@@ -13,12 +13,12 @@ class StatusEval:
         if status_eval:
             status_eval.erase()
 
-        id           = cs_eval.Eval.next_id
-        self.id      = id
-        self.code    = code
-        self.session = None
+        id            = cs_eval.Eval.next_id()
+        self.id       = id
+        self.batch_id = id
+        self.code     = code
+        self.session  = None
         
-        cs_eval.Eval.next_id += 1
         status_eval  = self
 
         self.update('pending', cs_progress.phase())

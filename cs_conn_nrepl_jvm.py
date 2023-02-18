@@ -3,7 +3,7 @@ from . import cs_common, cs_conn, cs_conn_nrepl_raw, cs_eval
 
 class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
     """
-    Enhanced nREPL connection that only will work on JVM
+    Enhanced nREPL connection that will work only on JVM
     """
     def __init__(self, addr):
         super().__init__(addr)
@@ -17,7 +17,7 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
             msg['nrepl.middleware.print/quota']   = 4096
         super().send(msg)
 
-    def interrupt_impl(self, id):
+    def interrupt_impl(self, batch_id, id):
         eval = cs_eval.by_id(id)
         msg = {'session':      eval.session or self.session,
                'op':           'interrupt',

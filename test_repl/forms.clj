@@ -13,13 +13,13 @@
 (bean "abc")
 
 ; delayed eval
-(do (Thread/sleep 5000) :done)
-(do (Thread/sleep 5000) :done)
-(do (Thread/sleep 5000) :done)
-(do (Thread/sleep 5000) :done)
-(do (Thread/sleep 900) :done)
-(do (Thread/sleep 490) :done)
-(do (Thread/sleep 90) :done)
+(do (Thread/sleep 1400) :first)
+(do (Thread/sleep 1300) :second)
+(do (Thread/sleep 1200) :third)
+(do (Thread/sleep 1100) :fourth)
+(do (Thread/sleep 990) :fifth)
+(do (Thread/sleep 490) :sixth)
+(do (Thread/sleep 90) :seventh)
 
 ; infinite sequence
 (range) 

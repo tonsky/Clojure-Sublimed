@@ -1,3 +1,12 @@
+### WIP
+
+- Huge refactoring, easier to add new REPLs
+- REPLs do not depend on syntax highlighting anymore, will work with any syntax
+- new REPL: Raw nREPL
+- new REPL: Socket REPL (no external dependencies, faster to start than nREPL)
+- Report results of different forms in the same selection separately (Socket REPL only)
+- Removed `clojure_sublimed_require_namespace` command
+
 ### 2.11.0 - Jan 5, 2023
 
 - Connect command accepts 'auto' (will look for `.nrepl-port` file) #82
