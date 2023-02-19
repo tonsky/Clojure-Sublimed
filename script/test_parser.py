@@ -1,77 +1,17 @@
 #! /usr/bin/env python3
-import os, random, re, sys, time
+import os, random, sys, time
 
 cwd = os.path.dirname(__file__)
 os.chdir(os.path.abspath(cwd + "/.."))
 sys.path.append(os.getcwd())
-import cs_parser as parser
-
-def print_table(titles, cols):
-    cols = [col.split('\n') for col in cols]
-    widths = [max([len(line) for line in col] + [len(title)]) for col, title in zip(cols, titles)]
-    height = max(len(col) for col in cols)
-    
-    print("┌", end = "")
-    for i, width in enumerate(widths):
-        print("".join(['─'] * (width + 2)), end = "┬" if i < len(widths) - 1 else "┐")
-    print()
-
-    print("│", end = "")
-    for title, width in zip(titles, widths):
-        print(" " + title.ljust(width) + " ", end = "│")
-    print()
-
-    print("├", end = "")
-    for i, width in enumerate(widths):
-        print("".join(['─'] * (width + 2)), end = "┼" if i < len(widths) - 1 else "┤")
-    print()
-
-    for row in range(height):
-        print("│", end = "")
-        for col in range(len(cols)):
-            str = cols[col][row] if row < len(cols[col]) else ""
-            print(" " + str.ljust(widths[col]) + " ", end = "│")
-        print()
-
-    print("└", end = "")
-    for i, width in enumerate(widths):
-        print("".join(['─'] * (width + 2)), end = "┴" if i < len(widths) - 1 else "┘")
-    print("\n")
+import cs_parser
+import script.test_core as test_core
 
 def test_parse_trees():
     dir = cwd + "/../test_parser/"
-    files = [file for file in os.listdir(dir) if file.endswith(".txt")]
-    width = max(len(file) for file in files)
-    tests = 0
-    failed = 0
-    for file in files:
-        with open(dir + file) as f:
-            content = f.read()
-        print(file.ljust(width), "[", end = "")
-        failures = []
-        for match in re.finditer("={80}\n(.+)\n={80}\n\n((?:.+\n)+)\n-{80}\n\n((?:.+\n)+)", content):
-            tests += 1
-            name = match.group(1)
-            expr = match.group(2).strip('\n')
-            expected = match.group(3).strip('\n')
-            expected = "\n".join(line.rstrip(' ') for line in expected.split('\n'))
-            parsed = parser.parse(expr)
-            actual = str(parsed)
-            if parsed.end < len(expr):
-                failed += 1
-                print("F", end = "")
-                failures.append((name, expr, "(source 0..{})".format(len(expr)), actual))
-            elif actual != expected:
-                failed += 1
-                print("F", end = "")
-                failures.append((name, expr, expected, actual))
-            else:
-                print(".", end = "")
-            sys.stdout.flush()
-        print("]")
-        for (name, expr, expected, actual) in failures:
-            print_table([name, "Expected", "Actual"], [expr, expected, actual])
-    print("Tests: {}, failed: {}\n".format(tests, failed), flush=True)
+    def test_fn(input):
+        return str(cs_parser.parse(input))
+    test_core.run_tests(dir, test_fn)
 
 def test_clojure():
     dir = cwd + "/../test_parser/"
@@ -85,7 +25,7 @@ def test_clojure():
         print(file.ljust(width), end = "", flush = True)
         tests += 1
         start = time.time()
-        parsed = parser.parse(expr)
+        parsed = cs_parser.parse(expr)
         if parsed.end < len(expr):
             failed += 1
             print(" [ FAIL ]", flush = True)
@@ -102,15 +42,15 @@ def test_random():
     for i in range(0, 10000):
         tests += 1
         expr = "".join(random.choices(alphabet, k = random.randint(1, 50)))
-        parsed = parser.parse(expr)
+        parsed = cs_parser.parse(expr)
         # if i < 10:
         #     actual = str(parsed)
-        #     print_table(["Expr", "Actual"], ["'" + expr + "'", actual])
+        #     test_core.print_table(["Expr", "Actual"], ["'" + expr + "'", actual])
         if parsed.end < len(expr):
             failed += 1
             actual = str(parsed)
             if failed == 1:
-                print_table(["Expr", "Expected", "Actual"], [expr, "(source 0..{})".format(len(expr)), actual])
+                test_core.print_table(["Expr", "Expected", "Actual"], [expr, "(source 0..{})".format(len(expr)), actual])
     print("Randomized tests: {}, failed: {}\n".format(tests, failed), flush=True)
 
 if __name__ == '__main__':

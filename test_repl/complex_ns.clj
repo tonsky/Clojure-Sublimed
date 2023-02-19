@@ -17,6 +17,8 @@ Nice namespace"
 
 *ns*
 
+(meta *ns*)
+
 (find-ns 'sublime-clojure.test)
 
 (str/join ", " (range 10))

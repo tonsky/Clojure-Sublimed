@@ -6,6 +6,8 @@
 - new REPL: Socket REPL (no external dependencies, faster to start than nREPL)
 - Report results of different forms in the same selection separately (Socket REPL only)
 - Removed `clojure_sublimed_require_namespace` command
+- Implemented pretty-printing of expanded results in Python, removing clojure.pprint dependency
+- Added `wrap_width` setting
 
 ### 2.11.0 - Jan 5, 2023
 

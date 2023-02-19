@@ -1,6 +1,6 @@
 import collections, html, os, re, sublime, sublime_plugin
 from typing import Any, Dict, Tuple
-from . import cs_common, cs_conn, cs_eval_status, cs_parser, cs_progress
+from . import cs_common, cs_conn, cs_eval_status, cs_parser, cs_printer, cs_progress
 
 evals = {} # Dict[int, Eval]
 evals_by_view = collections.defaultdict(dict) # Dict[int, Dict[int, Eval]]
@@ -109,7 +109,9 @@ class Eval:
                     self.phantom_id = self.view.add_phantom(self.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
 
     def toggle_pprint(self):
-        self.toggle_phantom(self.value, """
+        node = cs_parser.parse(self.value)
+        string = cs_printer.format(self.value, node, limit = cs_common.setting('wrap_width', 80))
+        self.toggle_phantom(string, """
             .light body { background-color: hsl(100, 100%, 90%); }
             .dark body  { background-color: hsl(100, 100%, 10%); }
         """)
