@@ -110,7 +110,9 @@ class ConnectionNreplRaw(cs_conn.Connection):
         if 'out' in msg:
             print(msg['out'], end = '')
             return True
-        elif 'err' in msg:
+
+    def handle_err(self, msg):
+        if 'err' in msg:
             print(msg['err'], end = '')
             return True
 
@@ -125,6 +127,7 @@ class ConnectionNreplRaw(cs_conn.Connection):
         or self.handle_exception(msg) \
         or self.handle_lookup(msg) \
         or self.handle_out(msg) \
+        or self.handle_err(msg) \
         or self.handle_done(msg)
 
 class ClojureSublimedConnectNreplRawCommand(sublime_plugin.ApplicationCommand):

@@ -1,4 +1,4 @@
-import os, sublime, sublime_plugin
+import os, re, sublime, sublime_plugin
 from . import cs_common, cs_conn, cs_conn_nrepl_raw, cs_eval
 
 class ConnectionShadowCljs(cs_conn_nrepl_raw.ConnectionNreplRaw):
@@ -29,6 +29,24 @@ class ConnectionShadowCljs(cs_conn_nrepl_raw.ConnectionNreplRaw):
         elif 2 == msg.get('id') and msg.get('status') == ['done']:
             self.set_status(4, self.addr)
             return True
+
+    def handle_value(self, msg):
+        if 'value' in msg and (id := msg.get('id')):
+            eval = cs_eval.by_id(id)
+            value = msg.get('value')
+            if eval and eval.status == 'exception' and value in {'nil', ':repl/exception!'}:
+                pass
+            else:
+                cs_eval.on_success(id, msg.get('value'))
+            return True
+
+    def handle_err(self, msg):
+        if 'err' in msg and (id := msg.get('id')):
+            trace = msg['err']
+            error = re.sub(r'\s*------+\s*', '', trace)
+            cs_eval.on_exception(id, error, trace = trace)
+            return True
+
 
 class BuildInputHandler(sublime_plugin.TextInputHandler):
     def initial_text(self):
