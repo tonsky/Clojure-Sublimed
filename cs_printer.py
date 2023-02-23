@@ -7,26 +7,6 @@ def safe_get(l, i, default = None):
     else:
         return default
 
-def right_boundary(indent, s):
-    """
-    Given (potentially) multiline s, figures out max right offset,
-    considering it starts at `indent`
-    """
-    if '\n' in s:
-        return max(len(line) for line in s.split('\n'))
-    else:
-        return len(indent) + len(s)
-
-def end_offset(indent, s):
-    """
-    Given (potentially) multiline s, figures out where end index will be,
-    considering it starts at `indent`
-    """
-    if '\n' in s:
-        return len(s.split('\n')[-1])
-    else:
-        return len(indent) + len(s)
-
 def format_map(text, node, indent, limit):
     """
     Puts key-value pairs on separate line each. Aligns keys by longest one:
@@ -50,17 +30,15 @@ def format_map(text, node, indent, limit):
             res += '\n' + indent_keys
         res += ks
         if v is not None:
-            vs = format(text, v, indent_vals, limit)
-            if right_boundary(indent_vals, vs) <= limit:
+            vs = format(text, v, indent_keys, limit)
+            if '\n' in vs:
+                res += '\n' + indent_keys + vs
+            elif len(indent_keys) + longest_key + 1 + len(vs) <= limit:
                 res += (longest_key - len(ks)) * ' ' + ' ' + vs
+            elif len(indent_keys) + len(ks) + 1 + len(vs) <= limit:
+                res += ' ' + vs
             else:
-                indent = indent_keys + len(ks) * ' ' + ' '
-                vs = format(text, v, indent, limit)
-                if right_boundary(indent, vs) <= limit:
-                    res += ' ' + vs
-                else:
-                    vs = format(text, v, indent_keys, limit)
-                    res += '\n' + indent_keys + vs
+                res += '\n' + indent_keys + vs
     if node.close:
         res += node.close.text
     return res
@@ -72,23 +50,30 @@ def format_list(text, node, indent, limit):
     """
     indent_children = indent + (len(node.open.text) * ' ')
     res = node.open.text
+    force_newline = False
+    is_first = True
     if node.body:
-        offset = len(indent_children)
         for i, child in enumerate(node.body.children):
-            separator = 0
-            if i > 0 and offset > len(indent_children):
-                offset += 1
-                separator = 1
-            indent_child = offset * ' '
-            child_str = format(text, child, indent_child, limit)
-            if right_boundary(indent_child, child_str) <= limit:
-                res += separator * ' '
+            if force_newline:
+                res += '\n' + indent_children
+                is_first = True
+            
+            child_str = format(text, child, indent_children, limit)
+            if '\n' in child_str:
+                if not is_first:
+                    res += '\n' + indent_children
                 res += child_str
-                offset = end_offset(indent_child, child_str)
-            else:
-                child_str = format(text, child, indent_children, limit)
+                force_newline = True
+                is_first = True
+                continue
+            last_line = res[res.rfind('\n') + 1:]
+            separator = '' if is_first else ' '
+            if len(last_line) + len(separator) + len(child_str) > limit:
                 res += '\n' + indent_children + child_str
-                offset = end_offset(indent_children, child_str)
+            else:
+                res += separator + child_str
+            force_newline = False
+            is_first = False
     close = node.close.text if node.close else ''
     res += close
     return res

@@ -100,7 +100,7 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
         cs_common.debug('RCV {}', msg)
 
         for key in msg.get('nrepl.middleware.print/truncated-keys', []):
-            msg[key] += '...'
+            msg[key] += ' ...'
 
         self.handle_connect(msg) \
         or self.handle_disconnect(msg) \

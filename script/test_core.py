@@ -76,5 +76,5 @@ def run_tests(dir, test_fn):
             sys.stdout.flush()
         print("]")
         for (name, input, expected, actual) in failures:
-            print_table([name, "Expected", "Actual"], ["", expected, actual])
+            print_table([name, "Expected", "Actual"], [input, expected, actual])
     print("Tests: {}, failed: {}\n".format(tests, failed), flush=True)
