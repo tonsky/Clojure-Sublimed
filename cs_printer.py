@@ -7,6 +7,16 @@ def safe_get(l, i, default = None):
     else:
         return default
 
+def right_boundary(indent, s):
+    """
+    Given (potentially) multiline s, figures out max right offset,
+    considering it starts at `indent`
+    """
+    if '\n' in s:
+        return max(len(line) for line in s.split('\n'))
+    else:
+        return len(indent) + len(s)
+
 def end_offset(indent, s):
     """
     Given (potentially) multiline s, figures out where end index will be,
@@ -40,9 +50,17 @@ def format_map(text, node, indent, limit):
             res += '\n' + indent_keys
         res += ks
         if v is not None:
-            res += (longest_key - len(ks)) * ' ' + ' '
             vs = format(text, v, indent_vals, limit)
-            res += vs
+            if right_boundary(indent_vals, vs) <= limit:
+                res += (longest_key - len(ks)) * ' ' + ' ' + vs
+            else:
+                indent = indent_keys + len(ks) * ' ' + ' '
+                vs = format(text, v, indent, limit)
+                if right_boundary(indent, vs) <= limit:
+                    res += ' ' + vs
+                else:
+                    vs = format(text, v, indent_keys, limit)
+                    res += '\n' + indent_keys + vs
     if node.close:
         res += node.close.text
     return res
@@ -63,10 +81,10 @@ def format_list(text, node, indent, limit):
                 separator = 1
             indent_child = offset * ' '
             child_str = format(text, child, indent_child, limit)
-            if (end := end_offset(indent_child, child_str)) <= limit:
+            if right_boundary(indent_child, child_str) <= limit:
                 res += separator * ' '
                 res += child_str
-                offset = end
+                offset = end_offset(indent_child, child_str)
             else:
                 child_str = format(text, child, indent_children, limit)
                 res += '\n' + indent_children + child_str

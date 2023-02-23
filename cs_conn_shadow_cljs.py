@@ -53,7 +53,7 @@ class ClojureSublimedConnectShadowCljsCommand(sublime_plugin.ApplicationCommand)
 
     def input(self, args):
         if 'build' not in args:
-            return cs_conn.AddressInputHandler(BuildInputHandler())
+            return cs_conn.AddressInputHandler(next_input = BuildInputHandler())
         else:
             return cs_conn.AddressInputHandler()
 
