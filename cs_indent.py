@@ -3,7 +3,7 @@ from . import cs_common, cs_parser
 
 def search_path(node, pos):
     """
-    Looks for the deepes node that wraps pos (start < pos < end).
+    Looks for the deepest node that wraps pos (start < pos < end).
     Returns full path to that node from the top
     """
     res = [node]
@@ -24,7 +24,7 @@ def indent(view, point):
 
     Row is row number of the token for which this indent is based on (row of open paren)
     """
-    parsed = cs_parser.parse_tree(view)
+    parsed = cs_parser.parse(view.substr(sublime.Region(0, view.size())) + ' ')
     if path := search_path(parsed, point):
         node = None
         first_form = None
