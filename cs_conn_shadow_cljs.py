@@ -47,6 +47,22 @@ class ConnectionShadowCljs(cs_conn_nrepl_raw.ConnectionNreplRaw):
             cs_eval.on_exception(id, error, trace = trace)
             return True
 
+    def load_file_impl(self, id, file, path):
+        msg = {'id':        id,
+               'session':   self.session,
+               'op':        'load-file',
+               'file':      file,
+               'file-name': os.path.basename(path) if path else "NO_SOURCE_FILE.cljc"}
+        if path:
+            msg['file-path'] = path
+        self.send(msg)
+
+    def load_file(self, view):
+        if view.file_name():
+            super().load_file(view)
+        else:
+            self.eval(view, [sublime.Region(0, view.size())])
+
 
 class BuildInputHandler(sublime_plugin.TextInputHandler):
     def initial_text(self):
