@@ -77,7 +77,7 @@
         ; ret   (eval `(do (in-ns '~(or ns 'user)) ~code'))
         ret    (binding [*read-eval* false
                          *ns*        ns-obj]
-                 (clojure.lang.Compiler/load (reader code line column) file name))
+                 (clojure.lang.Compiler/load (reader code line column) file (or name "NO_SOURCE_FILE.cljc")))
         time   (-> (System/nanoTime)
                  (- start)
                  (quot 1000000))]
