@@ -34,7 +34,7 @@ class ConnectionShadowCljs(cs_conn_nrepl_raw.ConnectionNreplRaw):
         if 'value' in msg and (id := msg.get('id')):
             eval = cs_eval.by_id(id)
             value = msg.get('value')
-            if eval and eval.status == 'exception' and value in {'nil', ':repl/exception!'}:
+            if eval and eval.status == 'exception' and ('nil' == value or value.startswith(':repl/')):
                 pass
             else:
                 cs_eval.on_success(id, msg.get('value'))
@@ -42,8 +42,12 @@ class ConnectionShadowCljs(cs_conn_nrepl_raw.ConnectionNreplRaw):
 
     def handle_err(self, msg):
         if 'err' in msg and (id := msg.get('id')):
+            eval = cs_eval.by_id(id)
             trace = msg['err']
             error = re.sub(r'\s*------+\s*', '', trace)
+            if eval and eval.status == 'exception':
+                trace = eval.trace + '\n' + trace
+                error = eval.value + '\n' + error
             cs_eval.on_exception(id, error, trace = trace)
             return True
 
