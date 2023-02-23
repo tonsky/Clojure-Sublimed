@@ -21,11 +21,12 @@ class ConnectionNreplRaw(cs_conn.Connection):
         self.reader.start()
 
     def disconnect_impl(self):
-        if self.session:
-            self.send({'op': 'close', 'session': self.session})
         if self.socket:
-            self.socket.close()
-            self.socket = None
+            if self.session:
+                self.send({'op': 'close', 'session': self.session})
+            else:
+                self.socket.close()
+                self.socket = None
 
     def read_loop(self):
         try:
@@ -85,6 +86,12 @@ class ConnectionNreplRaw(cs_conn.Connection):
             self.set_status(4, self.addr)
             return True
 
+    def handle_disconnect(self, msg):
+        if self.session == msg.get('session') and 'session-closed' in msg.get('status', []):
+            self.socket.close()
+            self.socket = None
+            return True
+
     def handle_value(self, msg):
         if 'value' in msg and (id := msg.get('id')):
             cs_eval.on_success(id, msg.get('value'))
@@ -93,9 +100,9 @@ class ConnectionNreplRaw(cs_conn.Connection):
     def handle_exception(self, msg):
         if (id := msg.get('id')):
             error = msg.get('root-ex') or msg.get('ex')
-            if not error and 'status' in msg and 'namespace-not-found' in msg['status']:
+            if not error and 'status' in msg and 'namespace-not-found' in msg.get('status', []):
                 error = 'Namespace not found: ' + msg['ns']
-            if not error and 'status' in msg and 'unknown-op' in msg['status']:
+            if not error and 'status' in msg and 'unknown-op' in msg.get('status', []):
                 error = 'Unknown op: ' + msg['op']
             if error:
                 cs_eval.on_exception(id, error)
@@ -123,6 +130,7 @@ class ConnectionNreplRaw(cs_conn.Connection):
     def handle_msg(self, msg):
         cs_common.debug('RCV {}', msg)
         self.handle_connect(msg) \
+        or self.handle_disconnect(msg) \
         or self.handle_value(msg) \
         or self.handle_exception(msg) \
         or self.handle_lookup(msg) \

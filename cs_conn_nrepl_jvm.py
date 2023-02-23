@@ -103,6 +103,7 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
             msg[key] += '...'
 
         self.handle_connect(msg) \
+        or self.handle_disconnect(msg) \
         or self.handle_new_session(msg) \
         or self.handle_value(msg) \
         or self.handle_exception(msg) \
