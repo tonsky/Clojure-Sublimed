@@ -59,7 +59,7 @@ def format_list(text, node, indent, limit):
                 is_first = True
             
             child_str = format(text, child, indent_children, limit)
-            if '\n' in child_str:
+            if '\n' in child_str or child.name in {'brackets', 'parens', 'braces'} or len(child_str) > limit / 3:
                 if not is_first:
                     res += '\n' + indent_children
                 res += child_str

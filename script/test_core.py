@@ -46,7 +46,7 @@ def print_table(titles, cols):
         print("".join(['─'] * (width + 2)), end = "┴" if i < len(widths) - 1 else "┘")
     print("\n")
 
-def run_tests(dir, test_fn):
+def run_tests(dir, test_fn, col_input = True):
     """
     Looks for all *.txt files in dir, parses them as `input` + `expected`,
     then compares `expected` to `test_fn(input)`. Prints errors and execution stats
@@ -76,5 +76,8 @@ def run_tests(dir, test_fn):
             sys.stdout.flush()
         print("]")
         for (name, input, expected, actual) in failures:
-            print_table([name, "Expected", "Actual"], [input, expected, actual])
+            if col_input:
+                print_table([name, "Expected", "Actual"], [input, expected, actual])
+            else:
+                print_table([name + ": Expected", "Actual"], [expected, actual])
     print("Tests: {}, failed: {}\n".format(tests, failed), flush=True)

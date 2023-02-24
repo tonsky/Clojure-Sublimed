@@ -62,17 +62,27 @@ Long Vectors
 
 --------------------------------------------------------------------------------
 
-[1 "looooooooooooooooooooooong" 2 "looooooooooooooooooooooong" 3
- "looooooooooooooooooooooong" 4 "looooooooooooooooooooooong" 5  
- "looooooooooooooooooooooong" 6]                                
+[1                           
+ "looooooooooooooooooooooong"
+ 2                           
+ "looooooooooooooooooooooong"
+ 3                           
+ "looooooooooooooooooooooong"
+ 4                           
+ "looooooooooooooooooooooong"
+ 5                           
+ "looooooooooooooooooooooong"
+ 6]                          
 
 ================================================================================
 Long Nested Vectors
 ================================================================================
 
-[[1 "looooooooooooooooooooooong" 2] [3 "looooooooooooooooooooooong" 4] [5 "looooooooooooooooooooooong" 6] [7 "looooooooooooooooooooooong" 8]]
+[[1 "looooooooooooooooooong" 2] [3 "looooooooooooooooooong" 4] [5 "looooooooooooooooooong" 6] [7 "looooooooooooooooooong" 8]]
 
 --------------------------------------------------------------------------------
 
-[[1 "looooooooooooooooooooooong" 2] [3 "looooooooooooooooooooooong" 4]
- [5 "looooooooooooooooooooooong" 6] [7 "looooooooooooooooooooooong" 8]]
+[[1 "looooooooooooooooooong" 2] 
+ [3 "looooooooooooooooooong" 4] 
+ [5 "looooooooooooooooooong" 6] 
+ [7 "looooooooooooooooooong" 8]]

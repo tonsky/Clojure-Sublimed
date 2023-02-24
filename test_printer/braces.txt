@@ -89,7 +89,9 @@ Nested Sets
 
 --------------------------------------------------------------------------------
 
-#{#{1} #{#{0} 2}}
+#{#{1}
+  #{#{0}
+    2}}
 
 ================================================================================
 Long Set
@@ -240,4 +242,5 @@ Error
         [[java.lang.Thread sleep0 "Thread.java" -2]            
          [java.lang.Thread sleep "Thread.java" 465]            
          [user$eval2179 invokeStatic "NO_SOURCE_FILE" 24]      
-         [user$eval2179 invoke "NO_SOURCE_FILE" 24] ...        
+         [user$eval2179 invoke "NO_SOURCE_FILE" 24]            
+         ...                                                   

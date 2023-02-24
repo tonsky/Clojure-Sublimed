@@ -109,9 +109,9 @@ class ConnectionNreplRaw(cs_conn.Connection):
                 self.eval_impl(cs_common.Form(f'{id}.e', '*e'))
             if not error:
                 if 'namespace-not-found' in msg.get('status', []):
-                    error = 'Namespace not found: ' + msg['ns']
+                    error = 'Namespace not found: ' + msg.get('ns', '')
                 elif 'unknown-op' in msg.get('status', []):
-                    error = 'Unknown op: ' + msg.get('op')
+                    error = 'Unknown op: ' + msg.get('op', '')
             if error:
                 cs_eval.on_exception(id, error)
                 return True

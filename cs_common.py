@@ -45,7 +45,7 @@ def wrap_width(view):
         return w
     if not view:
         return 80
-    return math.floor(view.viewport_extent()[0] / view.em_width())
+    return math.floor(view.viewport_extent()[0] / view.em_width()) - 2
 
 def debug(format, *args):
     """
