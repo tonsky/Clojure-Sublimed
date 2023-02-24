@@ -1,5 +1,5 @@
 import os, sublime, sublime_plugin, threading
-from . import cs_bencode, cs_common, cs_conn, cs_eval
+from . import cs_bencode, cs_common, cs_conn, cs_eval, cs_parser, cs_printer
 
 class ConnectionNreplRaw(cs_conn.Connection):
     """
@@ -94,16 +94,24 @@ class ConnectionNreplRaw(cs_conn.Connection):
 
     def handle_value(self, msg):
         if 'value' in msg and (id := msg.get('id')):
-            cs_eval.on_success(id, msg.get('value'))
+            if isinstance(id, str) and id.endswith('.e'):
+                id = int(id[:-2])
+                if (eval := cs_eval.by_id(id)) and eval.status == 'exception' and not eval.trace:
+                    eval.trace = msg['value']
+            else:
+                cs_eval.on_success(id, msg.get('value'))
             return True
 
     def handle_exception(self, msg):
         if (id := msg.get('id')):
             error = msg.get('root-ex') or msg.get('ex')
-            if not error and 'status' in msg and 'namespace-not-found' in msg.get('status', []):
-                error = 'Namespace not found: ' + msg['ns']
-            if not error and 'status' in msg and 'unknown-op' in msg.get('status', []):
-                error = 'Unknown op: ' + msg['op']
+            if error:
+                self.eval_impl(cs_common.Form(f'{id}.e', '*e'))
+            if not error:
+                if 'namespace-not-found' in msg.get('status', []):
+                    error = 'Namespace not found: ' + msg['ns']
+                elif 'unknown-op' in msg.get('status', []):
+                    error = 'Unknown op: ' + msg.get('op')
             if error:
                 cs_eval.on_exception(id, error)
                 return True

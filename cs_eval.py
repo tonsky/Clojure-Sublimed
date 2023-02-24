@@ -110,7 +110,7 @@ class Eval:
 
     def toggle_pprint(self):
         node = cs_parser.parse(self.value)
-        string = cs_printer.format(self.value, node, limit = cs_common.setting('wrap_width', 80))
+        string = cs_printer.format(self.value, node, limit = cs_common.wrap_width(self.view))
         self.toggle_phantom(string, """
             .light body { background-color: hsl(100, 100%, 90%); }
             .dark body  { background-color: hsl(100, 100%, 10%); }

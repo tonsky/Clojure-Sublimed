@@ -1,4 +1,4 @@
-import os, re, socket, sublime, sublime_plugin, time, traceback
+import math, os, re, socket, sublime, sublime_plugin, time, traceback
 
 ns = 'clojure-sublimed'
 
@@ -39,6 +39,13 @@ def clear_settings_change(tag):
     Unsubscribe from settings change
     """
     settings().clear_on_change(tag)
+
+def wrap_width(view):
+    if (w := setting('wrap_width')):
+        return w
+    if not view:
+        return 80
+    return math.floor(view.viewport_extent()[0] / view.em_width())
 
 def debug(format, *args):
     """
