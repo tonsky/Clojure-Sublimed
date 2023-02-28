@@ -45,7 +45,7 @@ def wrap_width(view):
         return w
     if not view:
         return 80
-    return math.floor(view.viewport_extent()[0] / view.em_width()) - 2
+    return math.floor(view.viewport_extent()[0] / view.em_width()) - 3
 
 def debug(format, *args):
     """
@@ -106,7 +106,7 @@ def basic_styles(view):
     top = settings.get('line_padding_top', 0)
     bottom = settings.get('line_padding_bottom', 0)
     return f"""<style>
-        body {{ margin: 0 0 {top+bottom}px 0; padding: {bottom}px 1rem {top}px 1rem; }}
+        body {{ margin: 0 0 {top+bottom}px 0; padding: {bottom}px 0 {top}px 0; }}
         p {{ margin: 0; padding: {top}px 0 {bottom}px 0; }}
     """
 

@@ -1,9 +1,8 @@
+
 ;;; test.clj: a test file to check eval plugin
 
 ;; by Nikita Prokopov
 ;; October 2021
-
-*ns*
 
 (ns ^{:doc "Hey!
 Nice namespace"
@@ -15,7 +14,11 @@ Nice namespace"
   (:require
    [clojure.string :as str]))
 
-*ns*
+(str *ns*)
+
+
+
+
 
 (meta *ns*)
 

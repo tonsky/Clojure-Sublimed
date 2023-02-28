@@ -1,22 +1,23 @@
+
+(str *ns*)
+
 (defn fun []
   *ns*)
 
-*ns*
 
 (ns first)
 
-*ns*
+(str *ns*)
 
 (defn fun []
   *ns*)
 
-*ns*
 
 (ns second)
 
-*ns*
+(str *ns*)
 
 (defn fun []
   *ns*)
 
-*ns*
+
