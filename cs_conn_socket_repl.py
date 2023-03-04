@@ -40,11 +40,11 @@ class ConnectionSocketRepl(cs_conn.Connection):
     def read_loop(self):
         try:
             self.set_status(1, 'Upgrading REPL')
-            self.socket.sendall(cs_common.clojure_source('exception.clj').encode())
-            self.socket.sendall(cs_common.clojure_source('socket_repl.clj').encode())
+            self.send(cs_common.clojure_source('exception.clj'))
+            self.send(cs_common.clojure_source('socket_repl.clj'))
             if shared := cs_common.setting('eval_shared'):
-                self.socket.sendall(shared.encode())
-            self.socket.sendall("(repl)\n".encode())
+                self.send(shared)
+            self.send("(repl)\n")
             started = False
             for line in lines(self.socket):
                 if started:

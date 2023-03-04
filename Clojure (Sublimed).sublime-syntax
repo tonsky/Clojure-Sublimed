@@ -270,7 +270,7 @@ contexts:
         2: punctuation.definition.constant.namespace.clojure
 
   integer:
-    - match: '{{wsb}}[+-]?(?:0|[1-9][0-9]*)(N)?{{wse}}'
+    - match: '{{wsb}}[+-]?(?:0x0|0x[1-9a-fA-F][0-9a-fA-F]*|0|[1-9][0-9]*)(N)?{{wse}}'
       scope: constant.numeric.integer.clojure
       captures:
         1: punctuation.definition.integer.precision.clojure

@@ -50,7 +50,8 @@ class ClojureSublimedEvalCodeCommand(sublime_plugin.ApplicationCommand):
         eval = StatusEval(code)
         if (not ns) and (view := eval.active_view()):
             ns = cs_parser.namespace(view, view.size())
-        cs_conn.conn.eval(eval.id, code, ns or 'user')
+        form = cs_common.Form(id = eval.id, code = code, ns = ns or 'user')
+        cs_conn.conn.eval_impl(form)
 
     def is_enabled(self):
         if not cs_conn.ready():
