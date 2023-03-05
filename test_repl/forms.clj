@@ -49,6 +49,7 @@
   "abc" {:a 1}))
 (throw (Exception. "ex with msg"))
 *e
+(/ 1 0)
 
 ; truncating
 (range) 

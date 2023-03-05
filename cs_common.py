@@ -81,7 +81,7 @@ def format_time_taken(time_taken):
     """
     threshold = setting("elapsed_threshold_ms")
     if threshold != None and time_taken != None:
-        elapsed = time_taken / 1000000000
+        elapsed = time_taken / 1000
         if elapsed * 1000 >= threshold:
             if elapsed >= 10:
                 return f"({'{:,.0f}'.format(elapsed)} sec)"

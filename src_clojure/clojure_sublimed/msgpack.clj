@@ -5,9 +5,7 @@
     [java.io BufferedInputStream BufferedOutputStream BufferedReader BufferedWriter DataInputStream DataOutputStream FilterReader InputStream OutputStream Reader Writer]))
 
 (defn field ^Field [^Class cls name]
-  (let [f ^Field (some
-                   #(when (= name (.getName ^java.lang.reflect.Field %)) %)
-                   (.getDeclaredFields cls))]
+  (let [f ^Field (.getDeclaredField cls name)]
     (.setAccessible f true)
     #(.get f %)))
         
@@ -141,4 +139,15 @@
   (roundtrip "")
   (roundtrip "abc")
   (roundtrip "абв")
-  (roundtrip "\n"))
+  (roundtrip "\n")
+  
+  (format "%08x" 0)
+  (format "%08x" 10)
+  (format "%08x" 100)
+  (format "%08x" Integer/MAX_VALUE)
+  (format "%08x" Integer/MIN_VALUE)
+  (format "%08x" -1)
+  (format "%08x" -10)
+  (format "%08x" (quot (System/currentTimeMillis) 1000))
+  (Integer/parseInt "fffffff6" 16)
+  )

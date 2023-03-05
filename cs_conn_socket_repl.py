@@ -115,7 +115,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
 
     def handle_value(self, msg):
         if ':ret' == msg[':tag'] and (id := msg.get(':id')):
-            cs_eval.on_success(id, msg.get(':val'))
+            cs_eval.on_success(id, msg.get(':val'), time = msg.get(':time'))
             return True
 
     def handle_exception(self, msg):

@@ -168,12 +168,12 @@ def erase_evals(predicate = lambda x: True, view = None):
         if predicate(eval):
             eval.erase()
 
-def on_success(id, value):
+def on_success(id, value, time = None):
     """
     Callback to be called after conn.eval or conn.load_file
     """
     if (eval := by_id(id)):
-        eval.update('success', value)
+        eval.update('success', value, time_taken = time)
 
 def on_exception(id, value, line = None, column = None, trace = None):
     """

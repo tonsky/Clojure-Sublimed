@@ -76,6 +76,14 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
             eval.session = msg['new-session']
             return True
 
+    def handle_value(self, msg):
+        if 'value' in msg and (id := msg.get('id')):
+            time = msg.get(cs_common.ns + '.middleware/time-taken')
+            if time:
+                time = time / 1000000
+            cs_eval.on_success(id, msg.get('value'), time = time)
+            return True
+
     def handle_exception(self, msg):
         if (id := msg.get('id')):
             ns = cs_common.ns + '.middleware/'
