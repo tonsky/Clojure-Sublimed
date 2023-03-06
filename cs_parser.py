@@ -378,28 +378,13 @@ def search(node, pos, pred = lambda x: True, max_depth = 1000):
         elif pos < child.start:
             break
 
-parsed_cache = {}
-
-if __package__:
-    import sublime, sublime_plugin
-
-    class TextChangeListener(sublime_plugin.TextChangeListener):
-        def on_text_changed_async(self, changes):
-            id = self.buffer.id()
-            if id in parsed_cache:
-                del parsed_cache[id]
-
-def parse_tree(view):
+def parse_tree(view, region = None):
     """
-    Parses current buffer content and return AST. Cached, evict on write
+    Parses current buffer content and return AST
     """
     id = view.buffer_id()
-    if id in parsed_cache:
-        return parsed_cache[id]
-    text = view.substr(sublime.Region(0, view.size()))
-    parsed = parse(text)
-    parsed_cache[id] = parsed
-    return parsed
+    text = view.substr(region or sublime.Region(0, view.size()))
+    return parse(text)
 
 def symbol_at_point(view, point):
     """

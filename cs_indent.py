@@ -24,7 +24,7 @@ def indent(view, point):
 
     Row is row number of the token for which this indent is based on (row of open paren)
     """
-    parsed = cs_parser.parse(view.substr(sublime.Region(0, view.size())) + ' ')
+    parsed = cs_parser.parse(view.substr(sublime.Region(0, point)) + ' ')
     if path := search_path(parsed, point):
         node = None
         first_form = None

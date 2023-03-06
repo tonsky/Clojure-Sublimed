@@ -3,10 +3,10 @@
     [clojure.string :as str]
     [clojure-sublimed.exception :as exception]))
 
-(def ^:dynamic *out-fn*
+(defonce ^:dynamic *out-fn*
   prn)
 
-(def ^:dynamic *context*
+(defonce ^:dynamic *context*
   nil)
 
 (defonce *evals
