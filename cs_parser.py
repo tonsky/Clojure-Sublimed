@@ -378,6 +378,9 @@ def search(node, pos, pred = lambda x: True, max_depth = 1000):
         elif pos < child.start:
             break
 
+if __package__:
+    import sublime, sublime_plugin
+
 def parse_tree(view, region = None):
     """
     Parses current buffer content and return AST

@@ -1,5 +1,6 @@
-(ns clojure-sublimed.exception
+(ns clojure-sublimed.core
   (:require
+    ; [clojure.spec.alpha :as spec]
     [clojure.string :as str])
   (:import
     [clojure.lang Compiler Compiler$CompilerException ExceptionInfo LispReader$ReaderException]
@@ -125,3 +126,48 @@
            (str " (" source ":" line ":" column ")")))
        (when-some [data (ex-data cause)]
          (str " " (bounded-pr-str data)))))))
+
+;; Allow dynamic vars to be set in root thread when changed in spawned threads
+
+(def settable-vars
+  [#'*ns*
+   #'*warn-on-reflection*
+   #'*math-context*
+   #'*print-meta*
+   #'*print-length*
+   #'*print-level*
+   #'*print-namespace-maps*
+   #'*data-readers*
+   #'*default-data-reader-fn*
+   #'*compile-path*
+   #'*command-line-args*
+   #'*unchecked-math*
+   #'*assert*
+   #'spec/*explain-out*])
+
+(def ^:dynamic *changed-vars)
+
+(defn track-vars* [vars on-change body]
+  (let [before (persistent!
+                 (reduce #(assoc! %1 %2 @%2)
+                   (transient {})
+                   vars))]
+    (push-thread-bindings before)
+    (try
+      (body)
+      (finally
+        (doseq [var vars
+                :let [val @var]
+                :when (not= val (before var))]
+          (on-change var val))
+        (pop-thread-bindings)))))
+
+(defmacro track-vars [& body]
+  `(track-vars* settable-vars
+     (fn [var# val#] (swap! *changed-vars assoc var# val#))
+     (fn [] ~@body)))
+
+(defn set-changed-vars! []
+  (let [[vars _] (reset-vals! *changed-vars {})]
+    (doseq [[var val] vars]
+      (.set ^clojure.lang.Var var val))))

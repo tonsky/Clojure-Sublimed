@@ -1,8 +1,7 @@
 (ns clojure-sublimed.socket-repl
   (:require
-    [clojure.spec.alpha :as spec]
     [clojure.string :as str]
-    [clojure-sublimed.exception :as exception]))
+    [clojure-sublimed.core :as core]))
 
 (defonce ^:dynamic *out-fn*
   prn)
@@ -29,7 +28,7 @@
     form))
 
 (defn report-throwable [^Throwable t]
-  (let [root  ^Throwable (exception/root-cause t)
+  (let [root  ^Throwable (core/root-cause t)
         {:clojure.error/keys [source line column]} (ex-data root)
         cause ^Throwable (or (some-> root .getCause) root)
         data  (ex-data cause)
@@ -37,8 +36,8 @@
         msg   (.getMessage cause)
         val   (cond-> (str class ": " msg)
                 data
-                (str " " (exception/bounded-pr-str data)))
-        trace (exception/trace-str root {:location? false})]
+                (str " " (core/bounded-pr-str data)))
+        trace (core/trace-str root {:location? false})]
     (*out-fn*
       (merge
         {:tag    :ex
@@ -86,15 +85,16 @@
     (*out-fn*
       {:tag  :ret
        :id   id
-       :val  (exception/bounded-pr-str ret)
+       :val  (core/bounded-pr-str ret)
        :time time})))
 
 (defn fork-eval [{:keys [id forms]}]
   (let [f (future
             (try
-              (doseq [form forms]
-                (vswap! *context* assoc :id (:id form))
-                (eval-code form))
+              (core/track-vars
+                (doseq [form forms]
+                  (vswap! *context* assoc :id (:id form))
+                  (eval-code form)))
               (catch Throwable t
                 (try
                   (report-throwable t)
@@ -145,39 +145,18 @@
        (binding [*out* out]
          (prn %)))))
 
-(defmacro with-bindings
-  "Executes body in the context of thread-local bindings for several vars
-  that often need to be set!: *ns* *warn-on-reflection* *math-context*
-  *print-meta* *print-length* *print-level* *compile-path*
-  *command-line-args*"
-  [& body]
-  `(binding [*ns*                     *ns*
-             *warn-on-reflection*     *warn-on-reflection*
-             *math-context*           *math-context*
-             *print-meta*             *print-meta*
-             *print-length*           *print-length*
-             *print-level*            *print-level*
-             *print-namespace-maps*   *print-namespace-maps*
-             *data-readers*           *data-readers*
-             *default-data-reader-fn* *default-data-reader-fn*
-             *compile-path*           (System/getProperty "clojure.compile.path" "classes")
-             *command-line-args*      *command-line-args*
-             *unchecked-math*         *unchecked-math*
-             *assert*                 *assert*
-             spec/*explain-out*       spec/*explain-out*]
-     ~@body))
-
 (defn repl []
   (binding [*out-fn* (out-fn *out*)
             *out*    (.getRawRoot #'*out*)
-            *err*    (.getRawRoot #'*err*)]
+            *err*    (.getRawRoot #'*err*)
+            core/*changed-vars (atom {})]
     (*out-fn* {:tag :started})
-    (with-bindings
       (loop []
         (when
           (binding [*context* (volatile! {})]
             (try
               (let [form (read-command *in*)]
+                (core/set-changed-vars!)
                 (when-some [id (:id form)]
                   (vswap! *context* assoc :id id))
                 (case (:op form)
@@ -193,4 +172,4 @@
                   true))))
           (recur)))
       (doseq [[id f] @*evals]
-        (future-cancel f)))))
+        (future-cancel f))))

@@ -2,7 +2,7 @@
   (:require
     [clojure.pprint :as pprint]
     [clojure.string :as str]
-    [clojure-sublimed.exception :as exception]
+    [clojure-sublimed.core :as core]
     [nrepl.middleware :as middleware]
     [nrepl.middleware.print :as print]
     [nrepl.middleware.caught :as caught]
@@ -36,10 +36,10 @@
         this))))
 
 (defn print-root-trace [^Throwable t]
-  (println (exception/trace-str t)))
+  (println (core/trace-str t)))
 
 (defn- populate-caught [{t ::caught/throwable :as resp}]
-  (let [root  ^Throwable (exception/root-cause t)
+  (let [root  ^Throwable (core/root-cause t)
         {:clojure.error/keys [source line column]} (ex-data root)
         cause ^Throwable (or (some-> root .getCause) root)
         data  (ex-data cause)
@@ -48,7 +48,7 @@
                          ::caught/throwable root
                          ::root-ex-msg      (.getMessage cause)
                          ::root-ex-class    (.getSimpleName (class cause))
-                         ::trace            (exception/trace-str root))
+                         ::trace            (core/trace-str root))
                 source (assoc  ::source source)
                 line   (assoc  ::line line)
                 column (assoc  ::column column)

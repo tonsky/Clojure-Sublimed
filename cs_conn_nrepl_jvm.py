@@ -28,7 +28,7 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
         if 1 == msg.get('id') and 'new-session' in msg:
             self.set_status(2, 'Uploading middleware 1/2...')
             self.session = msg['new-session']
-            file = cs_common.clojure_source('exception.clj')
+            file = cs_common.clojure_source('core.clj')
             self.send({'id':      2,
                        'session': self.session,
                        'op':      'load-file',
