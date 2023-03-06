@@ -20,6 +20,14 @@
 
 #:clojure.core{:first "Terence", :last "Tao", :occupation #:inner{:name "Mathematics"}}
 
+*warn-on-reflection*
+(.getRawRoot #'*warn-on-reflection*)
+*print-namespace-maps*
+(set! *print-namespace-maps* true)
+(.getRawRoot #'*print-namespace-maps*)
+(alter-var-root #'*print-namespace-maps* (constantly true))
+(defn x)
+
 ; delayed eval
 (do (Thread/sleep 1400) :first)
 *e

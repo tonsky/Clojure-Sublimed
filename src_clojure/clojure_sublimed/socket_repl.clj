@@ -1,5 +1,6 @@
 (ns clojure-sublimed.socket-repl
   (:require
+    [clojure.spec.alpha :as spec]
     [clojure.string :as str]
     [clojure-sublimed.exception :as exception]))
 
@@ -77,7 +78,8 @@
         ; ret   (eval `(do (in-ns '~(or ns 'user)) ~code'))
         ret    (binding [*read-eval* false
                          *ns*        ns-obj]
-                 (clojure.lang.Compiler/load (reader code line column) file (or name "NO_SOURCE_FILE.cljc")))
+                 (-> (reader code line column)
+                   (clojure.lang.Compiler/load file (or name "NO_SOURCE_FILE.cljc"))))
         time   (-> (System/nanoTime)
                  (- start)
                  (quot 1000000))]
@@ -117,8 +119,8 @@
         symbol (clojure.core/symbol symbol)
         meta   (if (special-symbol? symbol)
                  (assoc ((requiring-resolve 'clojure.repl/special-doc) symbol)
-                   :ns 'clojure.core
-                   :file "clojure/core.clj"
+                   :ns           'clojure.core
+                   :file         "clojure/core.clj"
                    :special-form true)
                  (meta (ns-resolve ns symbol)))]
     (*out-fn*
@@ -143,29 +145,52 @@
        (binding [*out* out]
          (prn %)))))
 
+(defmacro with-bindings
+  "Executes body in the context of thread-local bindings for several vars
+  that often need to be set!: *ns* *warn-on-reflection* *math-context*
+  *print-meta* *print-length* *print-level* *compile-path*
+  *command-line-args*"
+  [& body]
+  `(binding [*ns*                     *ns*
+             *warn-on-reflection*     *warn-on-reflection*
+             *math-context*           *math-context*
+             *print-meta*             *print-meta*
+             *print-length*           *print-length*
+             *print-level*            *print-level*
+             *print-namespace-maps*   *print-namespace-maps*
+             *data-readers*           *data-readers*
+             *default-data-reader-fn* *default-data-reader-fn*
+             *compile-path*           (System/getProperty "clojure.compile.path" "classes")
+             *command-line-args*      *command-line-args*
+             *unchecked-math*         *unchecked-math*
+             *assert*                 *assert*
+             spec/*explain-out*       spec/*explain-out*]
+     ~@body))
+
 (defn repl []
   (binding [*out-fn* (out-fn *out*)
             *out*    (.getRawRoot #'*out*)
             *err*    (.getRawRoot #'*err*)]
     (*out-fn* {:tag :started})
-    (loop []
-      (when
-        (binding [*context* (volatile! {})]
-          (try
-            (let [form (read-command *in*)]
-              (when-some [id (:id form)]
-                (vswap! *context* assoc :id id))
-              (case (:op form)
-                :close     (stop!)
-                :eval      (fork-eval form)
-                :interrupt (interrupt form)
-                :lookup    (lookup-symbol form)
-                (throw (Exception. (str "Unknown op: " (:op form)))))
-              true)
-            (catch Throwable t
-              (when-not (-> t ex-data ::stop)
-                (report-throwable t)
-                true))))
-        (recur)))
-    (doseq [[id f] @*evals]
-      (future-cancel f))))
+    (with-bindings
+      (loop []
+        (when
+          (binding [*context* (volatile! {})]
+            (try
+              (let [form (read-command *in*)]
+                (when-some [id (:id form)]
+                  (vswap! *context* assoc :id id))
+                (case (:op form)
+                  :close     (stop!)
+                  :eval      (fork-eval form)
+                  :interrupt (interrupt form)
+                  :lookup    (lookup-symbol form)
+                  (throw (Exception. (str "Unknown op: " (:op form)))))
+                true)
+              (catch Throwable t
+                (when-not (-> t ex-data ::stop)
+                  (report-throwable t)
+                  true))))
+          (recur)))
+      (doseq [[id f] @*evals]
+        (future-cancel f)))))
