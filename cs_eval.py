@@ -72,7 +72,7 @@ class Eval:
             return regions[0]
 
     def escape(self, value):
-        return html.escape(value).replace("\t", "&nbsp;&nbsp;").replace(" ", "&nbsp;")
+        return html.escape(value).replace("\t", "  ").replace(" ", " ")
 
     def update(self, status, value, region = None, time_taken = None):
         self.status = status
@@ -98,9 +98,10 @@ class Eval:
                     { cs_common.basic_styles(self.view) }
                     { styles }
                 </style>"""
-                for line in self.escape(text).splitlines():
-                    line = re.sub(r"(?<!\\)\\n", "<br>", line)
-                    line = re.sub(r"(?<!\\)\\t", "&nbsp;&nbsp;", line)
+                limit = cs_common.wrap_width(self.view)
+                for line in text.splitlines():
+                    line = cs_printer.wrap_string(line, limit = limit)
+                    line = self.escape(line)
                     body += "<p>" + line + "</p>"
                 body += "</body>"
                 region = self.region()

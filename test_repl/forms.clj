@@ -27,6 +27,10 @@
 (.getRawRoot #'*print-namespace-maps*)
 (alter-var-root #'*print-namespace-maps* (constantly true))
 (defn x)
+(try
+  (eval '(defn x))
+  (catch Throwable e
+    e))
 
 ; delayed eval
 (do (Thread/sleep 1400) :first)

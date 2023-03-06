@@ -89,6 +89,21 @@ def format_tagged(text, node, indent, limit):
         res += ' ' + format(text, node.body.children[0], value_indent, limit)
     return res
 
+def wrap_string(s, limit = 80, indent = ''):
+    space = limit - len(indent)
+    length = len(s)
+    if length <= space:
+        return s
+    if space < 10:
+        return s
+    res = ""
+    for start in range(0, length, space):
+        end = min(start + space, length)
+        if start > 0:
+            res += '\n' + indent
+        res += s[start:end]
+    return res
+
 def format(text, node, indent = '', limit = 80):
     """
     Given text and its parsed AST as node, returns formatted (pretty-printed) string of that node
@@ -102,4 +117,4 @@ def format(text, node, indent = '', limit = 80):
     elif node.name == 'tagged':
         return format_tagged(text, node, indent, limit)
     else:
-        return text[node.start:node.end]
+        return wrap_string(text[node.start:node.end], limit = limit, indent = indent)
