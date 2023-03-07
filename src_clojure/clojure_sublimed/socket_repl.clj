@@ -1,7 +1,11 @@
 (ns clojure-sublimed.socket-repl
   (:require
     [clojure.string :as str]
-    [clojure-sublimed.core :as core]))
+    [clojure-sublimed.core :as core])
+  (:import
+    [java.io Reader StringReader]
+    [java.lang.reflect Field]
+    [clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader LispReader LispReader$ReaderException RT]))
 
 (defonce ^:dynamic *out-fn*
   prn)
@@ -48,40 +52,91 @@
          :column column}
         @*context*))))
 
-(defn reader [code line column]
-  (let [reader (clojure.lang.LineNumberingPushbackReader. (java.io.StringReader. code))]
+(defn reader ^LineNumberingPushbackReader [code line column]
+  (let [reader (LineNumberingPushbackReader. (StringReader. code))]
     (when line
       (.setLineNumber reader (int line)))
     (when column
-      (when-some [field (->> clojure.lang.LineNumberingPushbackReader
-                          (.getDeclaredFields)
-                          (filter #(= "_columnNumber" (.getName ^java.lang.reflect.Field %)))
-                          first)]
-        (doto ^java.lang.reflect.Field field
+      (when-some [field (.getDeclaredField LineNumberingPushbackReader "_columnNumber")]
+        (doto ^Field field
           (.setAccessible true)
           (.set reader (int column)))))
     reader))
 
+(defn consume-ws [^LineNumberingPushbackReader reader]
+  (loop [ch (.read reader)]
+    (if (or (Character/isWhitespace ch) (= (int \,) ch))
+      (recur (.read reader))
+      (when-not (neg? ch)
+        (.unread reader ch)))))
+  
 (defn eval-code [form]
-  (let [{:keys [id op code ns line column file]} form
-        ; code' (binding [*read-eval* false]
-        ;         (read-string {:read-cond :preserve} code))
+  (let [{:keys [id code ns line column file]} form
         start  (System/nanoTime)
+        name   (or (some-> file (str/split #"[/\\]") last) "NO_SOURCE_FILE")
         ns     (or ns 'user)
         ns-obj (or
                  (find-ns ns)
                  (do
                    (require ns)
                    (find-ns ns)))
-        name   (some-> file (str/split #"[/\\]") last)
-        ; ret   (eval `(do (in-ns '~(or ns 'user)) ~code'))
-        ret    (binding [*read-eval* false
-                         *ns*        ns-obj]
-                 (-> (reader code line column)
-                   (clojure.lang.Compiler/load file (or name "NO_SOURCE_FILE.cljc"))))
-        time   (-> (System/nanoTime)
-                 (- start)
-                 (quot 1000000))]
+        ;; "Adapted from clojure.lang.Compiler/load
+        ;; Does not bind *uncheked-math*, *warn-on-reflection* and *data-readers*"
+        eof    (Object.)
+        opts   {:eof       eof
+                :read-cond :allow}
+        reader (reader code line column)
+        _      (consume-ws reader)
+        _      (push-thread-bindings
+                 {Compiler/LOADER         (RT/makeClassLoader)
+                  #'*file*                file
+                  #'*source-path*         name
+                  Compiler/METHOD         nil
+                  Compiler/LOCAL_ENV      nil
+                  Compiler/LOOP_LOCALS    nil
+                  Compiler/NEXT_LOCAL_NUM 0
+                  #'*read-eval*           true
+                  #'*ns*                  ns-obj
+                  Compiler/LINE_BEFORE    (.getLineNumber reader)
+                  Compiler/COLUMN_BEFORE  (.getColumnNumber reader)
+                  Compiler/LINE_AFTER     (.getLineNumber reader)
+                  Compiler/COLUMN_AFTER   (.getColumnNumber reader)})
+        ret    (try
+                 (loop [ret nil]
+                   (let [obj (read opts reader)]
+                     (if (identical? obj eof)
+                       ret
+                       (do
+                         (consume-ws reader)
+                         (.set Compiler/LINE_AFTER (.getLineNumber reader))
+                         (.set Compiler/COLUMN_AFTER (.getColumnNumber reader))
+                         (let [ret (Compiler/eval obj false)]
+                           (.set Compiler/LINE_BEFORE (.getLineNumber reader))
+                           (.set Compiler/COLUMN_BEFORE (.getColumnNumber reader))
+                           (recur ret))))))
+                 (catch LispReader$ReaderException e
+                   (throw (Compiler$CompilerException.
+                            file
+                            (.-line e)
+                            (.-column e)
+                            nil
+                            Compiler$CompilerException/PHASE_READ
+                            (.getCause e))))
+                 (catch Throwable e
+                   (if (instance? Compiler$CompilerException e)
+                     (throw e)
+                     (throw (Compiler$CompilerException.
+                              file
+                              (.deref Compiler/LINE_BEFORE)
+                              (.deref Compiler/COLUMN_BEFORE)
+                              nil
+                              Compiler$CompilerException/PHASE_EXECUTION
+                              e))))
+                 (finally
+                   (pop-thread-bindings)))
+        time (-> (System/nanoTime)
+               (- start)
+               (quot 1000000))]
     (*out-fn*
       {:tag  :ret
        :id   id
@@ -151,25 +206,25 @@
             *err*    (.getRawRoot #'*err*)
             core/*changed-vars (atom {})]
     (*out-fn* {:tag :started})
-      (loop []
-        (when
-          (binding [*context* (volatile! {})]
-            (try
-              (let [form (read-command *in*)]
-                (core/set-changed-vars!)
-                (when-some [id (:id form)]
-                  (vswap! *context* assoc :id id))
-                (case (:op form)
-                  :close     (stop!)
-                  :eval      (fork-eval form)
-                  :interrupt (interrupt form)
-                  :lookup    (lookup-symbol form)
-                  (throw (Exception. (str "Unknown op: " (:op form)))))
-                true)
-              (catch Throwable t
-                (when-not (-> t ex-data ::stop)
-                  (report-throwable t)
-                  true))))
-          (recur)))
-      (doseq [[id f] @*evals]
-        (future-cancel f))))
+    (loop []
+      (when
+        (binding [*context* (volatile! {})]
+          (try
+            (let [form (read-command *in*)]
+              (core/set-changed-vars!)
+              (when-some [id (:id form)]
+                (vswap! *context* assoc :id id))
+              (case (:op form)
+                :close     (stop!)
+                :eval      (fork-eval form)
+                :interrupt (interrupt form)
+                :lookup    (lookup-symbol form)
+                (throw (Exception. (str "Unknown op: " (:op form)))))
+              true)
+            (catch Throwable t
+              (when-not (-> t ex-data ::stop)
+                (report-throwable t)
+                true))))
+        (recur)))
+    (doseq [[id f] @*evals]
+      (future-cancel f))))

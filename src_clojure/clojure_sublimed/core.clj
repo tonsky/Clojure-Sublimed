@@ -1,6 +1,6 @@
 (ns clojure-sublimed.core
   (:require
-    ; [clojure.spec.alpha :as spec]
+    [clojure.spec.alpha :as spec]
     [clojure.string :as str])
   (:import
     [clojure.lang Compiler Compiler$CompilerException ExceptionInfo LispReader$ReaderException]
@@ -163,8 +163,10 @@
         (pop-thread-bindings)))))
 
 (defmacro track-vars [& body]
-  `(track-vars* settable-vars
-     (fn [var# val#] (swap! *changed-vars assoc var# val#))
+  `(track-vars*
+     settable-vars
+     (fn [var# val#]
+       (swap! *changed-vars assoc var# val#))
      (fn [] ~@body)))
 
 (defn set-changed-vars! []
