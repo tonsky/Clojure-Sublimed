@@ -51,20 +51,25 @@ class Eval:
     def value_key(self):
         return f"{cs_common.ns}.eval-{self.id}"
 
-    def scope_color(self):
+    def scope_color(self, scope = None):
         if not Eval.colors:
             default = self.view.style_for_scope("source")
-            def try_scopes(*scopes):
+            def try_scopes(*scopes, key = "foreground"):
                 for scope in scopes:
                     colors = self.view.style_for_scope(scope)
                     if colors != default:
-                        return (scope, colors["foreground"])
+                        return (scope, colors.get(key))
             Eval.colors["pending"]   = try_scopes("region.eval.pending",   "region.bluish")
             Eval.colors["interrupt"] = try_scopes("region.eval.interrupt", "region.eval.pending", "region.bluish")
             Eval.colors["success"]   = try_scopes("region.eval.success",   "region.greenish")
             Eval.colors["exception"] = try_scopes("region.eval.exception", "region.redish")
             Eval.colors["lookup"]    = try_scopes("region.eval.lookup",    "region.eval.pending",   "region.bluish")
-        return Eval.colors[self.status]
+            Eval.colors["phantom_success_fg"] = try_scopes("region.phantom.success")
+            Eval.colors["phantom_success_bg"] = try_scopes("region.phantom.success", key = "background")
+            Eval.colors["phantom_exception_fg"] = try_scopes("region.phantom.exception")
+            Eval.colors["phantom_exception_bg"] = try_scopes("region.phantom.exception", key = "background")
+        scope = scope or self.status
+        return Eval.colors[scope]
 
     def region(self):
         regions = self.view.get_regions(self.value_key())
@@ -109,19 +114,36 @@ class Eval:
                     point = self.view.line(region.end()).begin()
                     self.phantom_id = self.view.add_phantom(self.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
 
+    def phantom_styles(self, scope):
+        styles = []
+        _, fg = self.scope_color(f"{scope}_fg")
+        if fg:
+            styles.append(f"color: {fg};")
+        _, bg = self.scope_color(f"{scope}_bg")
+        if bg:
+            styles.append(f"background-color: {bg};")
+        if styles:
+            return " ".join(styles)
+
     def toggle_pprint(self):
         node = cs_parser.parse(self.value)
         string = cs_printer.format(self.value, node, limit = cs_common.wrap_width(self.view))
-        self.toggle_phantom(string, """
+        styles = """
             .light body { background-color: hsl(100, 100%, 90%); }
             .dark body  { background-color: hsl(100, 100%, 10%); }
-        """)
+        """ 
+        if phantom_styles := self.phantom_styles("phantom_success"):
+            styles += f".light body, .dark body {{ {phantom_styles}; border: 4px solid #CC3333; }}"
+        self.toggle_phantom(string, styles)
         
     def toggle_trace(self):
-        self.toggle_phantom(self.trace, """
+        styles = """
             .light body { background-color: hsl(0, 100%, 90%); }
             .dark body  { background-color: hsl(0, 100%, 10%); }
-        """)
+        """
+        if phantom_styles := self.phantom_styles("phantom_exception"):
+            styles += f".light body, .dark body {{ {phantom_styles}; border: 4px solid #CC3333; }}"
+        self.toggle_phantom(self.trace, styles)
 
     def erase(self, interrupt = True):
         self.view.erase_regions(self.value_key())

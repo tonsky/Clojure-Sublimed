@@ -47,6 +47,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
             self.send("(repl)\n")
             started = False
             for line in lines(self.socket):
+                cs_common.debug('RCV {}', line)
                 if started:
                     msg = cs_parser.parse_as_dict(line)
                     self.handle_msg(msg)

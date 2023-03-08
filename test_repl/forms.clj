@@ -1,6 +1,12 @@
+
+  (/ 1 0)
+
+
 ; simple expr
 (+ 1 2)
  (+ 1 2) 
+
+*warn-on-reflection*
 
 (str 1 '\newline 2)
 
