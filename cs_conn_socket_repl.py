@@ -52,7 +52,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
                     msg = cs_parser.parse_as_dict(line)
                     self.handle_msg(msg)
                 else:
-                    if '{:tag :started}' in line:
+                    if '{"tag" "started"}' in line:
                         self.set_status(4, self.addr)
                         started = True
         except OSError:
@@ -89,13 +89,13 @@ class ConnectionSocketRepl(cs_conn.Connection):
             ns     = cs_parser.namespace(view, region.begin()) or 'user'
             file   = view.file_name()
             msg = ('{' +
-              f':id {batch_id}, ' +
-              f':op :eval, ' +
-              f':code "{code}", ' +
-              f':ns "{ns}", ' +
-              f':file "{file}", ' +
-              f':line {line}, ' +
-              f':column {column}' +
+              f'"id" {batch_id}, ' +
+              f'"op" "eval", ' +
+              f'"code" "{code}", ' +
+              f'"ns" "{ns}", ' +
+              f'"file" "{file}", ' +
+              f'"line" {line}, ' +
+              f'"column" {column}' +
             '}')
             self.send(msg)
 
@@ -103,43 +103,43 @@ class ConnectionSocketRepl(cs_conn.Connection):
         self.eval(view, [sublime.Region(0, view.size())])
 
     def lookup_impl(self, id, symbol, ns):
-        msg = f'{{:id {id}, :op :lookup, :symbol "{symbol}", :ns {ns}}}'
+        msg = f'{{"id" {id}, "op" "lookup", "symbol" "{symbol}", "ns" "{ns}"}}'
         self.send(msg)
 
     def interrupt_impl(self, batch_id, id):
-        msg = f'{{:id {batch_id}, :op :interrupt}}'
+        msg = f'{{"id" {batch_id}, "op" "interrupt"}}'
         self.send(msg)
 
     def handle_value(self, msg):
-        if ':ret' == msg[':tag']:
-            id   = msg.get(':id')
-            idx  = msg.get(':idx')
-            val  = msg.get(':val')
+        if 'ret' == msg['tag']:
+            id   = msg.get('id')
+            idx  = msg.get('idx')
+            val  = msg.get('val')
             time = msg.get('time')
             cs_eval.on_success(f'{id}.{idx}', val, time = time)
             return True
 
     def handle_exception(self, msg):
-        if ':ex' == msg[':tag']:
-            id     = msg.get(':id')
-            idx    = msg.get(':idx')
-            val    = msg.get(':val')
-            line   = msg.get(':line')
-            column = msg.get(':column')
-            trace  = msg.get(':trace')
+        if 'ex' == msg['tag']:
+            id     = msg.get('id')
+            idx    = msg.get('idx')
+            val    = msg.get('val')
+            line   = msg.get('line')
+            column = msg.get('column')
+            trace  = msg.get('trace')
             cs_eval.on_exception(f'{id}.{idx}', val, line = line, column = column, trace = trace)
             return True
 
     def handle_done(self, msg):
-        if ':done' == msg[':tag']:
-            batch_id = msg.get(':id')
+        if 'done' == msg['tag']:
+            batch_id = msg.get('id')
             cs_eval.on_done(batch_id)
             return True
 
     def handle_lookup(self, msg):
-        if ':lookup' == msg[':tag']:
-            id = msg.get(':id')
-            val = cs_parser.parse_as_dict(msg[':val'])
+        if 'lookup' == msg['tag']:
+            id = msg.get('id')
+            val = cs_parser.parse_as_dict(msg['val'])
             cs_eval.on_lookup(id, val)
             return True
 

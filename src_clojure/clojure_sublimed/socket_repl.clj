@@ -43,12 +43,12 @@
                 (str " " (core/bounded-pr-str data)))
         trace (core/trace-str root {:location? false})]
     (*out-fn*
-      {:tag    :ex
-       :val    val
-       :trace  trace
-       :source source
-       :line   line
-       :column column})))
+      {"tag"    "ex"
+       "val"    val
+       "trace"  trace
+       "source" source
+       "line"   line
+       "column" column})))
 
 (defn reader ^LineNumberingPushbackReader [code line column]
   (let [reader (LineNumberingPushbackReader. (StringReader. code))]
@@ -69,7 +69,7 @@
         (.unread reader ch)))))
   
 (defn eval-code [form]
-  (let [{:keys [code ns line column file]} form
+  (let [{:strs [code ns line column file]} form
         name   (or (some-> file (str/split #"[/\\]") last) "NO_SOURCE_FILE")
         ns     (symbol (or ns "user"))
         ns-obj (or
@@ -100,23 +100,23 @@
                   Compiler/COLUMN_AFTER   (.getColumnNumber reader)})
         ret    (try
                  (loop [idx 0]
-                   (vswap! *context* assoc :idx idx)
+                   (vswap! *context* assoc "idx" idx)
                    (let [[obj obj-str] (read+string opts reader)]
                      (when-not (identical? obj eof)
                        (.set Compiler/LINE_AFTER (.getLineNumber reader))
                        (.set Compiler/COLUMN_AFTER (.getColumnNumber reader))
                        (vswap! *context* assoc
-                         :from_line   (.get Compiler/LINE_BEFORE)
-                         :from_column (.get Compiler/COLUMN_BEFORE)
-                         :to_line     (.get Compiler/LINE_AFTER)
-                         :to_column   (.get Compiler/COLUMN_AFTER)
-                         :form        obj-str)
+                         "from_line"   (.get Compiler/LINE_BEFORE)
+                         "from_column" (.get Compiler/COLUMN_BEFORE)
+                         "to_line"     (.get Compiler/LINE_AFTER)
+                         "to_column"   (.get Compiler/COLUMN_AFTER)
+                         "form"        obj-str)
                        (let [start (System/nanoTime)
                              ret   (Compiler/eval obj false)]
                          (*out-fn*
-                           {:tag  :ret
-                            :val  (core/bounded-pr-str ret)
-                            :time (-> (System/nanoTime) (- start) (quot 1000000))})
+                           {"tag"  "ret"
+                            "val"  (core/bounded-pr-str ret)
+                            "time" (-> (System/nanoTime) (- start) (quot 1000000))})
                          (consume-ws reader)
                          (.set Compiler/LINE_BEFORE (.getLineNumber reader))
                          (.set Compiler/COLUMN_BEFORE (.getColumnNumber reader))
@@ -142,7 +142,7 @@
                  (finally
                    (pop-thread-bindings)))]))
 
-(defn fork-eval [{:keys [id] :as form}]
+(defn fork-eval [{:strs [id] :as form}]
   (swap! *evals assoc id 
     (future
       (try
@@ -155,11 +155,11 @@
               :ignore)))
         (finally
           (swap! *evals dissoc id)
-          (vswap! *context* dissoc :idx :from_line :from_column :to_line :to_column :form)
+          (vswap! *context* dissoc "idx" "from_line" "from_column" "to_line" "to_column" "form")
           (*out-fn*
-            {:tag :done}))))))
+            {"tag" "done"}))))))
  
-(defn interrupt [{:keys [id]}]
+(defn interrupt [{:strs [id]}]
   (when-some [f (@*evals id)]
     (future-cancel f)))
 
@@ -167,8 +167,8 @@
   #{:ns :name :doc :file :arglists :forms :macro :special-form :protocol :line :column :added :deprecated :resource})
 
 (defn lookup-symbol [form]
-  (let [{:keys [id op symbol ns] :or {ns 'user}} form
-        ns     (clojure.core/symbol ns)
+  (let [{:strs [id op symbol ns]} form
+        ns     (clojure.core/symbol (or ns "user"))
         symbol (clojure.core/symbol symbol)
         meta   (if (special-symbol? symbol)
                  (assoc ((requiring-resolve 'clojure.repl/special-doc) symbol)
@@ -185,10 +185,10 @@
                           m))
                       nil
                       meta)]
-          {:tag :lookup
-           :val meta'})
-        {:tag :ex
-         :val (str "Symbol '" symbol " not found in ns '" ns)}))))
+          {"tag" "lookup"
+           "val" meta'})
+        {"tag" "ex"
+         "val" (str "Symbol '" symbol " not found in ns '" ns)}))))
 
 (defn out-fn [out]
   (let [lock (Object.)]
@@ -201,21 +201,20 @@
             *out*    (.getRawRoot #'*out*)
             *err*    (.getRawRoot #'*err*)
             core/*changed-vars (atom {})]
-    (*out-fn* {:tag :started})
+    (*out-fn* {"tag" "started"})
     (loop []
       (when
         (binding [*context* (volatile! {})]
           (try
             (let [form (read-command *in*)]
               (core/set-changed-vars!)
-              (when-some [id (:id form)]
-                (vswap! *context* assoc :id id))
-              (case (:op form)
-                :close     (stop!)
-                :eval      (fork-eval form)
-                :interrupt (interrupt form)
-                :lookup    (lookup-symbol form)
-                (throw (Exception. (str "Unknown op: " (:op form)))))
+              (when-some [id (form "id")]
+                (vswap! *context* assoc "id" id))
+              (case (get form "op")
+                "eval"      (fork-eval form)
+                "interrupt" (interrupt form)
+                "lookup"    (lookup-symbol form)
+                (throw (Exception. (str "Unknown op: " (get form "op")))))
               true)
             (catch Throwable t
               (when-not (-> t ex-data ::stop)
