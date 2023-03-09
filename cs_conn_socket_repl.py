@@ -64,44 +64,40 @@ class ConnectionSocketRepl(cs_conn.Connection):
         self.socket.sendall(msg.encode())
 
     def eval(self, view, sel):
-        regions = []
         for region in sel:
+            # find regions to eval
             if region.empty():
                 region = cs_parser.topmost_form(view, region.begin())
-                regions.append(region)
-            else:
-                start = region.begin()
-                parsed = cs_parser.parse(view.substr(region))
-                regions += [sublime.Region(start + child.start, start + child.end) for child in parsed.children]
 
-        forms = []
-        batch_id = cs_eval.Eval.next_id()
-        for region in regions:
-            eval = cs_eval.Eval(view, region, batch_id = batch_id)
+            start = region.begin()
+            parsed = cs_parser.parse(view.substr(region))
+            forms = [ \
+                sublime.Region(start + child.start, start + child.end) \
+                for child in parsed.children \
+                if child.name not in {'comment', 'discard'} \
+            ]
+            
+            # create evals
+            batch_id = cs_eval.Eval.next_id()
+            for idx, form in enumerate(forms):
+                eval = cs_eval.Eval(view, form, id = f'{batch_id}.{idx}', batch_id = batch_id)
+
+            # send msg
             (line, column) = view.rowcol_utf16(region.begin())
             line = line + 1
-            form = cs_common.Form(
-                    id     = eval.id,
-                    code   = view.substr(region),
-                    ns     = cs_parser.namespace(view, region.begin()) or 'user',
-                    line   = line,
-                    column = column,
-                    file   = view.file_name())
-            forms.append(form)
-
-        msg = f'{{:id {batch_id}, :op :eval, :forms ['
-        for form in forms:
-            code = form.code.replace('\\', '\\\\').replace('"', '\\"')
-            msg += f'{{:id {form.id}, :code "{code}", :ns {form.ns}'
-            if (line := form.line) is not None:
-                msg += f', :line {line}'
-            if (column := form.column) is not None:
-                msg += f', :column {column}'
-            if (file := form.file) is not None:
-                msg += f', :file "{file}"'
-            msg += f'}}, '
-        msg += f"]}}"
-        self.send(msg)
+            code = view.substr(region).replace('\\', '\\\\').replace('"', '\\"')
+            ns     = cs_parser.namespace(view, region.begin()) or 'user'
+            file   = view.file_name()
+            msg = ('{' +
+              f':id {batch_id}, ' +
+              f':op :eval, ' +
+              f':code "{code}", ' +
+              f':ns "{ns}", ' +
+              f':file "{file}", ' +
+              f':line {line}, ' +
+              f':column {column}' +
+            '}')
+            self.send(msg)
 
     def load_file(self, view):
         self.eval(view, [sublime.Region(0, view.size())])
@@ -115,27 +111,40 @@ class ConnectionSocketRepl(cs_conn.Connection):
         self.send(msg)
 
     def handle_value(self, msg):
-        if ':ret' == msg[':tag'] and (id := msg.get(':id')):
-            cs_eval.on_success(id, msg.get(':val'), time = msg.get(':time'))
+        if ':ret' == msg[':tag']:
+            id   = msg.get(':id')
+            idx  = msg.get(':idx')
+            val  = msg.get(':val')
+            time = msg.get('time')
+            cs_eval.on_success(f'{id}.{idx}', val, time = time)
             return True
 
     def handle_exception(self, msg):
-        if ':ex' == msg[':tag'] and (id := msg.get(':id')):
-            cs_eval.on_exception(id, msg.get(':val'), line = msg.get(':line'), column = msg.get(':column'), trace = msg.get(':trace'))
+        if ':ex' == msg[':tag']:
+            id     = msg.get(':id')
+            idx    = msg.get(':idx')
+            val    = msg.get(':val')
+            line   = msg.get(':line')
+            column = msg.get(':column')
+            trace  = msg.get(':trace')
+            cs_eval.on_exception(f'{id}.{idx}', val, line = line, column = column, trace = trace)
             return True
 
     def handle_done(self, msg):
-        if ':done' == msg[':tag'] and (batch_id := msg.get(':id')):
+        if ':done' == msg[':tag']:
+            batch_id = msg.get(':id')
             cs_eval.on_done(batch_id)
+            return True
 
     def handle_lookup(self, msg):
-        if ':lookup' == msg[':tag'] and (id := msg.get(':id')):
+        if ':lookup' == msg[':tag']:
+            id = msg.get(':id')
             val = cs_parser.parse_as_dict(msg[':val'])
             cs_eval.on_lookup(id, val)
             return True
 
     def handle_msg(self, msg):
-        cs_common.debug('MSG {}', msg)
+        # cs_common.debug('MSG {}', msg)
         self.handle_value(msg) \
         or self.handle_exception(msg) \
         or self.handle_done(msg) \

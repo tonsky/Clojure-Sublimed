@@ -106,7 +106,7 @@ class ConnectionNreplRaw(cs_conn.Connection):
         if (id := msg.get('id')):
             error = msg.get('root-ex') or msg.get('ex')
             if error:
-                self.eval_impl(cs_common.Form(f'{id}.e', '*e'))
+                self.eval_impl(cs_common.Form(id = f'{id}.e', code = '*e'))
             if not error:
                 if 'namespace-not-found' in msg.get('status', []):
                     error = 'Namespace not found: ' + msg.get('ns', '')

@@ -28,11 +28,11 @@ class Eval:
         Eval.last_id += 1
         return Eval.last_id
     
-    def __init__(self, view, region, batch_id = None):
+    def __init__(self, view, region, id = None, batch_id = None):
         extended_region = view.line(region)
         erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
         
-        id = Eval.next_id()
+        id = id or Eval.next_id()
         self.id = id
         self.batch_id = batch_id or id
         self.view = view

@@ -43,14 +43,12 @@
                 (str " " (core/bounded-pr-str data)))
         trace (core/trace-str root {:location? false})]
     (*out-fn*
-      (merge
-        {:tag    :ex
-         :val    val
-         :trace  trace
-         :source source
-         :line   line
-         :column column}
-        @*context*))))
+      {:tag    :ex
+       :val    val
+       :trace  trace
+       :source source
+       :line   line
+       :column column})))
 
 (defn reader ^LineNumberingPushbackReader [code line column]
   (let [reader (LineNumberingPushbackReader. (StringReader. code))]
@@ -71,10 +69,9 @@
         (.unread reader ch)))))
   
 (defn eval-code [form]
-  (let [{:keys [id code ns line column file]} form
-        start  (System/nanoTime)
+  (let [{:keys [code ns line column file]} form
         name   (or (some-> file (str/split #"[/\\]") last) "NO_SOURCE_FILE")
-        ns     (or ns 'user)
+        ns     (symbol (or ns "user"))
         ns-obj (or
                  (find-ns ns)
                  (do
@@ -102,18 +99,28 @@
                   Compiler/LINE_AFTER     (.getLineNumber reader)
                   Compiler/COLUMN_AFTER   (.getColumnNumber reader)})
         ret    (try
-                 (loop [ret nil]
-                   (let [obj (read opts reader)]
-                     (if (identical? obj eof)
-                       ret
-                       (do
+                 (loop [idx 0]
+                   (vswap! *context* assoc :idx idx)
+                   (let [[obj obj-str] (read+string opts reader)]
+                     (when-not (identical? obj eof)
+                       (.set Compiler/LINE_AFTER (.getLineNumber reader))
+                       (.set Compiler/COLUMN_AFTER (.getColumnNumber reader))
+                       (vswap! *context* assoc
+                         :from_line   (.get Compiler/LINE_BEFORE)
+                         :from_column (.get Compiler/COLUMN_BEFORE)
+                         :to_line     (.get Compiler/LINE_AFTER)
+                         :to_column   (.get Compiler/COLUMN_AFTER)
+                         :form        obj-str)
+                       (let [start (System/nanoTime)
+                             ret   (Compiler/eval obj false)]
+                         (*out-fn*
+                           {:tag  :ret
+                            :val  (core/bounded-pr-str ret)
+                            :time (-> (System/nanoTime) (- start) (quot 1000000))})
                          (consume-ws reader)
-                         (.set Compiler/LINE_AFTER (.getLineNumber reader))
-                         (.set Compiler/COLUMN_AFTER (.getColumnNumber reader))
-                         (let [ret (Compiler/eval obj false)]
-                           (.set Compiler/LINE_BEFORE (.getLineNumber reader))
-                           (.set Compiler/COLUMN_BEFORE (.getColumnNumber reader))
-                           (recur ret))))))
+                         (.set Compiler/LINE_BEFORE (.getLineNumber reader))
+                         (.set Compiler/COLUMN_BEFORE (.getColumnNumber reader))
+                         (recur (inc idx))))))
                  (catch LispReader$ReaderException e
                    (throw (Compiler$CompilerException.
                             file
@@ -133,33 +140,24 @@
                               Compiler$CompilerException/PHASE_EXECUTION
                               e))))
                  (finally
-                   (pop-thread-bindings)))
-        time (-> (System/nanoTime)
-               (- start)
-               (quot 1000000))]
-    (*out-fn*
-      {:tag  :ret
-       :id   id
-       :val  (core/bounded-pr-str ret)
-       :time time})))
+                   (pop-thread-bindings)))]))
 
-(defn fork-eval [{:keys [id forms]}]
-  (let [f (future
-            (try
-              (core/track-vars
-                (doseq [form forms]
-                  (vswap! *context* assoc :id (:id form))
-                  (eval-code form)))
-              (catch Throwable t
-                (try
-                  (report-throwable t)
-                  (catch Throwable t
-                    :ignore))))
-            (swap! *evals dissoc id)
-            (vswap! *context* assoc :id id)
-            (*out-fn*
-              (merge @*context* {:tag :done})))]
-    (swap! *evals assoc id f)))
+(defn fork-eval [{:keys [id] :as form}]
+  (swap! *evals assoc id 
+    (future
+      (try
+        (core/track-vars
+          (eval-code form))
+        (catch Throwable t
+          (try
+            (report-throwable t)
+            (catch Throwable t
+              :ignore)))
+        (finally
+          (swap! *evals dissoc id)
+          (vswap! *context* dissoc :idx :from_line :from_column :to_line :to_column :form)
+          (*out-fn*
+            {:tag :done}))))))
  
 (defn interrupt [{:keys [id]}]
   (when-some [f (@*evals id)]
@@ -188,17 +186,15 @@
                       nil
                       meta)]
           {:tag :lookup
-           :id  id
            :val meta'})
         {:tag :ex
-         :id  id
          :val (str "Symbol '" symbol " not found in ns '" ns)}))))
 
 (defn out-fn [out]
   (let [lock (Object.)]
     #(locking lock
        (binding [*out* out]
-         (prn %)))))
+         (prn (merge (some-> *context* deref) %))))))
 
 (defn repl []
   (binding [*out-fn* (out-fn *out*)
