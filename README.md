@@ -5,8 +5,12 @@
 This package provides Clojure support for Sublime Text and includes:
 
 - Clojure and EDN syntax grammars (Sublime Text 3+)
-- Clojure code formatter/indenter (Sublime Text 4075+)
-- Clojure nREPL client (Sublime Text 4075+, nREPL 0.9+)
+- Code formatter/indenter (Sublime Text 4075+)
+- nREPL, Socket REPL, ShadowCLJS REPL clients (Sublime Text 4075+)
+
+## Installation
+
+`Package Control: Install Package` → `Clojure Sublimed`
 
 ## Clojure syntax
 
@@ -22,19 +26,22 @@ Clojure Sublimed ships with its own syntax definition for Clojure and EDN. Unlik
 - semantically correct tokenization, perfect for fonts with ligatures,
 - has separate EDN syntax, same way JSON is separate from JavaScript in Sublime Text.
 
-Want to put your parser to test? Check out [syntax_test_edn.edn](./test_syntax/syntax_test_edn.edn) and [syntax_test_clojure.cljc](./test_syntax/syntax_test_clojure.cljc).
+How to enable? Assign syntax to Clojure files:
 
-Clojure Sublimed syntax is also used by nREPL client to find form boundaries and namespaces (might be changed in the future).
+- open any clj/cljc/cljs file,
+- run `View` → `Syntax` → `Open all with current extension as...` → `Clojure Sublimed` → `Clojure (Sublimed)`.
+
+Want to put your parser to test? Check out [syntax_test_edn.edn](./test_syntax/syntax_test_edn.edn) and [syntax_test_clojure.cljc](./test_syntax/syntax_test_clojure.cljc).
 
 ## Formatter/indenter
 
-Clojure Sublimed includes optional support for [Simple Clojure Formatting rules](https://tonsky.me/blog/clojurefmt/). It doesn’t require nREPL connection but does require `Clojure (Sublimed)` syntax to be selected for buffer.
+Clojure Sublimed includes optional support for [Simple Clojure Formatting rules](https://tonsky.me/blog/clojurefmt/). It doesn’t require REPL connection, any Clojure runtime or external tools.
 
 To reformat whole file, run `Clojure Sublimed: Reindent Buffer`.
 
-To reindent only current line(s), run `Clojure Sublimed: Reindent Lines`.
+To reindent only selected line(s), run `Clojure Sublimed: Reindent Lines`.
 
-To enable reindenting / formatting on save, add `format_on_save: true` to settings. ([See how to edit settings](#editing-settings))
+To enable reindenting/formatting on save, add `format_on_save: true` to settings. ([See how to edit settings](#editing-settings))
 
 To enable correct indentations as you type code, rebind `Enter` to `Clojure Sublimed: Insert Newline`:
 
@@ -48,15 +55,14 @@ To enable correct indentations as you type code, rebind `Enter` to `Clojure Subl
 
 Best way to do it is through running `Preferences: Clojure Sublimed Key Bindings`.
 
-## nREPL Client
+## REPL clients
 
-Clojure Sublimed nREPL client enables interactive development from the comfort of your editor.
+Clojure Sublimed REPL clients enable interactive development from the comfort of your editor.
 
 Principles:
 
 - Minimal distraction. Display evaluation results inline.
 - Decomplected. Eval code and nothing more.
-- Server-agnostic. We work with any nREPL socket, local or over network.
 
 Features:
 
@@ -69,23 +75,30 @@ Features:
 - [x] show evaluation time,
 - [x] bind keys to eval arbitrary code.
 
+Clojure Sublimed has four REPL clients:
+
+1. Raw nREPL: no extra middlewares, could work with any nREPL server.
+2. JVM nREPL: only works with JVM server.
+3. ShadowCLJS nREPL: works with ShadowCLJS
+4. JVM Socket REPL: works with raw Socket REPL on JVM
+
+All four support same basic features (eval, lookup, interrupt on JVM), maybe with slightly different quality of implementation.
+
+How to choose which REPL to use?
+
+1. Are you on JVM? Use Socket REPL.
+2. CLJS? Use ShadowCLJS REPL.
+3. Only have basic nREPL? Use Raw nREPL.
+4. JVM nREPL is mostly a carryover from Clojure Sublime v1-2 and is now superseded by Socket REPL. Works better than Raw nREPL but worse than Socket REPL.
+
 We intentionally excluded following features:
 
 - [ ] Autocomplete. Static analysis is much simpler and much more reliable than requiring an always-live connection to the working app.
 
 Look at [Sublime LSP](https://github.com/sublimelsp/LSP) with [Clojure LSP](https://github.com/clojure-lsp/clojure-lsp) or [SublimeLinter](https://github.com/SublimeLinter/SublimeLinter) with [clj-kondo](https://github.com/ToxicFrog/SublimeLinter-contrib-clj-kondo) if you need autocompletion.
 
-Why nREPL and not Socket Server REPL/pREPL/unREPL?
-
-- nREPL has the widest adoption,
-- nREPL is machine-friendly,
-- nREPL comes with batteries included (interrupt, load-file, sideload),
-- nREPL is extensible via middleware,
-- nREPL serialization is easier to access from Python than EDN.
-
 Differences from [Tutkain](https://tutkain.flowthing.me/):
 
-- nREPL instead of Socket Server REPL
 - Does not have separate REPL panel
 - Keeps multiple eval results on a screen simultaneously
 - Can show stack traces inline in editor
@@ -94,30 +107,23 @@ Differences from [Tutkain](https://tutkain.flowthing.me/):
 - Can eval infinite sequences
 - Redirects all `*out*`/`*err*` to `System.out`/`System.err`
 
-## Installation
-
-1. `Package Control: Install Package` → `Clojure Sublimed`
-
-2. Assign syntax to Clojure files:
-
-   - open any clj/cljc/cljs file,
-   - run `View` → `Syntax` → `Open all with current extension as...` → `Clojure Sublimed` → `Clojure (Sublimed)`.
-
 ## How to use
 
-Important! Make sure you switched your syntax to `Clojure (Sublimed)`.
+For Clojure apps:
 
-For Clojure apps
+1. Run Socket Server, e.g. with `clj -X clojure.core.server/start-server :name repl :port 5555 :accept clojure.core.server/repl :server-daemon false`
+2. Run `Clojure Sublimed: Connect to Socket REPL` command.
 
-1. Run nREPL server.
-2. Run `Clojure Sublimed: Connect` command.
-
-For Shadow-cljs apps
+For Shadow-cljs apps:
 
 1. Run `shadow-cljs watch app`. (This starts a HTTP server and an nREPL)
 2. If you are building a web-app, open the http-server url (from step 1) in the browser. This connects the shadow server to JS runtime.
-3. Run `Clojure Sublimed: Connect shadow-cljs` command from sublime's command palette.
+3. Run `Clojure Sublimed: Connect shadow-cljs` command.
 
+For other nREPL apps:
+
+1. Run nREPL server.
+2. Run `Clojure Sublimed: Connect to raw nREPL` command.
 
 ### Evaluating code from buffer
 
@@ -139,7 +145,7 @@ You don’t have to wait for one form to finish evaluating to evaluate something
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_parallel.gif" width="353" height="151" alt="Evaluate in Parallel">
 
-By default, Clojure Sublimed will also print evaluation time if it took more than 100 ms:
+By default, Clojure Sublimed will also print evaluation time if it takes more than 100 ms:
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_elapsed.png" width="500" height="139" alt="Elapsed time">
 
@@ -183,11 +189,13 @@ To support such use cases, Clojure Sublimed allows you to bind arbitrary piece o
  "args": {"code": "(clojure.test/run-all-tests)"}}
 ```
 
-Then, whenever you press <key>Ctrl</key> + <key>T</key>, you’ll see the result in the status bar, like this:
+Then, whenever you press <kbd>Ctrl</kbd> + <kbd>T</kbd>, you’ll see the result in the status bar, like this:
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_code.png" width="536" height="37" alt="Eval Code">
 
 Tip: use `(clojure.test/run-all-tests (re-pattern (str *ns*))))` to run tests in current namespace.
+
+Tip: bind `(user/reload)` to <kbd>Cmd</kbd> <kbd>R</kbd> to reload your app with tools.namespace.
 
 ### Clearing results
 
@@ -209,7 +217,7 @@ This will be applied to every evaluation.
 
 ## Default Key Bindings
 
-Clojure Sublimed comes with no keybindings enabled by default to guarantee they won’t conflict with any other extension.
+Clojure Sublimed comes with no keybindings enabled by default to guarantee they won’t conflict with any other extension (Sublime Text’s limitation).
 
 This is the recommended keymap:
 
@@ -226,12 +234,20 @@ Reindent Buffer               | <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>F</kbd> | 
 
 To set it up, run `Preferences: Clojure Sublimed Key Bindings` command and copy example keybindings to your local Key Bindings file.
 
+## stdout/stderr
+
+Clojure Sublimed does things a little different when it comes to stdout. Normally REPL would show you all stdout/stderr that originated from your session. I find it confusing, because it doesn’t always work and you have to check two places for output. Moreover, there’s no output panel, so there’s no place to show stdout anyway.
+
+So instead, Clojure Sublimed _does not_ redirect neither stdout nor stderr. Check original console to see what was printed there.
+
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/stdout.png" width="616" height="588" alt="Stdout redirect">
+
 ## Frequently Asked Questions
 
 Q: REPL/eval doesn’t work
 
 A: Make sure you are using nREPL 0.9 or later.
-A: Make sure you have assigned `Clojure (Sublimed)` syntax to the file.
+A: Also check console (<kbd>Cmd</kbd> <kbd>\`</kbd>) for errors
 
 ## Credits
 

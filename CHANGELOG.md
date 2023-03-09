@@ -1,4 +1,4 @@
-### WIP
+### 3.0.0 - Mar 9, 2023
 
 - Huge refactoring, easier to add new REPLs
 - REPLs do not depend on syntax highlighting anymore, will work with any syntax

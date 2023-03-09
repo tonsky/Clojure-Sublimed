@@ -34,6 +34,9 @@
 (do (Thread/sleep 990) :fifth)
 (do (Thread/sleep 490) :sixth)
 (do (Thread/sleep 90) :seventh)
+(do (Thread/sleep 45) :eigths)
+
+(defn x)
 
 ; infinite sequence
 (range) 
@@ -52,7 +55,8 @@
 ; throw exception
 (throw (ex-info 
   "abc" {:a 1}))
-(throw (Exception. "ex with msg"))
+#?(:clj (throw (Exception. "ex with msg"))
+   :cljs (throw (js/Error. "ex with msg")))
 *e
 (/ 1 0)
 

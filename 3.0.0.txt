@@ -1,0 +1,14 @@
+Clojure Sublimed just updated to 3.0.0! It’s a huge rewrite with many exciting features:
+
+- REPL doesn’t depend on syntax highlighting anymore.
+- On top of JVM nREPL and ShadowCLJS nREPL, we now support Raw nREPL (no extra middlewares, so less quality, but should work anywhere) and JVM Socket REPL (works on core Clojure with 0 dependencies).
+- It is now much easier to add new REPLs. Contributions welcome :)
+- Pretty-printer now works client-side, same on every REPL.
+- Indenter and formatter work much faster now and do not require setting `Clojure (Sublimed)` syntax.
+
+Let me know if anything breaks. If you were using JVM nREPL, I recommend switching to Socket REPL as it has better support in Clojure Sublimed, faster startup and brighter future.
+
+Happy Clojure-ing!
+
+Best,
+Nikita.
