@@ -8,14 +8,13 @@ class StatusEval:
     """
     Displays 'eval_code' command results in status bar
     """
-    def __init__(self, code):
+    def __init__(self, code, id = None, batch_id = None):
         global status_eval
         if status_eval:
             status_eval.erase()
 
-        id            = cs_eval.Eval.next_id()
-        self.id       = id
-        self.batch_id = id
+        self.id       = id or cs_eval.Eval.next_id()
+        self.batch_id = batch_id or self.id
         self.code     = code
         self.session  = None
         
@@ -38,20 +37,18 @@ class StatusEval:
                 value = time + ' ' + value
             cs_common.set_status(status_key, "❌ " + value)
 
-    def erase(self):
+    def erase(self, interrupt = True):
         global status_eval
         cs_common.set_status(status_key, None)
         status_eval = None
-        if self.status == "pending" and self.session:
+        if interrupt and self.status == "pending" and self.session:
             cs_conn.conn.interrupt(self.id)
 
 class ClojureSublimedEvalCodeCommand(sublime_plugin.ApplicationCommand):
-    def run(self, code, ns = None):        
-        eval = StatusEval(code)
-        if (not ns) and (view := eval.active_view()):
+    def run(self, code, ns = None):
+        if (not ns) and (view := cs_common.active_view()):
             ns = cs_parser.namespace(view, view.size())
-        form = cs_common.Form(id = eval.id, code = code, ns = ns or 'user')
-        cs_conn.conn.eval_impl(form)
+        cs_conn.conn.eval_status(code, ns or 'user')
 
     def is_enabled(self):
         if not cs_conn.ready():

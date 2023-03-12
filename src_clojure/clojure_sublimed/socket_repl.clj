@@ -97,7 +97,11 @@
                   Compiler/LINE_BEFORE    (.getLineNumber reader)
                   Compiler/COLUMN_BEFORE  (.getColumnNumber reader)
                   Compiler/LINE_AFTER     (.getLineNumber reader)
-                  Compiler/COLUMN_AFTER   (.getColumnNumber reader)})
+                  Compiler/COLUMN_AFTER   (.getColumnNumber reader)
+                  #'*e                    nil
+                  #'*1                    nil
+                  #'*2                    nil
+                  #'*3                    nil})
         ret    (try
                  (loop [idx 0]
                    (vswap! *context* assoc "idx" idx)

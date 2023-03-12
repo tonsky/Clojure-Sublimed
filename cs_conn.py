@@ -1,5 +1,5 @@
 import os, re, sublime, sublime_plugin
-from . import cs_common, cs_eval, cs_parser
+from . import cs_common, cs_eval, cs_eval_status, cs_parser
 
 # Global connection instance
 conn = None
@@ -60,6 +60,11 @@ class Connection:
                     column = column,
                     file   = view.file_name())
             self.eval_impl(form)
+
+    def eval_status(self, code, ns):
+        eval = cs_eval_status.StatusEval(code)
+        form = cs_common.Form(id = eval.id, code = code, ns = ns)
+        self.eval_impl(form)
 
     def load_file_impl(self, id, file, path):
         pass

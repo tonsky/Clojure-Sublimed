@@ -27,7 +27,6 @@
 
 ; delayed eval
 (do (Thread/sleep 1400) :first)
-*e
 (do (Thread/sleep 1300) :second)
 (do (Thread/sleep 1200) :third)
 (do (Thread/sleep 1100) :fourth)

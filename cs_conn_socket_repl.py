@@ -1,5 +1,5 @@
 import json, os, re, sublime, sublime_plugin, threading
-from . import cs_common, cs_conn, cs_eval, cs_parser
+from . import cs_common, cs_conn, cs_eval, cs_eval_status, cs_parser
 
 def lines(socket):
     buffer = b''
@@ -63,6 +63,24 @@ class ConnectionSocketRepl(cs_conn.Connection):
         cs_common.debug('SND {}', msg)
         self.socket.sendall(msg.encode())
 
+    def eval_impl(self, form):
+        msg = ('{' +
+              f'"id" {form.id}, ' +
+              f'"op" "eval", ' +
+              f'"code" "{form.code}", ' +
+              f'"ns" "{form.ns}"')
+        if form.file:
+            msg += f', "file" "{form.file}"'
+
+        if form.line is not None:
+            msg += f', "line" {form.line}'
+
+        if form.column is not None:
+            msg += f', "column" {form.column}'
+
+        msg += '}'
+        self.send(msg)
+
     def eval(self, view, sel):
         for region in sel:
             # find regions to eval
@@ -84,20 +102,21 @@ class ConnectionSocketRepl(cs_conn.Connection):
 
             # send msg
             (line, column) = view.rowcol_utf16(region.begin())
-            line = line + 1
-            code = view.substr(region).replace('\\', '\\\\').replace('"', '\\"')
-            ns     = cs_parser.namespace(view, region.begin()) or 'user'
-            file   = view.file_name()
-            msg = ('{' +
-              f'"id" {batch_id}, ' +
-              f'"op" "eval", ' +
-              f'"code" "{code}", ' +
-              f'"ns" "{ns}", ' +
-              f'"file" "{file}", ' +
-              f'"line" {line}, ' +
-              f'"column" {column}' +
-            '}')
-            self.send(msg)
+            form = cs_common.Form(
+                id   = batch_id,
+                code = view.substr(region).replace('\\', '\\\\').replace('"', '\\"'),
+                ns   = cs_parser.namespace(view, region.begin()) or 'user',
+                line = line + 1,
+                column = column,
+                file = view.file_name()
+            )
+            self.eval_impl(form)
+
+    def eval_status(self, code, ns):
+        batch_id = cs_eval.Eval.next_id()
+        eval = cs_eval_status.StatusEval(code, id = f'{batch_id}.0', batch_id = batch_id)
+        form = cs_common.Form(id = batch_id, code = code, ns = ns)
+        self.eval_impl(form)
 
     def load_file(self, view):
         self.eval(view, [sublime.Region(0, view.size())])
