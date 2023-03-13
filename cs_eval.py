@@ -115,15 +115,18 @@ class Eval:
                     self.phantom_id = self.view.add_phantom(self.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
 
     def phantom_styles(self, scope):
-        styles = []
-        _, fg = self.scope_color(f"{scope}_fg")
-        if fg:
-            styles.append(f"color: {fg};")
-        _, bg = self.scope_color(f"{scope}_bg")
-        if bg:
-            styles.append(f"background-color: {bg};")
-        if styles:
-            return " ".join(styles)
+        try:
+            styles = []
+            _, fg = self.scope_color(f"{scope}_fg")
+            if fg:
+                styles.append(f"color: {fg};")
+            _, bg = self.scope_color(f"{scope}_bg")
+            if bg:
+                styles.append(f"background-color: {bg};")
+            if styles:
+                return " ".join(styles)
+        except:
+            pass
 
     def toggle_pprint(self):
         node = cs_parser.parse(self.value)

@@ -2,6 +2,7 @@
 import os, subprocess
 
 if __name__ == '__main__':
+  print("Starting Server Socket REPL at port 5555")
   os.chdir(os.path.dirname(__file__) + "/..")
   subprocess.check_call(['clojure',
     '-J--add-opens=java.base/java.io=ALL-UNNAMED',
