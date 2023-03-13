@@ -1,3 +1,8 @@
+### 3.1.0 - Mar 13, 2023
+
+- Socket: Fixed status_eval, bind *1/*2/*3/*e for e.g. tools.namespace
+- Do not fail because of styles #91
+
 ### 3.0.0 - Mar 9, 2023
 
 - Huge refactoring, easier to add new REPLs
