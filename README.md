@@ -249,6 +249,12 @@ Q: REPL/eval doesn’t work
 A: Make sure you are using nREPL 0.9 or later.
 A: Also check console (<kbd>Cmd</kbd> <kbd>\`</kbd>) for errors
 
+---
+
+Q: How to connect to [a Babashka REPL](https://book.babashka.org/#repl)?
+
+A: Use Raw nREPL.
+
 ## Credits
 
 Made by [Niki Tonsky](https://twitter.com/nikitonsky).
