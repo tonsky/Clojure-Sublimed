@@ -111,7 +111,18 @@ Differences from [Tutkain](https://tutkain.flowthing.me/):
 
 For Clojure apps:
 
-1. Run Socket Server, e.g. with `clj -X clojure.core.server/start-server :name repl :port 5555 :accept clojure.core.server/repl :server-daemon false`
+1. Run Socket Server, e.g. with either
+
+```sh
+clj -X clojure.core.server/start-server :name repl :port 5555 :accept clojure.core.server/repl :server-daemon false
+```
+
+or
+
+```sh
+clj "-J-Dclojure.server.repl={:port 5555 :accept clojure.core.server/repl :server-daemon false}"
+```
+
 2. Run `Clojure Sublimed: Connect to Socket REPL` command.
 
 For Shadow-cljs apps:
