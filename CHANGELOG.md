@@ -1,3 +1,7 @@
+### 3.1.1 - Apr 3, 2023
+
+- Fixed perf degradation on reindent #96
+
 ### 3.1.0 - Mar 13, 2023
 
 - Socket: Fixed status_eval, bind *1/*2/*3/*e for e.g. tools.namespace
