@@ -14,7 +14,7 @@ def search_path(node, pos):
             break
     return res
 
-def indent(view, point):
+def indent(view, point, parsed = None):
     """
     Given point, returns (tag, row, indent) for that line, where indent
     is a correct indent based on the last unclosed paren before point.
@@ -24,7 +24,7 @@ def indent(view, point):
 
     Row is row number of the token for which this indent is based on (row of open paren)
     """
-    parsed = cs_parser.parse(view.substr(sublime.Region(0, point)) + ' ')
+    parsed = parsed or cs_parser.parse(view.substr(sublime.Region(0, point)) + ' ')
     if path := search_path(parsed, point):
         node = None
         first_form = None
@@ -82,6 +82,7 @@ def indent_lines(view, selections, edit):
     Given set of sorted ranges (`selections`), indents all lines touched by those selections
     """
     # Calculate all replacements first
+    parsed = cs_parser.parse(view.substr(sublime.Region(0, view.size())) + ' ')
     replacements = {} # row -> (begin, delta_i)
     for sel in selections:
         for line in view.lines(sel):
@@ -91,7 +92,7 @@ def indent_lines(view, selections, edit):
             if end == line.end():
                 continue
             row, _ = view.rowcol(begin)
-            type, base_row, i = indent(view, begin)
+            type, base_row, i = indent(view, begin, parsed)
             # do not re-indent multiline strings
             if type == 'string':
                 continue
