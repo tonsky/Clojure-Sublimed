@@ -97,16 +97,6 @@ We intentionally excluded following features:
 
 Look at [Sublime LSP](https://github.com/sublimelsp/LSP) with [Clojure LSP](https://github.com/clojure-lsp/clojure-lsp) or [SublimeLinter](https://github.com/SublimeLinter/SublimeLinter) with [clj-kondo](https://github.com/ToxicFrog/SublimeLinter-contrib-clj-kondo) if you need autocompletion.
 
-Differences from [Tutkain](https://tutkain.flowthing.me/):
-
-- Does not have separate REPL panel
-- Keeps multiple eval results on a screen simultaneously
-- Can show stack traces inline in editor
-- Can eval several forms in parallel
-- Can eval non well-formed forms (e.g. `(+ 1 2`)
-- Can eval infinite sequences
-- Redirects all `*out*`/`*err*` to `System.out`/`System.err`
-
 ## How to use
 
 For Clojure apps:
