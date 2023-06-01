@@ -1,3 +1,7 @@
+### 3.1.2 - June 1, 2023
+
+- Fixed indenting of reader conditionals
+
 ### 3.1.1 - Apr 3, 2023
 
 - Fixed perf degradation on reindent #96
