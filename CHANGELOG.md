@@ -1,3 +1,7 @@
+### 3.1.3 - Aug 19, 2023
+
+- Show file/line/column information when `clojure_sublimed_eval_code` fails
+
 ### 3.1.2 - June 1, 2023
 
 - Fixed indenting of reader conditionals

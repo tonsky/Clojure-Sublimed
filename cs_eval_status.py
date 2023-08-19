@@ -13,12 +13,16 @@ class StatusEval:
         if status_eval:
             status_eval.erase()
 
-        self.id       = id or cs_eval.Eval.next_id()
-        self.batch_id = batch_id or self.id
-        self.code     = code
-        self.session  = None
+        self.id        = id or cs_eval.Eval.next_id()
+        self.batch_id  = batch_id or self.id
+        self.code      = code
+        self.session   = None
+        self.ex_source = None
+        self.ex_line   = None
+        self.ex_column = None
+        self.trace     = None
         
-        status_eval  = self
+        status_eval    = self
 
         self.update('pending', cs_progress.phase())
         cs_progress.wake()
@@ -35,7 +39,14 @@ class StatusEval:
         elif "exception" == status:
             if time := cs_common.format_time_taken(time_taken):
                 value = time + ' ' + value
-            cs_common.set_status(status_key, "❌ " + value)
+            msg = "❌ " + value
+            if self.ex_source:
+                msg += ", at " + self.ex_source
+            if self.ex_line:
+                msg += ":" + str(self.ex_line)
+            if self.ex_column:
+                msg += ":" + str(self.ex_column)
+            cs_common.set_status(status_key, msg)
 
     def erase(self, interrupt = True):
         global status_eval

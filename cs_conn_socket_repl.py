@@ -143,10 +143,11 @@ class ConnectionSocketRepl(cs_conn.Connection):
             id     = msg.get('id')
             idx    = msg.get('idx')
             val    = msg.get('val')
+            source = msg.get('source')
             line   = msg.get('line')
             column = msg.get('column')
             trace  = msg.get('trace')
-            cs_eval.on_exception(f'{id}.{idx}', val, line = line, column = column, trace = trace)
+            cs_eval.on_exception(f'{id}.{idx}', val, source = source, line = line, column = column, trace = trace)
             return True
 
     def handle_done(self, msg):

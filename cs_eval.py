@@ -38,6 +38,9 @@ class Eval:
         self.view = view
         self.code = view.substr(region)
         self.session = None
+        self.ex_source = None
+        self.ex_line = None
+        self.ex_column = None
         self.trace = None
         self.phantom_id = None
         self.value = None
@@ -201,11 +204,14 @@ def on_success(id, value, time = None):
     if (eval := by_id(id)):
         eval.update('success', value, time_taken = time)
 
-def on_exception(id, value, line = None, column = None, trace = None):
+def on_exception(id, value, source = None, line = None, column = None, trace = None):
     """
     Callback to be called after conn.eval, conn.load_file or conn.interrupt
     """
     if (eval := by_id(id)):
+        eval.ex_source = source
+        eval.ex_line = line
+        eval.ex_column = column
         eval.trace = trace
         eval.update('exception', value)
 
