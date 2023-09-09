@@ -9,6 +9,9 @@
 (def ^:dynamic *print-quota*
   1024)
 
+(def quota-marker
+  {})
+
 (defn- to-char-array ^chars [x]
   (cond
     (string? x)  (.toCharArray ^String x)
@@ -34,7 +37,7 @@
              (vswap! total + len)
              (.write writer cbuf ^int off ^int (min len rem))
              (when (neg? (- rem len))
-               (throw (ex-info "Quota exceeded" {})))))))
+               (throw (ex-info "Quota Exceeded" quota-marker)))))))
       (flush []
         (.flush writer))
       (close []
@@ -46,8 +49,10 @@
       (binding [*out* writer]
         (pr x))
       (str writer)
-      (catch Exception e
-        (str writer "...")))))
+      (catch clojure.lang.ExceptionInfo e
+        (if (identical? quota-marker (ex-data e))
+          (str writer "...")
+          (throw e))))))
 
 ;; CompilerException has location info, but its cause RuntimeException has the message ¯\_(ツ)_/¯
 (defn root-cause [^Throwable t]
