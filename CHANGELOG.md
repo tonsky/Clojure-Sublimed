@@ -1,3 +1,8 @@
+### 3.2.0 - Sep 10, 2023
+
+- Socket REPL: handle exceptions in lookup
+- Do not silence exception during lazy seq printing
+
 ### 3.1.3 - Aug 19, 2023
 
 - Show file/line/column information when `clojure_sublimed_eval_code` fails
