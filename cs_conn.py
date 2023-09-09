@@ -80,11 +80,14 @@ class Connection:
     def lookup_impl(self, id, symbol, ns):
         pass
 
-    def lookup(self, id, symbol, ns = 'user'):
+    def lookup(self, view, region):
         """
         Look symbol up and call `cs_eval.on_lookup(id, value)`
         """
-        self.lookup_impl(id, symbol, ns)
+        symbol = view.substr(region)
+        ns     = cs_parser.namespace(view, region.begin()) or 'user'
+        eval   = cs_eval.Eval(view, region)
+        self.lookup_impl(eval.id, symbol, ns)
 
     def interrupt_impl(self, batch_id, id):
         pass

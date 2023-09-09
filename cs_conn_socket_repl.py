@@ -140,14 +140,15 @@ class ConnectionSocketRepl(cs_conn.Connection):
 
     def handle_exception(self, msg):
         if 'ex' == msg['tag']:
-            id     = msg.get('id')
-            idx    = msg.get('idx')
-            val    = msg.get('val')
-            source = msg.get('source')
-            line   = msg.get('line')
-            column = msg.get('column')
-            trace  = msg.get('trace')
-            cs_eval.on_exception(f'{id}.{idx}', val, source = source, line = line, column = column, trace = trace)
+            id      = msg.get('id')
+            idx     = msg.get('idx')
+            val     = msg.get('val')
+            source  = msg.get('source')
+            line    = msg.get('line')
+            column  = msg.get('column')
+            trace   = msg.get('trace')
+            eval_id = f'{id}.{idx}' if idx is not None else id
+            cs_eval.on_exception(eval_id, val, source = source, line = line, column = column, trace = trace)
             return True
 
     def handle_done(self, msg):

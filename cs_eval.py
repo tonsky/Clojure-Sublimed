@@ -346,10 +346,7 @@ class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
             eval.erase()
         else:
             if region := cs_parser.symbol_at_point(view, sel.begin()) if sel.empty() else sel:
-                symbol = view.substr(region)
-                ns = cs_parser.namespace(view, region.begin()) or 'user'
-                eval = Eval(view, region)
-                cs_conn.conn.lookup(eval.id, symbol, ns)
+                cs_conn.conn.lookup(view, region)
 
     def is_enabled(self):
         return cs_conn.ready() and len(self.view.sel()) == 1
