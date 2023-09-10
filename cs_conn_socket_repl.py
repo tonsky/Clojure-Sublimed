@@ -1,5 +1,5 @@
 import json, os, re, sublime, sublime_plugin, threading
-from . import cs_common, cs_conn, cs_eval, cs_eval_status, cs_parser
+from . import cs_common, cs_conn, cs_eval, cs_eval_status, cs_parser, cs_warn
 
 def lines(socket):
     buffer = b''
@@ -82,6 +82,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
         self.send(msg)
 
     def eval(self, view, sel):
+        cs_warn.reset_warnings()
         for region in sel:
             # find regions to eval
             if region.empty():
@@ -113,6 +114,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
             self.eval_impl(form)
 
     def eval_status(self, code, ns):
+        cs_warn.reset_warnings()
         batch_id = cs_eval.Eval.next_id()
         eval = cs_eval_status.StatusEval(code, id = f'{batch_id}.0', batch_id = batch_id)
         form = cs_common.Form(id = batch_id, code = code, ns = ns)
@@ -164,12 +166,19 @@ class ConnectionSocketRepl(cs_conn.Connection):
             cs_eval.on_lookup(id, val)
             return True
 
+    def handle_err(self, msg):
+        if 'err' == msg['tag']:
+            if msg['val'].startswith("Reflection warning"):
+                cs_warn.add_warning()
+            return True
+
     def handle_msg(self, msg):
         # cs_common.debug('MSG {}', msg)
         self.handle_value(msg) \
         or self.handle_exception(msg) \
         or self.handle_done(msg) \
-        or self.handle_lookup(msg)
+        or self.handle_lookup(msg) \
+        or self.handle_err(msg)
 
 class ClojureSublimedConnectSocketReplCommand(sublime_plugin.ApplicationCommand):
     def run(self, address):

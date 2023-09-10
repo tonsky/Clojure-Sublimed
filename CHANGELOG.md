@@ -1,3 +1,7 @@
+### 3.2.1 - Sep 10, 2023
+
+- Socket: Report number of reflection warnings in status bar
+
 ### 3.2.0 - Sep 10, 2023
 
 - Socket REPL: handle exceptions in lookup

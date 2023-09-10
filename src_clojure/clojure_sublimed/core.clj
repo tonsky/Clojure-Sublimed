@@ -4,7 +4,7 @@
     [clojure.string :as str])
   (:import
     [clojure.lang Compiler Compiler$CompilerException ExceptionInfo LispReader$ReaderException]
-    [java.io Writer]))
+    [java.io BufferedWriter OutputStream OutputStreamWriter PrintWriter Writer]))
 
 (def ^:dynamic *print-quota*
   1024)
@@ -33,7 +33,7 @@
         ([x off len]
          (locking total
            (let [cbuf (to-char-array x)
-                 rem (- quota @total)]
+                 rem  (- quota @total)]
              (vswap! total + len)
              (.write writer cbuf ^int off ^int (min len rem))
              (when (neg? (- rem len))
@@ -53,6 +53,28 @@
         (if (identical? quota-marker (ex-data e))
           (str writer "...")
           (throw e))))))
+
+(defn duplicate-writer ^Writer [^Writer writer tag out-fn]
+  (let [sb    (StringBuffer.)
+        proxy (proxy [Writer] []
+                (flush []
+                  (.flush writer)
+                  (let [len (.length sb)]
+                    (when (pos? len)
+                      (out-fn {"tag" tag, "val" (str sb)})
+                      (.delete sb 0 len))))
+                (close []
+                  (.close writer))
+                (write
+                  ([x]
+                   (let [cbuf (to-char-array x)]
+                     (.write writer cbuf)
+                     (.append sb cbuf)))
+                  ([x off len]
+                   (let [cbuf (to-char-array x)]
+                     (.write writer cbuf ^int off ^int len)
+                     (.append sb cbuf ^int off ^int len)))))]
+    (PrintWriter. proxy true)))
 
 ;; CompilerException has location info, but its cause RuntimeException has the message ¯\_(ツ)_/¯
 (defn root-cause [^Throwable t]

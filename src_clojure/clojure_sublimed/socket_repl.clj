@@ -3,7 +3,7 @@
     [clojure.string :as str]
     [clojure-sublimed.core :as core])
   (:import
-    [java.io Reader StringReader]
+    [java.io FilterWriter Reader StringReader Writer]
     [java.lang.reflect Field]
     [clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader LispReader LispReader$ReaderException RT]))
 
@@ -197,33 +197,35 @@
 (defn out-fn [out]
   (let [lock (Object.)]
     #(locking lock
-       (binding [*out* out]
+       (binding [*out*            out
+                 *print-readably* true]
          (prn (merge (some-> *context* deref) %))))))
 
 (defn repl []
-  (binding [*out-fn* (out-fn *out*)
-            *out*    (.getRawRoot #'*out*)
-            *err*    (.getRawRoot #'*err*)
-            core/*changed-vars (atom {})]
-    (*out-fn* {"tag" "started"})
-    (loop []
-      (when
-        (binding [*context* (volatile! {})]
-          (try
-            (let [form (read-command *in*)]
-              (core/set-changed-vars!)
-              (when-some [id (form "id")]
-                (vswap! *context* assoc "id" id))
-              (case (get form "op")
-                "eval"      (fork-eval form)
-                "interrupt" (interrupt form)
-                "lookup"    (lookup-symbol form)
-                (throw (Exception. (str "Unknown op: " (get form "op")))))
-              true)
-            (catch Throwable t
-              (when-not (-> t ex-data ::stop)
-                (report-throwable t)
-                true))))
-        (recur)))
-    (doseq [[id f] @*evals]
-      (future-cancel f))))
+  (let [out-fn (out-fn *out*)]
+    (binding [*out-fn* out-fn
+              *out*    (core/duplicate-writer (.getRawRoot #'*out*) "out" out-fn)
+              *err*    (core/duplicate-writer (.getRawRoot #'*err*) "err" out-fn)
+              core/*changed-vars (atom {})]
+      (out-fn {"tag" "started"})
+      (loop []
+        (when
+          (binding [*context* (volatile! {})]
+            (try
+              (let [form (read-command *in*)]
+                (core/set-changed-vars!)
+                (when-some [id (form "id")]
+                  (vswap! *context* assoc "id" id))
+                (case (get form "op")
+                  "eval"      (fork-eval form)
+                  "interrupt" (interrupt form)
+                  "lookup"    (lookup-symbol form)
+                  (throw (Exception. (str "Unknown op: " (get form "op")))))
+                true)
+              (catch Throwable t
+                (when-not (-> t ex-data ::stop)
+                  (report-throwable t)
+                  true))))
+          (recur)))
+      (doseq [[id f] @*evals]
+        (future-cancel f)))))

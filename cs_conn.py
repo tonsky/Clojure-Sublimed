@@ -1,5 +1,5 @@
 import os, re, sublime, sublime_plugin
-from . import cs_common, cs_eval, cs_eval_status, cs_parser
+from . import cs_common, cs_eval, cs_eval_status, cs_parser, cs_warn
 
 # Global connection instance
 conn = None
@@ -114,6 +114,7 @@ class Connection:
         conn = None
         cs_common.set_status(status_key, None)
         cs_eval.erase_evals()
+        cs_warn.reset_warnings()
 
     def set_status(self, phase, message, *args):
         status = phases[phase] + ' ' + message.format(*args)
