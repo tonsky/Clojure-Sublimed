@@ -1,3 +1,8 @@
+### 3.3.0 - Oct 26, 2023
+
+- Eval inside already evaled region re-evals same region instead of going to top form
+- Printer can display newlines
+
 ### 3.2.1 - Sep 10, 2023
 
 - Socket: Report number of reflection warnings in status bar

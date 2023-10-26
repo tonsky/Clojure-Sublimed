@@ -1,3 +1,5 @@
+import re
+
 def safe_get(l, i, default = None):
     """
     Like dict.get(), but for lists
@@ -117,4 +119,7 @@ def format(text, node, indent = '', limit = 80):
     elif node.name == 'tagged':
         return format_tagged(text, node, indent, limit)
     else:
-        return wrap_string(text[node.start:node.end], limit = limit, indent = indent)
+        str = text[node.start:node.end]
+        str = re.sub("(?<!\\\\)\\\\n", "\n", str)
+        str = "\n".join(wrap_string(s, limit = limit, indent = indent) for s in str.split("\n"))
+        return str

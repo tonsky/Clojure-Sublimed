@@ -42,13 +42,19 @@ class Connection:
     def eval_impl(self, form):
         pass
 
+    def eval_region(self, region, view):
+        if region.empty():
+            if eval := cs_eval.by_region(view, region):
+                return eval.region()
+            return cs_parser.topmost_form(view, region.begin())
+        return region
+
     def eval(self, view, sel):
         """
         Eval code and call `cs_eval.on_success(id, value)` or `cs_eval.on_exception(id, value, trace)`
         """
         for region in sel:
-            if region.empty():
-                region = cs_parser.topmost_form(view, region.begin())
+            region = self.eval_region(region, view)
             eval = cs_eval.Eval(view, region)
             (line, column) = view.rowcol_utf16(region.begin())
             line = line + 1

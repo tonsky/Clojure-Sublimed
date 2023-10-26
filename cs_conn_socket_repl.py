@@ -85,8 +85,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
         cs_warn.reset_warnings()
         for region in sel:
             # find regions to eval
-            if region.empty():
-                region = cs_parser.topmost_form(view, region.begin())
+            region = self.eval_region(region, view)
 
             start = region.begin()
             parsed = cs_parser.parse(view.substr(region))
