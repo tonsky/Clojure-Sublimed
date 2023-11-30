@@ -2,16 +2,17 @@ import sublime, sublime_plugin
 from . import cs_common, cs_conn, cs_eval, cs_parser, cs_progress
 
 status_key = 'clojure-sublimed-eval-status'
-status_eval = None
 
 class StatusEval:
     """
     Displays 'eval_code' command results in status bar
     """
     def __init__(self, code, id = None, batch_id = None):
-        global status_eval
-        if status_eval:
-            status_eval.erase()
+        self.window = sublime.active_window()
+        state = cs_common.get_state(self.window)
+        
+        if state.status_eval:
+            state.status_eval.erase()
 
         self.id        = id or cs_eval.Eval.next_id()
         self.batch_id  = batch_id or self.id
@@ -22,7 +23,7 @@ class StatusEval:
         self.ex_column = None
         self.trace     = None
         
-        status_eval    = self
+        state.status_eval = self
 
         self.update('pending', cs_progress.phase())
         cs_progress.wake()
@@ -31,11 +32,11 @@ class StatusEval:
         self.status = status
         self.value = value
         if status in {"pending", "interrupt"}:
-            cs_common.set_status(status_key, "⏳ " + self.code)
+            cs_common.set_status(self.window, status_key, "⏳ " + self.code)
         elif "success" == status:
             if time := cs_common.format_time_taken(time_taken):
                 value = time + ' ' + value
-            cs_common.set_status(status_key, "✅ " + value)
+            cs_common.set_status(self.window, status_key, "✅ " + value)
         elif "exception" == status:
             if time := cs_common.format_time_taken(time_taken):
                 value = time + ' ' + value
@@ -46,24 +47,26 @@ class StatusEval:
                 msg += ":" + str(self.ex_line)
             if self.ex_column:
                 msg += ":" + str(self.ex_column)
-            cs_common.set_status(status_key, msg)
+            cs_common.set_status(self.window, status_key, msg)
 
     def erase(self, interrupt = True):
-        global status_eval
-        cs_common.set_status(status_key, None)
-        status_eval = None
+        state = cs_common.get_state(self.window)
+        cs_common.set_status(self.window, status_key, None)
+        state.status_eval = None
         if interrupt and self.status == "pending" and self.session:
-            cs_conn.conn.interrupt(self.id)
+            state.conn.interrupt(self.id)
 
-class ClojureSublimedEvalCodeCommand(sublime_plugin.ApplicationCommand):
+class ClojureSublimedEvalCodeCommand(sublime_plugin.WindowCommand):
     def run(self, code, ns = None):
         if (not ns) and (view := cs_common.active_view()):
             ns = cs_parser.namespace(view, view.size())
-        cs_conn.conn.eval_status(code, ns or 'user')
+        state = cs_common.get_state(self.window)
+        state.conn.eval_status(code, ns or 'user')
 
     def is_enabled(self):
-        if not cs_conn.ready():
+        if not cs_conn.ready(self.window):
             return False
-        if status_eval and status_eval.status in {'pending', 'interrupt'}:
+        state = cs_common.get_state(self.window)
+        if state.status_eval and state.status_eval.status in {'pending', 'interrupt'}:
             return False
         return True

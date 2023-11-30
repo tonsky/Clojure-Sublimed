@@ -117,15 +117,17 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
         or self.handle_exception(msg) \
         or self.handle_lookup(msg)
 
-class ClojureSublimedConnectNreplJvmCommand(sublime_plugin.ApplicationCommand):
+class ClojureSublimedConnectNreplJvmCommand(sublime_plugin.WindowCommand):
     def run(self, address):
-        cs_conn.last_conn = ('clojure_sublimed_connect_nrepl_jvm', {'address': address})
+        state = cs_common.get_state(self.window)
+        state.last_conn = ('clojure_sublimed_connect_nrepl_jvm', {'address': address})
         if address == 'auto':
-            address = cs_conn.AddressInputHandler().initial_text()
+            address = cs_conn.AddressInputHandler(port_file = '.nrepl-port').initial_text()
         ConnectionNreplJvm(address).connect()
 
     def input(self, args):
-        return cs_conn.AddressInputHandler()
+        return cs_conn.AddressInputHandler(port_file = '.nrepl-port')
 
     def is_enabled(self):
-        return cs_conn.conn is None
+        state = cs_common.get_state(self.window)
+        return state.conn is None

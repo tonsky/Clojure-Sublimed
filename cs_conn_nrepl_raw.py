@@ -146,15 +146,17 @@ class ConnectionNreplRaw(cs_conn.Connection):
         or self.handle_err(msg) \
         or self.handle_done(msg)
 
-class ClojureSublimedConnectNreplRawCommand(sublime_plugin.ApplicationCommand):
+class ClojureSublimedConnectNreplRawCommand(sublime_plugin.WindowCommand):
     def run(self, address):
-        cs_conn.last_conn = ('clojure_sublimed_connect_nrepl_raw', {'address': address})
+        state = cs_common.get_state(self.window)
+        state.last_conn = ('clojure_sublimed_connect_nrepl_raw', {'address': address})
         if address == 'auto':
-            address = cs_conn.AddressInputHandler().initial_text()
+            address = cs_conn.AddressInputHandler(port_file = '.nrepl-port').initial_text()
         ConnectionNreplRaw(address).connect()
 
     def input(self, args):
-        return cs_conn.AddressInputHandler()
+        return cs_conn.AddressInputHandler(port_file = '.nrepl-port')
 
     def is_enabled(self):
-        return cs_conn.conn is None
+        state = cs_common.get_state(self.window)
+        return state.conn is None

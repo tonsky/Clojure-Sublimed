@@ -82,7 +82,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
         self.send(msg)
 
     def eval(self, view, sel):
-        cs_warn.reset_warnings()
+        cs_warn.reset_warnings(self.window)
         for region in sel:
             # find regions to eval
             region = self.eval_region(region, view)
@@ -113,7 +113,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
             self.eval_impl(form)
 
     def eval_status(self, code, ns):
-        cs_warn.reset_warnings()
+        cs_warn.reset_warnings(self.window)
         batch_id = cs_eval.Eval.next_id()
         eval = cs_eval_status.StatusEval(code, id = f'{batch_id}.0', batch_id = batch_id)
         form = cs_common.Form(id = batch_id, code = code, ns = ns)
@@ -168,7 +168,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
     def handle_err(self, msg):
         if 'err' == msg['tag']:
             if msg['val'].startswith("Reflection warning"):
-                cs_warn.add_warning()
+                cs_warn.add_warning(self.window())
             return True
 
     def handle_msg(self, msg):
@@ -179,13 +179,17 @@ class ConnectionSocketRepl(cs_conn.Connection):
         or self.handle_lookup(msg) \
         or self.handle_err(msg)
 
-class ClojureSublimedConnectSocketReplCommand(sublime_plugin.ApplicationCommand):
+class ClojureSublimedConnectSocketReplCommand(sublime_plugin.WindowCommand):
     def run(self, address):
-        cs_conn.last_conn = ('clojure_sublimed_connect_socket_repl', {'address': address})
+        state = cs_common.get_state(self.window)
+        state.last_conn = ('clojure_sublimed_connect_socket_repl', {'address': address})
+        if address == 'auto':
+            address = cs_conn.AddressInputHandler(port_file = '.repl-port').initial_text()
         ConnectionSocketRepl(address).connect()
 
     def input(self, args):
-        return cs_conn.AddressInputHandler(search_nrepl = False)
+        return cs_conn.AddressInputHandler(port_file = '.repl-port')
 
     def is_enabled(self):
-        return cs_conn.conn is None
+        state = cs_common.get_state(self.window)
+        return state.conn is None

@@ -1,0 +1,4 @@
+Clojure Sublimed now supports:
+
+- a separate connection per window (was one global connection)
+- `.repl-port` files for Socket REPL, similar to `.nrepl-port` for nREPL

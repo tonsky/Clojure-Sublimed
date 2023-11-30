@@ -1,10 +1,24 @@
-import math, os, re, socket, sublime, sublime_plugin, time, traceback
+import collections, math, os, re, socket, sublime, sublime_plugin, time, traceback
 
 ns = 'clojure-sublimed'
 
-statuses = {}
-last_view = None
 package = None
+
+class State:
+  def __init__(self):
+    self.statuses    = {}
+    self.last_view   = None
+    self.conn        = None
+    self.last_conn   = None
+    self.warnings    = 0
+    self.status_eval = None
+
+states = collections.defaultdict(lambda: State())
+
+def get_state(window = None):
+    if window is None:
+        window = sublime.active_window()
+    return states[window.id()]
 
 class Form:
     def __init__(self, id = None, code = None, ns = 'user', line = None, column = None, file = None):
@@ -146,33 +160,40 @@ def socket_connect(addr):
         s.connect(addr)
         return s
 
-def set_status(key, value):
+def set_status(window, key, value):
     """
     Sets persistent status that will travel when changing views.
     Pass value = None to erase
     """
-    global statuses, last_view
+    state = get_state(window)
     if view := active_view():
         if value is None:
             view.erase_status(key)
         else:
             view.set_status(key, value)
-        statuses[key] = value
-        if not last_view:
-            last_view = view
+        state.statuses[key] = value
+        if not state.last_view:
+            state.last_view = view
 
 class EventListener(sublime_plugin.EventListener):
     def on_activated_async(self, view):
         """
         When swithing to another view
         """
+        state = get_state(view.window())
         global statuses, last_view
-        if view != last_view:
-            for key in statuses:
-                last_view.erase_status(key)
-                if (value := statuses.get(key)) is not None:
+        if view != state.last_view:
+            for key in state.statuses:
+                state.last_view.erase_status(key)
+                if (value := state.statuses.get(key)) is not None:
                     view.set_status(key, value)
-            last_view = view
+            state.last_view = view
+
+    def on_pre_close_window(self, window):
+        state = get_state(window)
+        if state.conn:
+            state.conn.disconnect()
+        del states[window.id()]
 
 def plugin_loaded():
     global package
@@ -185,7 +206,7 @@ def plugin_loaded():
         package = os.path.basename(package_path)
 
 def plugin_unloaded():
-    global statuses, last_view
-    if view := last_view:
-        for key in statuses:
-            view.erase_status(key)
+    for state in states.values(): 
+        if view := state.last_view:
+            for key in state.statuses:
+                view.erase_status(key)

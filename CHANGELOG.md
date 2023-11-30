@@ -1,3 +1,8 @@
+### 3.4.0 - Nov 30, 2023
+
+- Support multiple windows, one connection per widnow
+- Support .repl-port files for Socket REPL
+
 ### 3.3.0 - Oct 26, 2023
 
 - Eval inside already evaled region re-evals same region instead of going to top form

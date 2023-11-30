@@ -165,7 +165,8 @@ def by_id(id):
     """
     Find an eval by id. Might return status_eval
     """
-    if (eval := cs_eval_status.status_eval) and id == eval.id:
+    state = cs_common.get_state()
+    if (eval := state.status_eval) and id == eval.id:
         return eval
     return evals.get(id, None)
 
@@ -191,7 +192,8 @@ def erase_evals(predicate = lambda x: True, view = None):
         es = list(evals_by_view[view.id()].items())
     else:
         es = list(evals.items())
-        if eval := cs_eval_status.status_eval:
+        state = cs_common.get_state(view.window() if view else None)
+        if eval := state.status_eval:
             es += [(eval.id, eval)]
     for id, eval in es:
         if predicate(eval):
@@ -292,20 +294,22 @@ class ClojureSublimedEval(sublime_plugin.TextCommand):
     Eval selected code or topmost form is selection is collapsed
     """
     def run(self, edit):
-        cs_conn.conn.eval(self.view, self.view.sel())
+        state = cs_common.get_state(self.view.window())
+        state.conn.eval(self.view, self.view.sel())
 
     def is_enabled(self):
-        return cs_conn.ready()
+        return cs_conn.ready(self.view.window())
 
 class ClojureSublimedEvalBufferCommand(sublime_plugin.TextCommand):
     """
     Eval whole buffer
     """
     def run(self, edit):
-        cs_conn.conn.load_file(self.view)
+        state = cs_common.get_state(self.view.window())
+        state.conn.load_file(self.view)
         
     def is_enabled(self):
-        return cs_conn.ready()
+        return cs_conn.ready(self.view.window())
 
 class ClojureSublimedCopyCommand(sublime_plugin.TextCommand):
     """
@@ -316,7 +320,7 @@ class ClojureSublimedCopyCommand(sublime_plugin.TextCommand):
         return by_region(view, view.sel()[0])
 
     def run(self, edir):
-        if cs_conn.ready() and len(self.view.sel()) == 1 and self.view.sel()[0].empty() and (eval := self.eval()) and eval.value:
+        if cs_conn.ready(self.view.window()) and len(self.view.sel()) == 1 and self.view.sel()[0].empty() and (eval := self.eval()) and eval.value:
             sublime.set_clipboard(eval.value)
         else:
             self.view.run_command("copy", {})
@@ -332,7 +336,7 @@ class ClojureSublimedToggleTraceCommand(sublime_plugin.TextCommand):
             eval.toggle_trace()
         
     def is_enabled(self):
-        return cs_conn.ready() and len(self.view.sel()) == 1
+        return cs_conn.ready(self.view.window()) and len(self.view.sel()) == 1
 
 class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
     """
@@ -346,10 +350,11 @@ class ClojureSublimedToggleSymbolCommand(sublime_plugin.TextCommand):
             eval.erase()
         else:
             if region := cs_parser.symbol_at_point(view, sel.begin()) if sel.empty() else sel:
-                cs_conn.conn.lookup(view, region)
+                state = cs_common.get_state(self.view.window())
+                state.conn.lookup(view, region)
 
     def is_enabled(self):
-        return cs_conn.ready() and len(self.view.sel()) == 1
+        return cs_conn.ready(self.view.window()) and len(self.view.sel()) == 1
 
 class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
     """
@@ -370,7 +375,7 @@ class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
             view.run_command("clojure_sublimed_toggle_symbol", {})
 
     def is_enabled(self):
-        return cs_conn.ready() and len(self.view.sel()) == 1
+        return cs_conn.ready(self.view.window()) and len(self.view.sel()) == 1
 
 class ClojureSublimedClearEvalsCommand(sublime_plugin.TextCommand):
     """
@@ -378,7 +383,8 @@ class ClojureSublimedClearEvalsCommand(sublime_plugin.TextCommand):
     """
     def run(self, edit):
         erase_evals(lambda eval: eval.status not in {"pending", "interrupt"}, self.view)
-        if (eval := cs_eval_status.status_eval) and eval.status not in {"pending", "interrupt"}:
+        state = cs_common.get_state(self.view.window())
+        if (eval := state.status_eval) and eval.status not in {"pending", "interrupt"}:
             eval.erase()
 
 class ClojureSublimedInterruptEvalCommand(sublime_plugin.TextCommand):
@@ -387,17 +393,19 @@ class ClojureSublimedInterruptEvalCommand(sublime_plugin.TextCommand):
     """
     def run(self, edit):
         es = list(by_status(self.view, 'pending'))
-        if (eval := cs_eval_status.status_eval) and eval.status not in {"pending", "interrupt"}:
+        state = cs_common.get_state(self.view.window())
+        if (eval := state.status_eval) and eval.status not in {"pending", "interrupt"}:
             es += [eval]
         if len(es) > 0:
             eval = min(es, key = lambda e: e.batch_id)
-            cs_conn.conn.interrupt(eval.batch_id, eval.id)
+            state = cs_common.get_state(self.view.window())
+            state.conn.interrupt(eval.batch_id, eval.id)
             for e in es:
                 if e.batch_id == eval.batch_id:
                     e.update('interrupt', "Interrupting...")
 
     def is_enabled(self):
-        return cs_conn.ready()
+        return cs_conn.ready(self.view.window())
 
 class EventListener(sublime_plugin.EventListener):
     def on_close(self, view):

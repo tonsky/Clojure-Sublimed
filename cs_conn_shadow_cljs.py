@@ -84,9 +84,10 @@ class BuildInputHandler(sublime_plugin.TextInputHandler):
         </html>
         """)
 
-class ClojureSublimedConnectShadowCljsCommand(sublime_plugin.ApplicationCommand):
+class ClojureSublimedConnectShadowCljsCommand(sublime_plugin.WindowCommand):
     def run(self, address, build):
-        cs_conn.last_conn = ('clojure_sublimed_connect_shadow_cljs', {'address': address, 'build': build})
+        state = cs_common.get_state(self.window)
+        state.last_conn = ('clojure_sublimed_connect_shadow_cljs', {'address': address, 'build': build})
         ConnectionShadowCljs(address, build).connect()
 
     def input(self, args):
@@ -96,4 +97,5 @@ class ClojureSublimedConnectShadowCljsCommand(sublime_plugin.ApplicationCommand)
             return cs_conn.AddressInputHandler()
 
     def is_enabled(self):
-        return cs_conn.conn is None
+        state = cs_common.get_state(self.window)
+        return state.conn is None

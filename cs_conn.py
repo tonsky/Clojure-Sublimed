@@ -1,23 +1,21 @@
 import os, re, sublime, sublime_plugin
 from . import cs_common, cs_eval, cs_eval_status, cs_parser, cs_warn
 
-# Global connection instance
-conn = None
-
 status_key = 'clojure-sublimed-conn'
 phases = ['🌑', '🌒', '🌓', '🌔', '🌕']
-last_conn = None
 
-def ready():
+def ready(window = None):
     """
     When connection is fully initialized
     """
-    return bool(conn and conn.ready())
+    state = cs_common.get_state(window)
+    return bool(state.conn and state.conn.ready())
 
 class Connection:
     def __init__(self):
         self.status = None
         self.disconnecting = False
+        self.window = sublime.active_window()
 
     def connect_impl(self):
         pass
@@ -26,10 +24,10 @@ class Connection:
         """
         Connect to address specified during construction
         """
-        global conn
+        state = cs_common.get_state()
         try:
             self.connect_impl()
-            conn = self
+            state.conn = self
         except Exception as e:
             cs_common.error('Connection failed')
             self.disconnect()
@@ -116,20 +114,20 @@ class Connection:
             return
         self.disconnecting = True
         self.disconnect_impl()
-        global conn
-        conn = None
-        cs_common.set_status(status_key, None)
-        cs_eval.erase_evals()
-        cs_warn.reset_warnings()
+        state = cs_common.get_state()
+        state.conn = None
+        cs_common.set_status(self.window, status_key, None)
+        cs_eval.erase_evals(lambda eval: eval.view.window == self.window)
+        cs_warn.reset_warnings(self.window)
 
     def set_status(self, phase, message, *args):
         status = phases[phase] + ' ' + message.format(*args)
         self.status = status
-        cs_common.set_status(status_key, status)
+        cs_common.set_status(self.window, status_key, status)
 
 class AddressInputHandler(sublime_plugin.TextInputHandler):
-    def __init__(self, search_nrepl = True, next_input = None):
-        self.search_nrepl = search_nrepl
+    def __init__(self, port_file = None, next_input = None):
+        self.port_file = port_file
         self.next = next_input
 
     """
@@ -140,15 +138,15 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
 
     def initial_text(self):
         # .nrepl-port file present
-        if self.search_nrepl and (window := sublime.active_window()):
+        if self.port_file and (window := sublime.active_window()):
             for folder in window.folders():
-                if os.path.exists(folder + "/.nrepl-port"):
-                    with open(folder + "/.nrepl-port", "rt") as f:
+                if os.path.exists(folder + "/" + self.port_file):
+                    with open(folder + "/" + self.port_file, "rt") as f:
                         content = f.read(10).strip()
                         if re.fullmatch(r'[1-9][0-9]*', content):
                             return f'localhost:{content}'
-
-        return last_conn[1]['address'] if last_conn else 'localhost:'
+        state = cs_common.get_state()
+        return state.last_conn[1]['address'] if state.last_conn else 'localhost:'
 
     def initial_selection(self):
         text = self.initial_text()
@@ -175,25 +173,27 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
     def next_input(self, args):
         return self.next
 
-class ClojureSublimedReconnectCommand(sublime_plugin.ApplicationCommand):
+class ClojureSublimedReconnectCommand(sublime_plugin.WindowCommand):
     def run(self):
-        if conn:
+        state = cs_common.get_state(self.window)
+        if state.conn:
             sublime.run_command('clojure_sublimed_disconnect', {})
-        sublime.run_command(*last_conn)
+        sublime.run_command(*state.last_conn)
 
     def is_enabled(self):
-        return last_conn is not None
+        state = cs_common.get_state(self.window)
+        return state.last_conn is not None
 
-class ClojureSublimedDisconnectCommand(sublime_plugin.ApplicationCommand):
+class ClojureSublimedDisconnectCommand(sublime_plugin.WindowCommand):
     def run(self):
-        global conn
-        conn.disconnect()
+        state = cs_common.get_state(self.window)
+        state.conn.disconnect()
 
     def is_enabled(self):
-        global conn
-        return conn is not None
+        state = cs_common.get_state(self.window)
+        return state.conn is not None
 
 def plugin_unloaded():
-    global conn
-    if conn:
-        conn.disconnect()
+    for state in cs_common.states.values():
+        if state.conn:
+            state.conn.disconnect()
