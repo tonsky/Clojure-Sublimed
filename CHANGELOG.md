@@ -1,3 +1,7 @@
+### 3.4.1 - Dec 7, 2023
+
+- Fixed status eval not clearing on disconnect
+
 ### 3.4.0 - Nov 30, 2023
 
 - Support multiple windows, one connection per widnow

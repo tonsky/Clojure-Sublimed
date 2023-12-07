@@ -18,6 +18,7 @@ class Eval:
     id:           int
     batch_id:     int
     view:         sublime.View
+    window:       sublime.Window
     status:       str # "pending" | "interrupt" | "success" | "exception" | "lookup"
     code:         str
     session:      str
@@ -36,6 +37,7 @@ class Eval:
         self.id = id
         self.batch_id = batch_id or id
         self.view = view
+        self.window = view.window()
         self.code = view.substr(region)
         self.session = None
         self.ex_source = None

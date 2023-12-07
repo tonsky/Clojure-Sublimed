@@ -117,7 +117,7 @@ class Connection:
         state = cs_common.get_state()
         state.conn = None
         cs_common.set_status(self.window, status_key, None)
-        cs_eval.erase_evals(lambda eval: eval.view.window == self.window)
+        cs_eval.erase_evals(lambda eval: eval.window == self.window)
         cs_warn.reset_warnings(self.window)
 
     def set_status(self, phase, message, *args):
