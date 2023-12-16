@@ -168,7 +168,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
     def handle_err(self, msg):
         if 'err' == msg['tag']:
             if msg['val'].startswith("Reflection warning"):
-                cs_warn.add_warning(self.window())
+                cs_warn.add_warning(self.window)
             return True
 
     def handle_msg(self, msg):
