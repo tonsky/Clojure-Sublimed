@@ -438,6 +438,13 @@ def namespace(view, point):
                         second_form = second_form.body.children[0]
                     if is_symbol(second_form):
                         ns = second_form.text
+                elif first_form.name == 'token' and first_form.text == 'in-ns':
+                    second_form = body.children[1]
+                    print(second_form.name, second_form.marker.text)
+                    if second_form.name == 'wrap' and second_form.marker.text == "'":
+                        unwrapped = second_form.body.children[0]
+                        if is_symbol(unwrapped):
+                            ns = unwrapped.text
     return ns
 
 def plugin_unloaded():

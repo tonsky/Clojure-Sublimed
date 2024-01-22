@@ -1,3 +1,7 @@
+### 3.5.0 - Jan 22, 2023
+
+- Detect namespace from in-ns forms
+
 ### 3.4.1 - Dec 7, 2023
 
 - Fixed status eval not clearing on disconnect
