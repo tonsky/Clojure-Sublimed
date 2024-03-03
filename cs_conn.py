@@ -47,7 +47,7 @@ class Connection:
             return cs_parser.topmost_form(view, region.begin())
         return region
 
-    def eval(self, view, sel):
+    def eval(self, view, sel, wrap_fstr=None):
         """
         Eval code and call `cs_eval.on_success(id, value)` or `cs_eval.on_exception(id, value, trace)`
         """
@@ -56,9 +56,14 @@ class Connection:
             eval = cs_eval.Eval(view, region)
             (line, column) = view.rowcol_utf16(region.begin())
             line = line + 1
+
+            code = view.substr(region)
+            if wrap_fstr is not None:
+                code = wrap_fstr%code
+
             form = cs_common.Form(
                     id     = eval.id,
-                    code   = view.substr(region),
+                    code   = code,
                     ns     = cs_parser.namespace(view, region.begin()) or 'user',
                     line   = line,
                     column = column,

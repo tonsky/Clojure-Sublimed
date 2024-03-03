@@ -295,9 +295,9 @@ class ClojureSublimedEval(sublime_plugin.TextCommand):
     """
     Eval selected code or topmost form is selection is collapsed
     """
-    def run(self, edit):
+    def run(self, edit, wrap_fstr=None):
         state = cs_common.get_state(self.view.window())
-        state.conn.eval(self.view, self.view.sel())
+        state.conn.eval(self.view, self.view.sel(), wrap_fstr)
 
     def is_enabled(self):
         return cs_conn.ready(self.view.window())
