@@ -84,36 +84,28 @@ class ConnectionSocketRepl(cs_conn.Connection):
         msg += '}'
         self.send(msg)
 
-    def eval(self, view, sel, wrap_fstr=None):
+    def eval(self, view, sel, transform_fn = None):
         cs_warn.reset_warnings(self.window)
-        for region in sel:
+        for selected_region in sel:
             # find regions to eval
-            region = self.eval_region(region, view)
+            eval_region = self.eval_region(selected_region, view)
 
-            start = region.begin()
-            parsed = cs_parser.parse(view.substr(region))
-            forms = [ \
-                sublime.Region(start + child.start, start + child.end) \
-                for child in parsed.children \
-                if child.name not in {'comment', 'discard'} \
-            ]
+            # extracting code
+            (code, ns, forms) = self.code(view, selected_region, eval_region, transform_fn)
             
             # create evals
+            start = eval_region.begin()
             batch_id = cs_eval.Eval.next_id()
             for idx, form in enumerate(forms):
-                eval = cs_eval.Eval(view, form, id = f'{batch_id}.{idx}', batch_id = batch_id)
-
-            code = view.substr(region)
-            if wrap_fstr is not None:
-                code = wrap_fstr%code
-            code = code
+                region = sublime.Region(start + form.start, start + form.end)
+                eval = cs_eval.Eval(view, region, id = f'{batch_id}.{idx}', batch_id = batch_id)
 
             # send msg
-            (line, column) = view.rowcol_utf16(region.begin())
+            (line, column) = view.rowcol_utf16(eval_region.begin())
             form = cs_common.Form(
                 id   = batch_id,
                 code = code,
-                ns   = cs_parser.namespace(view, region.begin()) or 'user',
+                ns   = ns,
                 line = line + 1,
                 column = column,
                 file = view.file_name()

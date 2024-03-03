@@ -440,12 +440,26 @@ def namespace(view, point):
                         ns = second_form.text
                 elif first_form.name == 'token' and first_form.text == 'in-ns':
                     second_form = body.children[1]
-                    print(second_form.name, second_form.marker.text)
                     if second_form.name == 'wrap' and second_form.marker.text == "'":
                         unwrapped = second_form.body.children[0]
                         if is_symbol(unwrapped):
                             ns = unwrapped.text
     return ns
+
+def defsym(node):
+    """
+    Finds name of the symbol (def.* <THIS> ...) defined by node form
+    """
+    if node.name == 'parens':
+        body = node.body
+        if len(body.children) >= 2:
+            first_form = body.children[0]
+            if first_form.name == 'token' and re.fullmatch(r'(ns|([^/]+/)?def.*)', first_form.text):
+                second_form = body.children[1]
+                while second_form.name == 'meta' and second_form.body:
+                    second_form = second_form.body.children[0]
+                if is_symbol(second_form):
+                    return second_form.text
 
 def plugin_unloaded():
     parsed_cache = {}

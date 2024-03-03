@@ -132,6 +132,10 @@ def active_view():
     if window := sublime.active_window():
         return window.active_view()
 
+def get_default(d, k, default):
+    v = d.get(k, None)
+    return v if v is not None else default
+
 class SocketIO:
     """
     Simple buffered interface around socket that let you read N bytes at a time

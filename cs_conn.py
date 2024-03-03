@@ -47,24 +47,39 @@ class Connection:
             return cs_parser.topmost_form(view, region.begin())
         return region
 
-    def eval(self, view, sel, wrap_fstr=None):
+    def code(self, view, selected_region, eval_region, transform_fn = None):
+        code = view.substr(eval_region)
+        ns = cs_parser.namespace(view, eval_region.begin()) or 'user'
+        parsed = cs_parser.parse(view.substr(eval_region))
+        forms = [child for child in parsed.children if child.name not in {'comment', 'discard'}]
+        
+        if transform_fn:
+            symbol = cs_parser.defsym(forms[0]) if len(forms) == 1 else None
+            kwargs = {'selected_region': selected_region,
+                      'eval_region':     eval_region,
+                      'ns':              ns,
+                      'symbol':          symbol}
+            code = transform_fn(code, **kwargs)
+
+        return (code, ns, forms)
+
+
+    def eval(self, view, sel, transform_fn = None):
         """
         Eval code and call `cs_eval.on_success(id, value)` or `cs_eval.on_exception(id, value, trace)`
         """
-        for region in sel:
-            region = self.eval_region(region, view)
-            eval = cs_eval.Eval(view, region)
-            (line, column) = view.rowcol_utf16(region.begin())
+        for selected_region in sel:
+            eval_region = self.eval_region(selected_region, view)
+            eval = cs_eval.Eval(view, eval_region)
+            (line, column) = view.rowcol_utf16(eval_region.begin())
             line = line + 1
 
-            code = view.substr(region)
-            if wrap_fstr is not None:
-                code = wrap_fstr%code
+            (code, ns, forms) = self.code(view, selected_region, eval_region, transform_fn)
 
             form = cs_common.Form(
                     id     = eval.id,
                     code   = code,
-                    ns     = cs_parser.namespace(view, region.begin()) or 'user',
+                    ns     = ns,
                     line   = line,
                     column = column,
                     file   = view.file_name())
