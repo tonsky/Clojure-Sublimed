@@ -116,7 +116,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
         cs_warn.reset_warnings(self.window)
         batch_id = cs_eval.Eval.next_id()
         eval = cs_eval_status.StatusEval(code, id = f'{batch_id}.0', batch_id = batch_id)
-        form = cs_common.Form(id = batch_id, code = code, ns = ns)
+        form = cs_common.Form(id = batch_id, code = code.replace('\\', '\\\\').replace('"', '\\"'), ns = ns)
         self.eval_impl(form)
 
     def load_file(self, view):
