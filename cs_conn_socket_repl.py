@@ -67,8 +67,11 @@ class ConnectionSocketRepl(cs_conn.Connection):
         msg = ('{' +
               f'"id" {form.id}, ' +
               f'"op" "eval", ' +
-              f'"code" "{form.code}", ' +
-              f'"ns" "{form.ns}"')
+              f'"ns" "{form.ns}", ')
+
+        code = form.code.replace('\\', '\\\\').replace('"', '\\"')
+        msg += f'"code" "{code}"'
+
         if form.file:
             msg += f', "file" "{form.file}"'
 
@@ -104,7 +107,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
             (line, column) = view.rowcol_utf16(region.begin())
             form = cs_common.Form(
                 id   = batch_id,
-                code = view.substr(region).replace('\\', '\\\\').replace('"', '\\"'),
+                code = view.substr(region),
                 ns   = cs_parser.namespace(view, region.begin()) or 'user',
                 line = line + 1,
                 column = column,
@@ -116,7 +119,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
         cs_warn.reset_warnings(self.window)
         batch_id = cs_eval.Eval.next_id()
         eval = cs_eval_status.StatusEval(code, id = f'{batch_id}.0', batch_id = batch_id)
-        form = cs_common.Form(id = batch_id, code = code.replace('\\', '\\\\').replace('"', '\\"'), ns = ns)
+        form = cs_common.Form(id = batch_id, code = code, ns = ns)
         self.eval_impl(form)
 
     def load_file(self, view):
