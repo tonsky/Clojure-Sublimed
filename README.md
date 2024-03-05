@@ -178,25 +178,91 @@ To show symbol info, run `Clojure Sublimed: Toggle Symbol Info`:
 
 Universal `Clojure Sublimed: Toggle Info` command acts as either `Toggle Stacktrace` or `Toggle Symbol Info`, depending on context.
 
-### Binding keys to eval code
+### Binding keys to eval custom code
 
 Every project is different, and sometimes it’s convenient to run a piece of code so often you’d want it on a shortcut. It might be a namespace reload, test execution, database reconnect, linter, formatter — possibilities are endless.
 
 To support such use cases, Clojure Sublimed allows you to bind arbitrary piece of code to a keyboard shortcut. Run `Preferences: Clojure Sublimed Key Bindings` and add something like this:
 
 ```
-{"keys": ["ctrl+t"],
+{"keys":    ["ctrl+t"],
  "command": "clojure_sublimed_eval_code",
- "args": {"code": "(clojure.test/run-all-tests)"}}
+ "args":    {"code": "(clojure.test/run-all-tests)"}}
 ```
 
 Then, whenever you press <kbd>Ctrl</kbd> + <kbd>T</kbd>, you’ll see the result in the status bar, like this:
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_code.png" width="536" height="37" alt="Eval Code">
 
-Tip: use `(clojure.test/run-all-tests (re-pattern (str *ns*))))` to run tests in current namespace.
+Other possible use-cases (select key combinations to your linking):
 
-Tip: bind `(user/reload)` to <kbd>Cmd</kbd> <kbd>R</kbd> to reload your app with tools.namespace.
+Only run tests from current namespace:
+
+```
+{"keys":    ["ctrl+shift+t"],
+ "command": "clojure_sublimed_eval_code",
+ "args":    {"code": "(clojure.test/run-all-tests (re-pattern (str *ns*)))"}}
+```
+
+Reload code with [clj-reload](https://github.com/tonsky/clj-reload):
+
+```
+{"keys":    ["ctrl+r"],
+ "command": "clojure_sublimed_eval_code",
+ "args":    {"code": "(clj-reload.core/reload)"}}
+```
+
+### Transforming code before eval
+
+You can also modify eval to run a transformed version of code under cursor/inside selection. For example, this:
+
+```
+{"keys":    ["ctrl+p"],
+ "command": "clojure_sublimed_eval",
+ "args":    {"transform": "(doto %code clojure.pprint/pprint)"}}
+```
+
+`transform` is a format string that takes selected form, formats it according to described rules and then sends resulting code to evaluation.
+
+If you now press `ctrl+p` on a form like `(+ 1 2)`, the actual eval sent to REPL will be:
+
+```
+(doto (+ 1 2) clojure.pprint/pprint)
+```
+
+Which will pretty-print evaluation result to stdout. This pattern might be useful for large results that don’t fit inline.
+
+Another use-case might be “eval to buffer”:
+
+```
+{"keys":    ["ctrl+b"],
+ "command": "chain",
+ "args":    {
+    "commands": [
+      ["clojure_sublimed_eval", {"transform": "(with-open [w (clojure.java.io/writer \"/tmp/sublimed_output.edn\")] (doto %code (clojure.pprint/pprint w)))"}],
+      ["open_file", {"file": "/tmp/sublimed_output.edn"}]
+    ]
+ }
+}
+```
+
+Eval to buffer at work:
+
+![](./screenshots/eval_to_buffer.gif)
+
+Inside `transform` you can also use `%ns` (current ns) and `%symbol` (if selected form is `def`-something, it will be replaced with defined name, otherwise `nil`).
+
+This allows us to implement “run test under cursor”:
+
+```
+{"keys":    ["super+shift+t"],
+ "command": "clojure_sublimed_eval",
+ "args":    {"transform": "(clojure.test/run-test-var #'%symbol)"}}
+```
+
+Run test under cursor at work:
+
+![](./screenshots/test_under_cursor.gif)
 
 ### Clearing results
 
@@ -260,7 +326,7 @@ A: Use Raw nREPL.
 
 Made by [Niki Tonsky](https://twitter.com/nikitonsky).
 
-With contributions by [Jaihindh Reddy](https://github.com/jaihindhreddy).
+With contributions by [Jaihindh Reddy](https://github.com/jaihindhreddy)and [KgOfHedgehogs](https://github.com/KGOH/).
 
 ## See also
 

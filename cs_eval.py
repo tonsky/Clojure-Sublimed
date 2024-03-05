@@ -291,6 +291,14 @@ def on_lookup(id, value):
         point = view.line(eval.region().end()).begin()
         eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
 
+def format_code_fn(s):
+    def transform_fn(code, **kwargs):
+        return s \
+            .replace(r"%code", code) \
+            .replace(r"%symbol", cs_common.get_default(kwargs, 'symbol', 'nil')) \
+            .replace(r"%ns", cs_common.get_default(kwargs, 'ns', 'user'))
+    return transform_fn
+
 class ClojureSublimedEvalCommand(sublime_plugin.TextCommand):
     """
     Eval selected code or topmost form is selection is collapsed
@@ -298,12 +306,7 @@ class ClojureSublimedEvalCommand(sublime_plugin.TextCommand):
     def run(self, edit, transform = None):
         state = cs_common.get_state(self.view.window())
         if transform:
-            def transform_fn(code, **kwargs):
-                return transform \
-                    .replace(r"%code", code) \
-                    .replace(r"%symbol", cs_common.get_default(kwargs, 'symbol', 'nil')) \
-                    .replace(r"%ns", cs_common.get_default(kwargs, 'ns', 'user'))
-            state.conn.eval(self.view, self.view.sel(), transform_fn)
+            state.conn.eval(self.view, self.view.sel(), format_code_fn(transform))
         else:
             state.conn.eval(self.view, self.view.sel())
 
