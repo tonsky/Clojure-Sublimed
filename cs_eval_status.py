@@ -37,6 +37,10 @@ class StatusEval:
             if time := cs_common.format_time_taken(time_taken):
                 value = time + ' ' + value
             cs_common.set_status(self.window, status_key, "✅ " + value)
+        elif "failure" == status:
+            if time := cs_common.format_time_taken(time_taken):
+                value = time + ' ' + value
+            cs_common.set_status(self.window, status_key, "❌ " + value)
         elif "exception" == status:
             if time := cs_common.format_time_taken(time_taken):
                 value = time + ' ' + value

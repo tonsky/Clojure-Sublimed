@@ -19,7 +19,7 @@ class Eval:
     batch_id:     int
     view:         sublime.View
     window:       sublime.Window
-    status:       str # "pending" | "interrupt" | "success" | "exception" | "lookup"
+    status:       str # "pending" | "interrupt" | "success" | "failure" | "exception" | "lookup"
     code:         str
     session:      str
     trace:        str
@@ -68,11 +68,14 @@ class Eval:
             Eval.colors["interrupt"] = try_scopes("region.eval.interrupt", "region.eval.pending", "region.bluish")
             Eval.colors["success"]   = try_scopes("region.eval.success",   "region.greenish")
             Eval.colors["exception"] = try_scopes("region.eval.exception", "region.redish")
+            Eval.colors["failure"]   = try_scopes("region.eval.failure",   "region.eval.exception", "region.redish")
             Eval.colors["lookup"]    = try_scopes("region.eval.lookup",    "region.eval.pending",   "region.bluish")
             Eval.colors["phantom_success_fg"] = try_scopes("region.phantom.success")
             Eval.colors["phantom_success_bg"] = try_scopes("region.phantom.success", key = "background")
             Eval.colors["phantom_exception_fg"] = try_scopes("region.phantom.exception")
             Eval.colors["phantom_exception_bg"] = try_scopes("region.phantom.exception", key = "background")
+            Eval.colors["phantom_failure_fg"] = try_scopes("region.phantom.failure", "region.phantom.exception")
+            Eval.colors["phantom_failure_bg"] = try_scopes("region.phantom.failure", "region.phantom.exception", key = "background")
         scope = scope or self.status
         return Eval.colors[scope]
 
@@ -91,7 +94,7 @@ class Eval:
         if region:
             scope, color = self.scope_color()
             if value:
-                if (self.status in {"success", "exception"}) and (time := cs_common.format_time_taken(time_taken)):
+                if (self.status in {"success", "failure", "exception"}) and (time := cs_common.format_time_taken(time_taken)):
                     value = time + " " + value
                 self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO, [self.escape(value)], color)
             else:
@@ -134,14 +137,25 @@ class Eval:
             pass
 
     def toggle_pprint(self):
-        node = cs_parser.parse(self.value)
-        string = cs_printer.format(self.value, node, limit = cs_common.wrap_width(self.view))
-        styles = """
+        node    = cs_parser.parse(self.value)
+        string  = cs_printer.format(self.value, node, limit = cs_common.wrap_width(self.view))
+        styles  = """
             .light body { background-color: hsl(100, 100%, 90%); }
             .dark body  { background-color: hsl(100, 100%, 10%); }
         """ 
         if phantom_styles := self.phantom_styles("phantom_success"):
-            styles += f".light body, .dark body {{ {phantom_styles}; border: 4px solid #CC3333; }}"
+            styles += f".light body, .dark body {{ { phantom_styles }; border: 4px solid #33CC33; }}"
+        self.toggle_phantom(string, styles)
+
+    def toggle_failure(self):
+        node    = cs_parser.parse(self.value)
+        string  = cs_printer.format(self.value, node, limit = cs_common.wrap_width(self.view))
+        styles  = """
+            .light body { background-color: hsl(0, 100%, 90%); }
+            .dark body  { background-color: hsl(0, 100%, 10%); }
+        """ 
+        if phantom_styles := self.phantom_styles("phantom_failure"):
+            styles += f".light body, .dark body {{ { phantom_styles }; border: 4px solid #CC3333; }}"
         self.toggle_phantom(string, styles)
         
     def toggle_trace(self):
@@ -206,7 +220,9 @@ def on_success(id, value, time = None):
     Callback to be called after conn.eval or conn.load_file
     """
     if (eval := by_id(id)):
-        eval.update('success', value, time_taken = time)
+        failure = re.search(r":fail\s+[1-9]\d*", value) \
+               or re.search(r":error\s+[1-9]\d*", value)
+        eval.update("failure" if failure else "success", value, time_taken = time)
 
 def on_exception(id, value, source = None, line = None, column = None, trace = None):
     """
@@ -225,7 +241,7 @@ def on_done(id):
     else:
         es = [eval for eval in evals.values() if eval.batch_id == id]
     for eval in es:
-        if eval.status not in {"success", "exception"}:
+        if eval.status not in {"success", "failure", "exception"}:
             eval.erase()
 
 def format_lookup(view, info):
@@ -380,6 +396,8 @@ class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
         if eval := by_region(view, sel):
             if eval.status == "exception":
                 eval.toggle_trace()
+            elif eval.status == "failure":
+                eval.toggle_failure()
             elif eval.status == "success":
                 eval.toggle_pprint()
             elif eval.status == 'lookup':

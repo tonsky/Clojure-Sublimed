@@ -1,5 +1,7 @@
 ### WIP
 
+- Add `transform` argument to `clojure_sublimed_eval` #101 #102
+- Display failed tests report as red
 - Socket REPL: fixed escaping in `clojure_sublimed_eval_code` #103 via @KGOH
 
 ### 3.5.0 - Jan 22, 2023
