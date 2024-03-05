@@ -1,0 +1,45 @@
+Clojure Sublimed now allows you to create custom commands that transform code before sending it to eval.
+
+For example, this will pretty-print result of your evaluation to stdout:
+
+```
+{"keys":    ["ctrl+p"],
+ "command": "clojure_sublimed_eval",
+ "args":    {"transform": "(doto %code clojure.pprint/pprint)"}}
+```
+
+`transform` is a format string that takes selected form, formats it according to described rules and then sends resulting code to evaluation.
+
+If you now press `ctrl+p` on a form like `(+ 1 2)`, the actual eval sent to REPL will be:
+
+```
+(doto (+ 1 2) clojure.pprint/pprint)
+```
+
+Which will pretty-print evaluation result to stdout. This pattern might be useful for large results that don’t fit inline.
+
+Another use-case might be “eval to buffer”:
+
+```
+{"keys":    ["ctrl+b"],
+ "command": "chain",
+ "args":    {
+    "commands": [
+      ["clojure_sublimed_eval", {"transform": "(with-open [w (clojure.java.io/writer \"/tmp/sublimed_output.edn\")] (doto %code (clojure.pprint/pprint w)))"}],
+      ["open_file", {"file": "/tmp/sublimed_output.edn"}]
+    ]
+ }
+}
+```
+
+Inside `transform` you can also use `%ns` (current ns) and `%symbol` (if selected form is `def`-something, it will be replaced with defined name, otherwise `nil`).
+
+This allows us to implement “run test under cursor”:
+
+```
+{"keys":    ["super+shift+t"],
+ "command": "clojure_sublimed_eval",
+ "args":    {"transform": "(clojure.test/run-test-var #'%symbol)"}}
+```
+
+Enjoy!

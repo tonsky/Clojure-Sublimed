@@ -214,7 +214,9 @@ Reload code with [clj-reload](https://github.com/tonsky/clj-reload):
 
 ### Transforming code before eval
 
-You can also modify eval to run a transformed version of code under cursor/inside selection. For example, this:
+You can also modify eval to run a transformed version of code under cursor/inside selection.
+
+For example, this will pretty-print result of your evaluation to stdout:
 
 ```
 {"keys":    ["ctrl+p"],

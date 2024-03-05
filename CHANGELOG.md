@@ -1,4 +1,4 @@
-### WIP
+### 3.6.0 - Mar 5, 2024
 
 - Add `transform` argument to `clojure_sublimed_eval` #101 #102
 - Display failed tests report as red
