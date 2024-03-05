@@ -29,7 +29,7 @@ class Eval:
         Eval.last_id += 1
         return Eval.last_id
     
-    def __init__(self, view, region, id = None, batch_id = None):
+    def __init__(self, view, region, id = None, batch_id = None, on_finish_callback = None):
         extended_region = view.line(region)
         erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
         
@@ -46,6 +46,7 @@ class Eval:
         self.trace = None
         self.phantom_id = None
         self.value = None
+        self.on_finish_callback = on_finish_callback
         
         evals[id] = self
         evals_by_view[view.id()][id] = self
@@ -223,6 +224,8 @@ def on_success(id, value, time = None):
         failure = re.search(r":fail\s+[1-9]\d*", value) \
                or re.search(r":error\s+[1-9]\d*", value)
         eval.update("failure" if failure else "success", value, time_taken = time)
+        if on_finish_callback := eval.on_finish_callback:
+            on_finish_callback(eval)
 
 def on_exception(id, value, source = None, line = None, column = None, trace = None):
     """
@@ -234,6 +237,8 @@ def on_exception(id, value, source = None, line = None, column = None, trace = N
         eval.ex_column = column
         eval.trace = trace
         eval.update('exception', value)
+        if on_finish_callback := eval.on_finish_callback:
+            on_finish_callback(eval)
 
 def on_done(id):
     if (eval := by_id(id)):

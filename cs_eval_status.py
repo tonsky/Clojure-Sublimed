@@ -22,6 +22,7 @@ class StatusEval:
         self.ex_line   = None
         self.ex_column = None
         self.trace     = None
+        self.on_finish_callback = None
         
         state.status_eval = self
 

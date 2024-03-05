@@ -64,13 +64,13 @@ class Connection:
         return (code, ns, forms)
 
 
-    def eval(self, view, sel, transform_fn = None):
+    def eval(self, view, sel, transform_fn = None, on_finish_callback = None):
         """
         Eval code and call `cs_eval.on_success(id, value)` or `cs_eval.on_exception(id, value, trace)`
         """
         for selected_region in sel:
             eval_region = self.eval_region(selected_region, view)
-            eval = cs_eval.Eval(view, eval_region)
+            eval = cs_eval.Eval(view, eval_region, on_finish_callback=on_finish_callback)
             (line, column) = view.rowcol_utf16(eval_region.begin())
             line = line + 1
 
