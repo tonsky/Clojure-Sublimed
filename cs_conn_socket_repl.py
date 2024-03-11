@@ -84,7 +84,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
         msg += '}'
         self.send(msg)
 
-    def eval(self, view, sel, transform_fn = None, on_finish_callback = None):
+    def eval(self, view, sel, transform_fn = None, on_finish = None):
         cs_warn.reset_warnings(self.window)
         for selected_region in sel:
             # find regions to eval
@@ -98,7 +98,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
             batch_id = cs_eval.Eval.next_id()
             for idx, form in enumerate(forms):
                 region = sublime.Region(start + form.start, start + form.end)
-                eval = cs_eval.Eval(view, region, id = f'{batch_id}.{idx}', batch_id = batch_id, on_finish_callback=on_finish_callback)
+                eval = cs_eval.Eval(view, region, id = f'{batch_id}.{idx}', batch_id = batch_id, on_finish=on_finish)
 
             # send msg
             (line, column) = view.rowcol_utf16(eval_region.begin())
