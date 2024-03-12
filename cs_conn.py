@@ -197,8 +197,8 @@ class ClojureSublimedReconnectCommand(sublime_plugin.WindowCommand):
     def run(self):
         state = cs_common.get_state(self.window)
         if state.conn:
-            sublime.run_command('clojure_sublimed_disconnect', {})
-        sublime.run_command(*state.last_conn)
+            self.window.run_command('clojure_sublimed_disconnect', {})
+        self.window.run_command(*state.last_conn)
 
     def is_enabled(self):
         state = cs_common.get_state(self.window)

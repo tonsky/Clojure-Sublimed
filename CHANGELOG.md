@@ -1,7 +1,12 @@
+### WIP
+
+- Fixed `Reconnect` command
+- Added optional `on_finish` argument to `cs_conn.eval`
+
 ### 3.6.0 - Mar 5, 2024
 
-- Add `transform` argument to `clojure_sublimed_eval` #101 #102
-- Display failed tests report as red
+- Added optional `transform` argument to `clojure_sublimed_eval` #101 #102
+- Display failed test reports as red
 - Socket REPL: fixed escaping in `clojure_sublimed_eval_code` #103 via @KGOH
 
 ### 3.5.0 - Jan 22, 2023
