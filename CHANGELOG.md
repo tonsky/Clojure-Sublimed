@@ -1,6 +1,8 @@
 ### WIP
 
 - Fixed `Reconnect` command
+- Added `output.repl` panel for raw nREPL output #104
+- Added `Toggle Output Panel` command for raw nREPL connections #104
 - Added optional `on_finish` argument to `cs_conn.eval`
 
 ### 3.6.0 - Mar 5, 2024

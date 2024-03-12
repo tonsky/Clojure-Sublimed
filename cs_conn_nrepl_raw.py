@@ -1,5 +1,5 @@
 import os, sublime, sublime_plugin, threading
-from . import cs_bencode, cs_common, cs_conn, cs_eval, cs_parser, cs_printer
+from . import cs_bencode, cs_common, cs_conn, cs_eval
 
 class ConnectionNreplRaw(cs_conn.Connection):
     """
@@ -7,12 +7,13 @@ class ConnectionNreplRaw(cs_conn.Connection):
     """
     def __init__(self, addr):
         super().__init__()
-        self.addr      = addr
-        self.socket    = None
-        self.reader    = None
-        self.session   = None
-        self.closing   = False
-        self.eval_op   = 'eval'
+        self.addr        = addr
+        self.socket      = None
+        self.reader      = None
+        self.session     = None
+        self.closing     = False
+        self.eval_op     = 'eval'
+        self.output_view = None
 
     def connect_impl(self):
         self.set_status(0, 'Connecting to {}...', self.addr)
@@ -121,14 +122,30 @@ class ConnectionNreplRaw(cs_conn.Connection):
             cs_eval.on_lookup(id, msg['info'])
             return True
 
+    def get_output_view(self):
+        window = self.window
+        if not self.output_view:
+            self.output_view = window.find_output_panel('repl')
+            if self.output_view:
+                self.output_view.run_command("clojure_sublimed_clear_output_panel")
+            else:
+                self.output_view = window.create_output_panel('repl')
+        return self.output_view
+
+    def output(self, text):
+        output_view = self.get_output_view()
+        self.window.run_command("show_panel", {"panel": "output.repl"})
+        output_view.run_command('append', {'characters': text, 'force': True, 'scroll_to_end': True})
+
     def handle_out(self, msg):
         if 'out' in msg:
-            print(msg['out'], end = '')
+            self.output(str(self))
+            self.output(msg['out'])
             return True
 
     def handle_err(self, msg):
         if 'err' in msg:
-            print(msg['err'], end = '')
+            self.output(msg['err'])
             return True
 
     def handle_done(self, msg):
@@ -160,3 +177,19 @@ class ClojureSublimedConnectNreplRawCommand(sublime_plugin.WindowCommand):
     def is_enabled(self):
         state = cs_common.get_state(self.window)
         return state.conn is None
+
+class ClojureSublimedClearOutputPanelCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        self.view.erase(edit, sublime.Region(0, self.view.size()))
+
+class ClojureSublimedToggleOutputPanelCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        window = self.window
+        if window.active_panel() == "output.repl":
+            window.run_command("hide_panel", {"cancel": False})
+        else:
+            window.run_command("show_panel", {"panel": "output.repl"})
+
+    def is_enabled(self):
+        state = cs_common.get_state(self.window)
+        return bool(state.conn and state.conn.ready() and isinstance(state.conn, ConnectionNreplRaw))
