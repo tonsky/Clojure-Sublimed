@@ -1,5 +1,5 @@
 import os, sublime, sublime_plugin, threading
-from . import cs_bencode, cs_common, cs_conn, cs_eval
+from . import cs_bencode, cs_colors, cs_common, cs_conn, cs_eval
 
 class ConnectionNreplRaw(cs_conn.Connection):
     """
@@ -132,20 +132,16 @@ class ConnectionNreplRaw(cs_conn.Connection):
                 self.output_view = window.create_output_panel('repl')
         return self.output_view
 
-    def output(self, text):
-        output_view = self.get_output_view()
-        self.window.run_command("show_panel", {"panel": "output.repl"})
-        output_view.run_command('append', {'characters': text, 'force': True, 'scroll_to_end': True})
-
     def handle_out(self, msg):
         if 'out' in msg:
-            self.output(str(self))
-            self.output(msg['out'])
+            self.window.run_command("show_panel", {"panel": "output.repl"})
+            cs_colors.write(self.get_output_view(), msg['out'])
             return True
 
     def handle_err(self, msg):
         if 'err' in msg:
-            self.output(msg['err'])
+            self.window.run_command("show_panel", {"panel": "output.repl"})
+            cs_colors.write(self.get_output_view(), msg['err'])
             return True
 
     def handle_done(self, msg):
