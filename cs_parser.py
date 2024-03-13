@@ -7,10 +7,10 @@ class Node:
     Optional children. Name from Named ('token', 'string' etc).
     Text is substring[start:end], only for terminal nodes like Regex or String
     """
-    def __init__(self, start, end, children = [], name = None, text = None):
+    def __init__(self, start, end, children = None, name = None, text = None):
         self.start = start
         self.end = end
-        self.children = children
+        self.children = children if children is not None else []
         self.name = name
         self.text = text
 
