@@ -1,4 +1,4 @@
-(require ' [puget.printer :as puget])
+(require '[puget.printer :as puget])
 
 (puget/cprint [nil
                true

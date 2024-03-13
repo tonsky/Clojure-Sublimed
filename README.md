@@ -1,5 +1,3 @@
-# Clojure support for Sublime Text 4
-
 <div align=center><img src="./screenshots/logo.png" width="350"></div>
 
 This package provides Clojure support for Sublime Text and includes:
@@ -8,11 +6,11 @@ This package provides Clojure support for Sublime Text and includes:
 - Code formatter/indenter (Sublime Text 4075+)
 - nREPL, Socket REPL, ShadowCLJS REPL clients (Sublime Text 4075+)
 
-## Installation
+# Installation
 
 `Package Control: Install Package` → `Clojure Sublimed`
 
-## Clojure syntax
+# Clojure syntax
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/syntaxes.png" width="463" height="362" alt="Syntaxes">
 
@@ -33,7 +31,7 @@ How to enable? Assign syntax to Clojure files:
 
 Want to put your parser to test? Check out [syntax_test_edn.edn](./test_syntax/syntax_test_edn.edn) and [syntax_test_clojure.cljc](./test_syntax/syntax_test_clojure.cljc).
 
-## Formatter/indenter
+# Formatter/indenter
 
 Clojure Sublimed includes optional support for [Simple Clojure Formatting rules](https://tonsky.me/blog/clojurefmt/). It doesn’t require REPL connection, any Clojure runtime or external tools.
 
@@ -55,7 +53,7 @@ To enable correct indentations as you type code, rebind `Enter` to `Clojure Subl
 
 Best way to do it is through running `Preferences: Clojure Sublimed Key Bindings`.
 
-## REPL clients
+# REPL clients
 
 Clojure Sublimed REPL clients enable interactive development from the comfort of your editor.
 
@@ -97,7 +95,7 @@ We intentionally excluded following features:
 
 Look at [Sublime LSP](https://github.com/sublimelsp/LSP) with [Clojure LSP](https://github.com/clojure-lsp/clojure-lsp) or [SublimeLinter](https://github.com/SublimeLinter/SublimeLinter) with [clj-kondo](https://github.com/ToxicFrog/SublimeLinter-contrib-clj-kondo) if you need autocompletion.
 
-## How to use
+# How to use
 
 For Clojure apps:
 
@@ -126,7 +124,7 @@ For other nREPL apps:
 1. Run nREPL server.
 2. Run `Clojure Sublimed: Connect to raw nREPL` command.
 
-### Evaluating code from buffer
+## Evaluating code from buffer
 
 From here you have three options:
 
@@ -150,17 +148,17 @@ By default, Clojure Sublimed will also print evaluation time if it takes more th
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_elapsed.png" width="500" height="139" alt="Elapsed time">
 
-### Copying evaluation results
+## Copying evaluation results
 
 Sometimes you want to copy evaluation result. It is recommended to rebind `Cmd+C`/`Ctrl+C` from `copy` to `sublime_clojure_copy`. This will copy evaluation result if inside evaluated region and fallback to default `copy` otherwise.
 
-### Interrupting
+## Interrupting
 
 If your evaluation runs too long and you want to interrupt it, run `Clojure Sublimed: Interrupt Pending Evaluations`:
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/interrupt.png" width="587" height="39" alt="Interrupt">
 
-### Opening stacktrace
+## Opening stacktrace
 
 If your evaluation failed, put your cursor inside failed region and run `Clojure Sublimed: Toggle Stacktrace`:
 
@@ -170,7 +168,21 @@ Clojure Sublimed will display stacktraces in a Clojure-friendly way. Compare wit
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/stacktraces.png" width="806" height="390" alt="Stacktraces">
 
-### Looking up symbol
+## Watches
+
+Watches are great alternative to debug prints: they allow you to monitor intermediate values during function execution right in the editor.
+
+This is how they work:
+
+- Select a right-hand expression
+- Run `Clojure Sublimed: Add Watch` command
+- Now every time function is executed, for any reason, watched expressions will display values they evaluate to, in real time.
+
+![](./screenshots/watch.gif)
+
+Watches are only supported in Socket REPL.
+
+## Looking up symbol
 
 To show symbol info, run `Clojure Sublimed: Toggle Symbol Info`:
 
@@ -178,7 +190,7 @@ To show symbol info, run `Clojure Sublimed: Toggle Symbol Info`:
 
 Universal `Clojure Sublimed: Toggle Info` command acts as either `Toggle Stacktrace` or `Toggle Symbol Info`, depending on context.
 
-### Binding keys to eval custom code
+## Binding keys to eval custom code
 
 Every project is different, and sometimes it’s convenient to run a piece of code so often you’d want it on a shortcut. It might be a namespace reload, test execution, database reconnect, linter, formatter — possibilities are endless.
 
@@ -212,7 +224,7 @@ Reload code with [clj-reload](https://github.com/tonsky/clj-reload):
  "args":    {"code": "(clj-reload.core/reload)"}}
 ```
 
-### Transforming code before eval
+## Transforming code before eval
 
 You can also modify eval to run a transformed version of code under cursor/inside selection.
 
@@ -266,15 +278,15 @@ Run test under cursor at work:
 
 ![](./screenshots/test_under_cursor.gif)
 
-### Clearing results
+## Clearing results
 
 Finally, to clear evaluation results run `Clojure Sublimed: Clear Evaluation Results`.
 
-### Editing settings
+## Editing settings
 
 To edit settings, run `Preferences: Clojure Sublimed Settings` command.
 
-### Session-wide settings
+## Session-wide settings
 
 It is sometimes desirable to set dynamic Clojure vars for the whole session. To do that, edit `"eval_shared"` setting. For example:
 
@@ -284,7 +296,7 @@ It is sometimes desirable to set dynamic Clojure vars for the whole session. To 
 
 This will be applied to every evaluation.
 
-## Default Key Bindings
+# Default Key Bindings
 
 Clojure Sublimed comes with no keybindings enabled by default to guarantee they won’t conflict with any other extension (Sublime Text’s limitation).
 
@@ -303,7 +315,7 @@ Reindent Buffer               | <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>F</kbd> | 
 
 To set it up, run `Preferences: Clojure Sublimed Key Bindings` command and copy example keybindings to your local Key Bindings file.
 
-## stdout/stderr
+# stdout/stderr
 
 Clojure Sublimed does things a little different when it comes to stdout. Normally REPL would show you all stdout/stderr that originated from your session. I find it confusing, because it doesn’t always work and you have to check two places for output. Moreover, there’s no output panel, so there’s no place to show stdout anyway.
 
@@ -311,7 +323,7 @@ So instead, Clojure Sublimed _does not_ redirect neither stdout nor stderr. Chec
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/stdout.png" width="616" height="588" alt="Stdout redirect">
 
-## Frequently Asked Questions
+# Frequently Asked Questions
 
 Q: REPL/eval doesn’t work
 
@@ -324,13 +336,13 @@ Q: How to connect to [a Babashka REPL](https://book.babashka.org/#repl)?
 
 A: Use Raw nREPL.
 
-## Credits
+# Credits
 
 Made by [Niki Tonsky](https://twitter.com/nikitonsky).
 
 With contributions by [Jaihindh Reddy](https://github.com/jaihindhreddy)and [KgOfHedgehogs](https://github.com/KGOH/).
 
-## See also
+# See also
 
 [Writer Color Scheme](https://github.com/tonsky/sublime-scheme-writer): A color scheme optimized for long-form writing.
 
@@ -338,6 +350,6 @@ With contributions by [Jaihindh Reddy](https://github.com/jaihindhreddy)and [KgO
 
 [Sublime Profiles](https://github.com/tonsky/sublime-profiles): Profile switcher.
 
-## License
+# License
 
 [MIT License](./LICENSE.txt)

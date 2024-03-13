@@ -1,6 +1,8 @@
 .github/ export-ignore
 screenshots/ export-ignore
 script/ export-ignore
+test_parser/ export-ignore
+test_printer/ export-ignore
 test_repl/ export-ignore
 test_syntax/ export-ignore
 .gitattributes export-ignore

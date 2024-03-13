@@ -1,6 +1,6 @@
 import collections, html, os, re, sublime, sublime_plugin
 from typing import Any, Dict, Tuple
-from . import cs_common, cs_conn, cs_eval_status, cs_parser, cs_printer, cs_progress
+from . import cs_common, cs_conn, cs_eval_status, cs_parser, cs_printer, cs_progress, cs_watch
 
 evals = {} # Dict[int, Eval]
 evals_by_view = collections.defaultdict(dict) # Dict[int, Dict[int, Eval]]
@@ -12,7 +12,6 @@ class Eval:
     """
     # class
     last_id: int = 9
-    colors:  Dict[str, Tuple[str, str]] = {}
 
     # instance
     id:           int
@@ -57,47 +56,21 @@ class Eval:
     def value_key(self):
         return f"{cs_common.ns}.eval-{self.id}"
 
-    def scope_color(self, scope = None):
-        if not Eval.colors:
-            default = self.view.style_for_scope("source")
-            def try_scopes(*scopes, key = "foreground"):
-                for scope in scopes:
-                    colors = self.view.style_for_scope(scope)
-                    if colors != default:
-                        return (scope, colors.get(key))
-            Eval.colors["pending"]   = try_scopes("region.eval.pending",   "region.bluish")
-            Eval.colors["interrupt"] = try_scopes("region.eval.interrupt", "region.eval.pending", "region.bluish")
-            Eval.colors["success"]   = try_scopes("region.eval.success",   "region.greenish")
-            Eval.colors["exception"] = try_scopes("region.eval.exception", "region.redish")
-            Eval.colors["failure"]   = try_scopes("region.eval.failure",   "region.eval.exception", "region.redish")
-            Eval.colors["lookup"]    = try_scopes("region.eval.lookup",    "region.eval.pending",   "region.bluish")
-            Eval.colors["phantom_success_fg"] = try_scopes("region.phantom.success")
-            Eval.colors["phantom_success_bg"] = try_scopes("region.phantom.success", key = "background")
-            Eval.colors["phantom_exception_fg"] = try_scopes("region.phantom.exception")
-            Eval.colors["phantom_exception_bg"] = try_scopes("region.phantom.exception", key = "background")
-            Eval.colors["phantom_failure_fg"] = try_scopes("region.phantom.failure", "region.phantom.exception")
-            Eval.colors["phantom_failure_bg"] = try_scopes("region.phantom.failure", "region.phantom.exception", key = "background")
-        scope = scope or self.status
-        return Eval.colors[scope]
-
     def region(self):
         regions = self.view.get_regions(self.value_key())
         if regions and len(regions) >= 1:
             return regions[0]
-
-    def escape(self, value):
-        return html.escape(value).replace("\t", "  ").replace(" ", " ")
 
     def update(self, status, value, region = None, time_taken = None):
         self.status = status
         self.value = value
         region = region or self.region()
         if region:
-            scope, color = self.scope_color()
+            scope, color = cs_common.scope_color(self.view, self.status)
             if value:
                 if (self.status in {"success", "failure", "exception"}) and (time := cs_common.format_time_taken(time_taken)):
                     value = time + " " + value
-                self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO, [self.escape(value)], color)
+                self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO, [cs_common.escape(value)], color)
             else:
                 self.view.erase_regions(self.value_key())
                 self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO)
@@ -115,27 +88,13 @@ class Eval:
                 limit = cs_common.wrap_width(self.view)
                 for line in text.splitlines():
                     line = cs_printer.wrap_string(line, limit = limit)
-                    line = self.escape(line)
+                    line = cs_common.escape(line)
                     body += "<p>" + line + "</p>"
                 body += "</body>"
                 region = self.region()
                 if region:
                     point = self.view.line(region.end()).begin()
                     self.phantom_id = self.view.add_phantom(self.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
-
-    def phantom_styles(self, scope):
-        try:
-            styles = []
-            _, fg = self.scope_color(f"{scope}_fg")
-            if fg:
-                styles.append(f"color: {fg};")
-            _, bg = self.scope_color(f"{scope}_bg")
-            if bg:
-                styles.append(f"background-color: {bg};")
-            if styles:
-                return " ".join(styles)
-        except:
-            pass
 
     def toggle_pprint(self):
         node    = cs_parser.parse(self.value)
@@ -144,7 +103,7 @@ class Eval:
             .light body { background-color: hsl(100, 100%, 90%); }
             .dark body  { background-color: hsl(100, 100%, 10%); }
         """ 
-        if phantom_styles := self.phantom_styles("phantom_success"):
+        if phantom_styles := cs_common.phantom_styles(self.view, "phantom_success"):
             styles += f".light body, .dark body {{ { phantom_styles }; border: 4px solid #33CC33; }}"
         self.toggle_phantom(string, styles)
 
@@ -155,7 +114,7 @@ class Eval:
             .light body { background-color: hsl(0, 100%, 90%); }
             .dark body  { background-color: hsl(0, 100%, 10%); }
         """ 
-        if phantom_styles := self.phantom_styles("phantom_failure"):
+        if phantom_styles := cs_common.phantom_styles(self.view, "phantom_failure"):
             styles += f".light body, .dark body {{ { phantom_styles }; border: 4px solid #CC3333; }}"
         self.toggle_phantom(string, styles)
         
@@ -164,7 +123,7 @@ class Eval:
             .light body { background-color: hsl(0, 100%, 90%); }
             .dark body  { background-color: hsl(0, 100%, 10%); }
         """
-        if phantom_styles := self.phantom_styles("phantom_exception"):
+        if phantom_styles := cs_common.phantom_styles(self.view, "phantom_exception"):
             styles += f".light body, .dark body {{ {phantom_styles}; border: 4px solid #CC3333; }}"
         self.toggle_phantom(self.trace, styles)
 
@@ -398,7 +357,9 @@ class ClojureSublimedToggleInfoCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         sel = view.sel()[0]
-        if eval := by_region(view, sel):
+        if watch := cs_watch.by_region(view, sel):
+            watch.toggle()
+        elif eval := by_region(view, sel):
             if eval.status == "exception":
                 eval.toggle_trace()
             elif eval.status == "failure":
@@ -422,6 +383,7 @@ class ClojureSublimedClearEvalsCommand(sublime_plugin.TextCommand):
         state = cs_common.get_state(self.view.window())
         if (eval := state.status_eval) and eval.status not in {"pending", "interrupt"}:
             eval.erase()
+        cs_watch.erase_watches(view = self.view)
 
 class ClojureSublimedInterruptEvalCommand(sublime_plugin.TextCommand):
     """
@@ -454,12 +416,6 @@ class TextChangeListener(sublime_plugin.TextChangeListener):
         def should_erase(eval):
             return not (reg := eval.region()) or any(reg.intersects(r) for r in changed) and view.substr(reg) != eval.code
         erase_evals(should_erase, view)
-
-def on_settings_change(settings):
-    Eval.colors.clear()
-
-def plugin_loaded():
-    cs_common.on_settings_change(__name__, on_settings_change)
 
 def plugin_unloaded():
     erase_evals()

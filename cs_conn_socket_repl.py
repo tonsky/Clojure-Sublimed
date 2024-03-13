@@ -1,5 +1,5 @@
 import json, os, re, sublime, sublime_plugin, threading
-from . import cs_common, cs_conn, cs_eval, cs_eval_status, cs_parser, cs_warn
+from . import cs_common, cs_conn, cs_eval, cs_eval_status, cs_parser, cs_warn, cs_watch
 
 def lines(socket):
     buffer = b''
@@ -33,6 +33,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
         self.reader.start()
 
     def disconnect_impl(self):
+        cs_watch.erase_watches(lambda w: w.view.window() == self.window)
         if self.socket:
             self.socket.close()
             self.socket = None
@@ -91,6 +92,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
             eval_region = self.eval_region(selected_region, view)
 
             # extracting code
+            transform_fn = transform_fn or cs_watch.transform(view)
             (code, ns, forms) = self.code(view, selected_region, eval_region, transform_fn)
             
             # create evals
@@ -139,6 +141,13 @@ class ConnectionSocketRepl(cs_conn.Connection):
             cs_eval.on_success(f'{id}.{idx}', val, time = time)
             return True
 
+    def handle_watch(self, msg):
+        if 'watch' == msg['tag']:
+            id   = msg.get('watch_id')
+            val  = msg.get('val')
+            cs_watch.on_watch(id, val)
+            return True
+
     def handle_exception(self, msg):
         if 'ex' == msg['tag']:
             id      = msg.get('id')
@@ -176,6 +185,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
         self.handle_value(msg) \
         or self.handle_exception(msg) \
         or self.handle_done(msg) \
+        or self.handle_watch(msg) \
         or self.handle_lookup(msg) \
         or self.handle_err(msg)
 

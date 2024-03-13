@@ -1,4 +1,5 @@
-import collections, math, os, re, socket, sublime, sublime_plugin, time, traceback
+import collections, html, math, os, re, socket, sublime, sublime_plugin, time, traceback
+from typing import Any, Dict, Tuple
 
 ns = 'clojure-sublimed'
 
@@ -12,6 +13,7 @@ class State:
     self.last_conn   = None
     self.warnings    = 0
     self.status_eval = None
+    self.watches     = {}
 
 states = collections.defaultdict(lambda: State())
 
@@ -136,6 +138,52 @@ def get_default(d, k, default):
     v = d.get(k, None)
     return v if v is not None else default
 
+def escape(value):
+    return html.escape(value).replace("\t", "  ").replace(" ", " ")
+
+colors: Dict[str, Tuple[str, str]] = {}
+
+def scope_color(view, scope):
+    global colors
+    if not colors:
+        default = view.style_for_scope("source")
+        def try_scopes(*scopes, key = "foreground"):
+            for scope in scopes:
+                colors = view.style_for_scope(scope)
+                if colors != default:
+                    return (scope, colors.get(key))
+        colors["pending"]   = try_scopes("region.eval.pending",   "region.bluish")
+        colors["interrupt"] = try_scopes("region.eval.interrupt", "region.eval.pending", "region.bluish")
+        colors["success"]   = try_scopes("region.eval.success",   "region.greenish")
+        colors["exception"] = try_scopes("region.eval.exception", "region.redish")
+        colors["failure"]   = try_scopes("region.eval.failure",   "region.eval.exception", "region.redish")
+        colors["lookup"]    = try_scopes("region.eval.lookup",    "region.eval.pending",   "region.bluish")
+        colors["watch"]     = try_scopes("region.watch",          "region.purplish")
+        colors["phantom_success_fg"] = try_scopes("region.phantom.success")
+        colors["phantom_success_bg"] = try_scopes("region.phantom.success", key = "background")
+        colors["phantom_exception_fg"] = try_scopes("region.phantom.exception")
+        colors["phantom_exception_bg"] = try_scopes("region.phantom.exception", key = "background")
+        colors["phantom_failure_fg"] = try_scopes("region.phantom.failure", "region.phantom.exception")
+        colors["phantom_failure_bg"] = try_scopes("region.phantom.failure", "region.phantom.exception", key = "background")
+        colors["phantom_watch_fg"] = try_scopes("region.phantom.watch")
+        colors["phantom_watch_bg"] = try_scopes("region.phantom.watch", key = "background")
+    return colors[scope]
+
+def phantom_styles(view, scope):
+    try:
+        styles = []
+        _, fg = cs_common.scope_color(view, f"{scope}_fg")
+        if fg:
+            styles.append(f"color: {fg};")
+        _, bg = cs_common.scope_color(view, f"{scope}_bg")
+        if bg:
+            styles.append(f"background-color: {bg};")
+        if styles:
+            return " ".join(styles)
+    except:
+        pass
+
+
 class SocketIO:
     """
     Simple buffered interface around socket that let you read N bytes at a time
@@ -208,6 +256,7 @@ def plugin_loaded():
     elif os.path.isdir(package_path):
         # Package is a directory, so get its basename
         package = os.path.basename(package_path)
+    on_settings_change(__name__, lambda _: colors.clear())
 
 def plugin_unloaded():
     for state in states.values(): 

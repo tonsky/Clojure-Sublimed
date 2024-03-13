@@ -1,14 +1,18 @@
 (ns clojure-sublimed.socket-repl
   (:require
     [clojure.string :as str]
+    [clojure.walk :as walk]
     [clojure-sublimed.core :as core])
   (:import
     [java.io FilterWriter Reader StringReader Writer]
     [java.lang.reflect Field]
-    [clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader LispReader LispReader$ReaderException RT]))
+    [clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader LispReader LispReader$ReaderException RT TaggedLiteral]))
 
 (defonce ^:dynamic *out-fn*
   prn)
+
+(defonce *out-fns
+  (atom #{}))
 
 (defonce ^:dynamic *context*
   nil)
@@ -77,8 +81,8 @@
                  (do
                    (require ns)
                    (find-ns ns)))
-        ;; "Adapted from clojure.lang.Compiler/load
-        ;; Does not bind *uncheked-math*, *warn-on-reflection* and *data-readers*"
+        ;; Adapted from clojure.lang.Compiler/load
+        ;; Does not bind *uncheked-math*, *warn-on-reflection* and *data-readers*
         eof    (Object.)
         opts   {:eof       eof
                 :read-cond :allow}
@@ -194,38 +198,51 @@
         {"tag" "ex"
          "val" (str "Symbol '" symbol " not found in ns '" ns)}))))
 
+(defmacro watch [id form]
+  `(let [res# ~form
+         msg# {"tag"      "watch"
+               "val"      (core/bounded-pr-str res#)
+               "watch_id" ~id}]
+     (doseq [out-fn# @*out-fns]
+       (out-fn# msg#))
+     res#))
+
 (defn out-fn [out]
   (let [lock (Object.)]
     #(locking lock
        (binding [*out*            out
                  *print-readably* true]
-         (prn (merge (some-> *context* deref) %))))))
+         (prn (merge (sorted-map) (some-> *context* deref) %))))))
 
 (defn repl []
   (let [out-fn (out-fn *out*)]
-    (binding [*out-fn* out-fn
-              *out*    (core/duplicate-writer (.getRawRoot #'*out*) "out" out-fn)
-              *err*    (core/duplicate-writer (.getRawRoot #'*err*) "err" out-fn)
-              core/*changed-vars (atom {})]
-      (out-fn {"tag" "started"})
-      (loop []
-        (when
-          (binding [*context* (volatile! {})]
-            (try
-              (let [form (read-command *in*)]
-                (core/set-changed-vars!)
-                (when-some [id (form "id")]
-                  (vswap! *context* assoc "id" id))
-                (case (get form "op")
-                  "eval"      (fork-eval form)
-                  "interrupt" (interrupt form)
-                  "lookup"    (lookup-symbol form)
-                  (throw (Exception. (str "Unknown op: " (get form "op")))))
-                true)
-              (catch Throwable t
-                (when-not (-> t ex-data ::stop)
-                  (report-throwable t)
-                  true))))
-          (recur)))
-      (doseq [[id f] @*evals]
-        (future-cancel f)))))
+    (try
+      (swap! *out-fns conj out-fn)
+      (binding [*out-fn* out-fn
+                *out*    (core/duplicate-writer (.getRawRoot #'*out*) "out" out-fn)
+                *err*    (core/duplicate-writer (.getRawRoot #'*err*) "err" out-fn)
+                core/*changed-vars (atom {})]
+        (out-fn {"tag" "started"})
+        (loop []
+          (when
+            (binding [*context* (volatile! {})]
+              (try
+                (let [form (read-command *in*)]
+                  (core/set-changed-vars!)
+                  (when-some [id (form "id")]
+                    (vswap! *context* assoc "id" id))
+                  (case (get form "op")
+                    "eval"      (fork-eval form)
+                    "interrupt" (interrupt form)
+                    "lookup"    (lookup-symbol form)
+                    (throw (Exception. (str "Unknown op: " (get form "op")))))
+                  true)
+                (catch Throwable t
+                  (when-not (-> t ex-data ::stop)
+                    (report-throwable t)
+                    true))))
+            (recur)))
+        (doseq [[id f] @*evals]
+          (future-cancel f)))
+      (finally
+        (swap! *out-fns disj out-fn)))))
