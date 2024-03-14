@@ -1,0 +1,13 @@
+New feature in Clojure Sublimed: Watches!
+
+Watches are great alternative to debug prints: they allow you to monitor intermediate values during function execution right in the editor.
+
+This is how they work:
+
+- Select a right-hand expression
+- Run `Clojure Sublimed: Add Watch` command
+- Now every time function is executed, for any reason, watched expressions will display values they evaluate to, in real time.
+
+For now watches are only supported in Socket REPL.
+
+Enjoy!

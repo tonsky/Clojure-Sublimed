@@ -1,4 +1,4 @@
-### WIP
+### 3.7.0 - Mar 14, 2024
 
 - New feature: Watches! Added `Add Watch` command
 - Added `output.repl` panel for raw nREPL output #104
