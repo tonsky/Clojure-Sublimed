@@ -29,8 +29,8 @@ class Eval:
         return Eval.last_id
     
     def __init__(self, view, region, id = None, batch_id = None, on_finish = None):
-        extended_region = view.line(region)
-        erase_evals(lambda eval: eval.region() and eval.region().intersects(extended_region), view)
+        line = view.line(region)
+        erase_evals(lambda eval: eval.region() and eval.region().intersects(line), view)
         
         id = id or Eval.next_id()
         self.id = id
@@ -53,11 +53,11 @@ class Eval:
         self.update("pending", cs_progress.phase(), region)
         cs_progress.wake()        
 
-    def value_key(self):
+    def region_key(self):
         return f"{cs_common.ns}.eval-{self.id}"
 
     def region(self):
-        regions = self.view.get_regions(self.value_key())
+        regions = self.view.get_regions(self.region_key())
         if regions and len(regions) >= 1:
             return regions[0]
 
@@ -70,10 +70,10 @@ class Eval:
             if value:
                 if (self.status in {"success", "failure", "exception"}) and (time := cs_common.format_time_taken(time_taken)):
                     value = time + " " + value
-                self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO, [cs_common.escape(value)], color)
+                self.view.add_regions(self.region_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO, [cs_common.escape(value)], color)
             else:
-                self.view.erase_regions(self.value_key())
-                self.view.add_regions(self.value_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO)
+                self.view.erase_regions(self.region_key())
+                self.view.add_regions(self.region_key(), [region], scope, '', sublime.DRAW_NO_FILL + sublime.NO_UNDO)
 
     def toggle_phantom(self, text, styles):
         if text:
@@ -94,7 +94,7 @@ class Eval:
                 region = self.region()
                 if region:
                     point = self.view.line(region.end()).begin()
-                    self.phantom_id = self.view.add_phantom(self.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
+                    self.phantom_id = self.view.add_phantom(self.region_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
 
     def toggle_pprint(self):
         node    = cs_parser.parse(self.value)
@@ -128,7 +128,7 @@ class Eval:
         self.toggle_phantom(self.trace, styles)
 
     def erase(self, interrupt = True):
-        self.view.erase_regions(self.value_key())
+        self.view.erase_regions(self.region_key())
         if self.phantom_id:
             self.view.erase_phantom_by_id(self.phantom_id)
 
@@ -269,7 +269,7 @@ def on_lookup(id, value):
         view = eval.view
         body = format_lookup(view, value)
         point = view.line(eval.region().end()).begin()
-        eval.phantom_id = view.add_phantom(eval.value_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
+        eval.phantom_id = view.add_phantom(eval.region_key(), sublime.Region(point, point), body, sublime.LAYOUT_BLOCK)
 
 def format_code_fn(s):
     def transform_fn(code, **kwargs):
@@ -419,4 +419,3 @@ class TextChangeListener(sublime_plugin.TextChangeListener):
 
 def plugin_unloaded():
     erase_evals()
-    cs_common.clear_settings_change(__name__)
