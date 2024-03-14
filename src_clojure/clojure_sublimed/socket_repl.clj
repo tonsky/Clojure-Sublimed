@@ -150,22 +150,23 @@
                  (finally
                    (pop-thread-bindings)))]))
 
-(defn fork-eval [{:strs [id] :as form}]
+(defn fork-eval [{:strs [id print_quota] :as form}]
   (swap! *evals assoc id 
     (future
-      (try
-        (core/track-vars
-          (eval-code form))
-        (catch Throwable t
-          (try
-            (report-throwable t)
-            (catch Throwable t
-              :ignore)))
-        (finally
-          (swap! *evals dissoc id)
-          (vswap! *context* dissoc "idx" "from_line" "from_column" "to_line" "to_column" "form")
-          (*out-fn*
-            {"tag" "done"}))))))
+      (binding [core/*print-quota* (or print_quota core/*print-quota*)]
+        (try
+          (core/track-vars
+            (eval-code form))
+          (catch Throwable t
+            (try
+              (report-throwable t)
+              (catch Throwable t
+                :ignore)))
+          (finally
+            (swap! *evals dissoc id)
+            (vswap! *context* dissoc "idx" "from_line" "from_column" "to_line" "to_column" "form")
+            (*out-fn*
+              {"tag" "done"})))))))
  
 (defn interrupt [{:strs [id]}]
   (when-some [f (@*evals id)]

@@ -65,10 +65,13 @@ class ConnectionSocketRepl(cs_conn.Connection):
         self.socket.sendall(msg.encode())
 
     def eval_impl(self, form):
-        msg = ('{' +
-              f'"id" {form.id}, ' +
-              f'"op" "eval", ' +
-              f'"ns" "{form.ns}", ')
+        msg = f'{{' + \
+              f'"id" {form.id}, ' + \
+              f'"op" "eval", ' + \
+              f'"ns" "{form.ns}", '
+
+        if form.print_quota is not None:
+            msg += f'"print_quota" {form.print_quota}, '
 
         code = form.code.replace('\\', '\\\\').replace('"', '\\"')
         msg += f'"code" "{code}"'
@@ -82,10 +85,10 @@ class ConnectionSocketRepl(cs_conn.Connection):
         if form.column is not None:
             msg += f', "column" {form.column}'
 
-        msg += '}'
+        msg += f'}}'
         self.send(msg)
 
-    def eval(self, view, sel, transform_fn = None, on_finish = None):
+    def eval(self, view, sel, transform_fn = None, print_quota = None, on_finish = None):
         cs_warn.reset_warnings(self.window)
         for selected_region in sel:
             # find regions to eval
@@ -110,7 +113,8 @@ class ConnectionSocketRepl(cs_conn.Connection):
                 ns   = ns,
                 line = line + 1,
                 column = column,
-                file = view.file_name()
+                file = view.file_name(),
+                print_quota = print_quota if print_quota is not None else cs_common.setting('print_quota')
             )
             self.eval_impl(form)
 

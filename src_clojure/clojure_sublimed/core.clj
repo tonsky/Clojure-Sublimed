@@ -7,7 +7,7 @@
     [java.io BufferedWriter OutputStream OutputStreamWriter PrintWriter Writer]))
 
 (def ^:dynamic *print-quota*
-  1024)
+  4096)
 
 (def quota-marker
   {})
@@ -44,7 +44,9 @@
         (.close writer)))))
 
 (defn bounded-pr-str [x]
-  (let [writer (bounded-writer (java.io.StringWriter.) *print-quota*)]
+  (let [writer (if (> *print-quota* 0)
+                 (bounded-writer (java.io.StringWriter.) *print-quota*)
+                 (java.io.StringWriter.))]
     (try
       (binding [*out* writer]
         (pr x))

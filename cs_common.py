@@ -23,13 +23,14 @@ def get_state(window = None):
     return states[window.id()]
 
 class Form:
-    def __init__(self, id = None, code = None, ns = 'user', line = None, column = None, file = None):
+    def __init__(self, id = None, code = None, ns = 'user', line = None, column = None, file = None, print_quota = None):
         self.id     = id
         self.code   = code
         self.ns     = ns
         self.line   = line
         self.column = column
         self.file   = file
+        self.print_quota = print_quota
 
 def settings():
     """

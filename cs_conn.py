@@ -64,7 +64,7 @@ class Connection:
         return (code, ns, forms)
 
 
-    def eval(self, view, sel, transform_fn = None, on_finish = None):
+    def eval(self, view, sel, transform_fn = None, print_quota = None, on_finish = None):
         """
         Eval code and call `cs_eval.on_success(id, value)` or `cs_eval.on_exception(id, value, trace)`
         """
@@ -82,7 +82,8 @@ class Connection:
                     ns     = ns,
                     line   = line,
                     column = column,
-                    file   = view.file_name())
+                    file   = view.file_name(),
+                    print_quota = print_quota)
             self.eval_impl(form)
 
     def eval_status(self, code, ns):

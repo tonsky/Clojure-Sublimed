@@ -13,9 +13,27 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
         if self.ready():
             ns = cs_common.ns + '.middleware'
             msg['nrepl.middleware.caught/caught'] = ns + '/print-root-trace'
-            msg['nrepl.middleware.print/print']   = ns + '/pprint'
-            msg['nrepl.middleware.print/quota']   = 4096
+            if 'nrepl.middleware.print/quota' not in msg:
+                msg['nrepl.middleware.print/quota'] = cs_common.setting('print_quota', 4096)
+            if 0 == msg['nrepl.middleware.print/quota']:
+                del msg['nrepl.middleware.print/quota']
         super().send(msg)
+
+    def eval_impl(self, form):
+        msg = {'id':      form.id,
+               'session': self.session,
+               'op':      self.eval_op,
+               'code':    form.code,
+               'ns':      form.ns}
+        if (line := form.line) is not None:
+            msg['line'] = line
+        if (column := form.column) is not None:
+            msg['column'] = column
+        if (file := form.file) is not None:
+            msg['file'] = file
+        if form.print_quota is not None:
+            msg['nrepl.middleware.print/quota'] = form.print_quota
+        self.send(msg)
 
     def interrupt_impl(self, batch_id, id):
         eval = cs_eval.by_id(id)

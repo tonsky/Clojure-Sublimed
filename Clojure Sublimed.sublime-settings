@@ -33,6 +33,9 @@
   // how often to update animation
   "progress_interval_ms": 100,
 
+  // values larger than this will be truncated. Set to 0 to disable truncation
+  "print_quota": 4096,
+
   // When true, all evals will happen in a single session. This makes 
   // dynamic vars like `*e` or `*warn-on-reflection*` persistent, but also
   // makes all evaluations strictly sequential (new eval will not start until

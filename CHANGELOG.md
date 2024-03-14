@@ -1,11 +1,11 @@
 ### WIP
 
-- New feature: Watches!
-- Added `Add Watch` command
-- Fixed `Reconnect` command
+- New feature: Watches! Added `Add Watch` command
 - Added `output.repl` panel for raw nREPL output #104
 - Added `Toggle Output Panel` command for raw nREPL connections #104
+- Fixed `Reconnect` command
 - Added optional `on_finish` argument to `cs_conn.eval`
+- Added `print_quota` as a setting and as an argument to `cs_conn.eval`
 
 ### 3.6.0 - Mar 5, 2024
 
