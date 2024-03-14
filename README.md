@@ -85,9 +85,9 @@ All four support same basic features (eval, lookup, interrupt on JVM), maybe wit
 How to choose which REPL to use?
 
 1. Are you on JVM? Use Socket REPL.
-2. CLJS? Use ShadowCLJS REPL.
-3. Only have basic nREPL? Use Raw nREPL.
-4. JVM nREPL is mostly a carryover from Clojure Sublime v1-2 and is now superseded by Socket REPL. Works better than Raw nREPL but worse than Socket REPL.
+2. On JVM and only have nREPL? Use JVM nREPL.
+3. CLJS? Use ShadowCLJS REPL.
+4. Otherwise (e.g. babashka) use Raw nREPL.
 
 We intentionally excluded following features:
 
