@@ -1,3 +1,7 @@
+### 3.7.1 - Mar 15, 2024
+
+- Added `expand` argument to `clojure_sublimed_eval` command
+
 ### 3.7.0 - Mar 14, 2024
 
 - New feature: Watches! Added `Add Watch` command

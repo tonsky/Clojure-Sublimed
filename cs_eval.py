@@ -283,12 +283,18 @@ class ClojureSublimedEvalCommand(sublime_plugin.TextCommand):
     """
     Eval selected code or topmost form is selection is collapsed
     """
-    def run(self, edit, print_quota = None, transform = None):
+    def run(self, edit, print_quota = None, transform = None, expand = False):
         state = cs_common.get_state(self.view.window())
+        
+        transform_fn = None
         if transform:
-            state.conn.eval(self.view, self.view.sel(), format_code_fn(transform), print_quota = print_quota)
-        else:
-            state.conn.eval(self.view, self.view.sel(), print_quota = print_quota)
+            transform_fn = format_code_fn(transform)
+        
+        on_finish = None
+        if expand:
+            on_finish = lambda _: self.view.run_command("clojure_sublimed_toggle_info", {})
+        
+        state.conn.eval(self.view, self.view.sel(), transform_fn = transform_fn, print_quota = print_quota, on_finish = on_finish)
 
     def is_enabled(self):
         return cs_conn.ready(self.view.window())

@@ -246,6 +246,15 @@ If you now press `ctrl+p` on a form like `(+ 1 2)`, the actual eval sent to REPL
 
 Which will pretty-print evaluation result to stdout. This pattern might be useful for large results that don’t fit inline.
 
+We can implement macroexpand this way:
+
+```
+{"keys":    ["ctrl+e"],
+ "command": "clojure_sublimed_eval",
+ "args":    {"transform": "(macroexpand-1 '%code)",
+             "expand": true}}
+```
+
 Another use-case might be “eval to buffer”:
 
 ```
