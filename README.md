@@ -349,7 +349,7 @@ A: Use Raw nREPL.
 
 Made by [Niki Tonsky](https://twitter.com/nikitonsky).
 
-With contributions by [Jaihindh Reddy](https://github.com/jaihindhreddy)and [KgOfHedgehogs](https://github.com/KGOH/).
+With contributions by [Jaihindh Reddy](https://github.com/jaihindhreddy) and [KgOfHedgehogs](https://github.com/KGOH/).
 
 # See also
 
