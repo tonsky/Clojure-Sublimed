@@ -1,3 +1,7 @@
+### 3.7.2 - May 5, 2024
+
+- Some defensive coding around default settings fallback #109
+
 ### 3.7.1 - Mar 15, 2024
 
 - Added `expand` argument to `clojure_sublimed_eval` command

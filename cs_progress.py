@@ -9,7 +9,7 @@ class ProgressThread:
     def __init__(self):
         self.running = False
         self.condition = threading.Condition()
-        self.phases = None
+        self.phases = ["🕐", "🕑", "🕒", "🕓", "🕔", "🕕", "🕖", "🕗", "🕘", "🕙", "🕚", "🕛"]
         self.phase_idx = 0
         self.interval = 100
 
@@ -72,7 +72,7 @@ class EventListener(sublime_plugin.EventListener):
         thread.wake()
 
 def on_settings_change(settings):
-    thread.update_phases(settings["progress_phases"], settings["progress_interval_ms"])
+    thread.update_phases(settings.get("progress_phases", ["🕐", "🕑", "🕒", "🕓", "🕔", "🕕", "🕖", "🕗", "🕘", "🕙", "🕚", "🕛"]), settings.get("progress_interval_ms", 100))
 
 def plugin_loaded():
     cs_common.on_settings_change(__name__, on_settings_change)

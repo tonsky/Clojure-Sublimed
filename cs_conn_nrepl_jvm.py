@@ -64,7 +64,7 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
 
         elif 3 == msg.get('id') and 'done' in msg.get('status', []):
             self.set_status(2, 'Adding middlewares...')
-            eval_shared = cs_common.setting('eval_shared')
+            eval_shared = cs_common.setting('eval_shared', '')
             ns = cs_common.ns + '.middleware'
             self.send({'id':               4 if eval_shared else 5,
                        'session':          self.session,
