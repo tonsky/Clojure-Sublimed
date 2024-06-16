@@ -1,7 +1,7 @@
 ### 3.7.3 - June 16, 2024
 
-- Fixed Socket REPL not working on Windows
-- Fixed Exception in settings on first install 
+- Fixed Socket REPL not working on Windows #95
+- Fixed Exception in settings on first install #109
 
 ### 3.7.2 - May 5, 2024
 
