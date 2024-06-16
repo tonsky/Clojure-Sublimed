@@ -1,3 +1,8 @@
+### 3.7.3 - June 16, 2024
+
+- Fixed Socket REPL not working on Windows
+- Fixed Exception in settings on first install 
+
 ### 3.7.2 - May 5, 2024
 
 - Some defensive coding around default settings fallback #109
