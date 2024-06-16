@@ -15,6 +15,9 @@ def lines(socket):
     if buffer:
         yield buffer.decode()
 
+def escape(s):
+    return s.replace('\\', '\\\\').replace('"', '\\"')
+
 class ConnectionSocketRepl(cs_conn.Connection):
     """
     Upgraded Socket REPL: does what nREPL JVM does, but without extra dependencies
@@ -73,11 +76,10 @@ class ConnectionSocketRepl(cs_conn.Connection):
         if form.print_quota is not None:
             msg += f'"print_quota" {form.print_quota}, '
 
-        code = form.code.replace('\\', '\\\\').replace('"', '\\"')
-        msg += f'"code" "{code}"'
+        msg += f'"code" "{escape(form.code)}"'
 
         if form.file:
-            msg += f', "file" "{form.file}"'
+            msg += f', "file" "{escape(form.file)}"'
 
         if form.line is not None:
             msg += f', "line" {form.line}'
