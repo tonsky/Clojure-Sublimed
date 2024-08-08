@@ -96,7 +96,7 @@ def format_time_taken(time_taken):
     """
     Human-readable time taken (ms or sec)
     """
-    threshold = setting("elapsed_threshold_ms")
+    threshold = setting("elapsed_threshold_ms" ,100)
     if threshold != None and time_taken != None:
         elapsed = time_taken / 1000
         if elapsed * 1000 >= threshold:

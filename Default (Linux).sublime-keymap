@@ -46,14 +46,9 @@
  //  "command": "clojure_sublimed_copy",
  //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
  
- // // Reindent Lines
+ // // Reindent
  // {"keys": ["ctrl+alt+f"],
- //  "command": "clojure_sublimed_reindent_lines",
- //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
-
- // // Reindent Buffer
- // {"keys": ["ctrl+alt+shift+f"],
- //  "command": "clojure_sublimed_reindent_buffer",
+ //  "command": "clojure_sublimed_reindent",
  //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
  // // Insert New Line

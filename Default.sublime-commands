@@ -61,6 +61,10 @@
         "command": "clojure_sublimed_clear_evals"
     },
     {
+        "caption": "Clojure Sublimed: Reindent",
+        "command": "clojure_sublimed_reindent"
+    },
+    {
         "caption": "Clojure Sublimed: Reindent Lines",
         "command": "clojure_sublimed_reindent_lines"
     },

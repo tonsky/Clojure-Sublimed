@@ -279,12 +279,13 @@ def format_code_fn(s):
             .replace(r"%ns", cs_common.get_default(kwargs, 'ns', 'user'))
     return transform_fn
 
-class ClojureSublimedEvalCommand(sublime_plugin.TextCommand):
+class ClojureSublimedEvalCommand(sublime_plugin.WindowCommand):
     """
     Eval selected code or topmost form is selection is collapsed
     """
-    def run(self, edit, print_quota = None, transform = None, expand = False):
-        state = cs_common.get_state(self.view.window())
+    def run(self, print_quota = None, transform = None, expand = False):
+        view = self.window.active_view()
+        state = cs_common.get_state(self.window)
         
         transform_fn = None
         if transform:
@@ -292,12 +293,12 @@ class ClojureSublimedEvalCommand(sublime_plugin.TextCommand):
         
         on_finish = None
         if expand:
-            on_finish = lambda _: self.view.run_command("clojure_sublimed_toggle_info", {})
+            on_finish = lambda _: view.run_command("clojure_sublimed_toggle_info", {})
         
-        state.conn.eval(self.view, self.view.sel(), transform_fn = transform_fn, print_quota = print_quota, on_finish = on_finish)
+        state.conn.eval(view, view.sel(), transform_fn = transform_fn, print_quota = print_quota, on_finish = on_finish)
 
-    def is_enabled(self):
-        return cs_conn.ready(self.view.window())
+    def is_enabled(self):    
+        return self.window.active_view() and cs_conn.ready(self.window)
 
 class ClojureSublimedEvalBufferCommand(sublime_plugin.TextCommand):
     """

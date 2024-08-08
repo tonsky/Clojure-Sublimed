@@ -1,3 +1,7 @@
+### 3.8.0 - Aug 8, 2024
+
+- `clojure_sublimed_reindent` command that reindents entire buffer if selection is empty and only selected lines if not
+
 ### 3.7.3 - June 16, 2024
 
 - Fixed Socket REPL not working on Windows #95

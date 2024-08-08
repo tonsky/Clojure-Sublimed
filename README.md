@@ -35,9 +35,7 @@ Want to put your parser to test? Check out [syntax_test_edn.edn](./test_syntax/s
 
 Clojure Sublimed includes optional support for [Simple Clojure Formatting rules](https://tonsky.me/blog/clojurefmt/). It doesn’t require REPL connection, any Clojure runtime or external tools.
 
-To reformat whole file, run `Clojure Sublimed: Reindent Buffer`.
-
-To reindent only selected line(s), run `Clojure Sublimed: Reindent Lines`.
+To reformat whole file, run `Clojure Sublimed: Reindent`. If you have non-empty selection, it will only reformat selected lines.
 
 To enable reindenting/formatting on save, add `format_on_save: true` to settings. ([See how to edit settings](#editing-settings))
 

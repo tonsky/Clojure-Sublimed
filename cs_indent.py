@@ -134,6 +134,14 @@ class ClojureSublimedReindentLinesCommand(sublime_plugin.TextCommand):
         with cs_common.Measure("Reindent Lines {}", view.sel()):
             indent_lines(view, view.sel(), edit)
 
+class ClojureSublimedReindentCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        if all(r.empty() for r in view.sel()):
+            view.run_command('clojure_sublimed_reindent_buffer')
+        else:
+            view.run_command('clojure_sublimed_reindent_lines')
+
 class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
