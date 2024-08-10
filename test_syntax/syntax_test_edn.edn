@@ -87,7 +87,7 @@ string"
 ; ^^^ -constant.character.edn
 
 
-;; COMMENTS
+;; LINE COMMENTS
   ; single semicolon
 ; ^^^^^^^^^^^^^^^^^^ comment.line.semicolon.edn
 ; ^                  punctuation.definition.comment.edn
@@ -95,10 +95,154 @@ string"
   "abc" ; after something
 ;       ^^^^^^^^^^^^^^^^^ comment.line.semicolon.edn
 ;       ^                 punctuation.definition.comment.edn
-  #_(abc) #_[123] #_xyz
-; ^^ comment.block.edn & punctuation.definition.comment.edn
-;         ^^ comment.block.edn & punctuation.definition.comment.edn
-;                 ^^ comment.block.edn & punctuation.definition.comment.edn
+
+;; READER COMMENTS
+  #_abc #_"abc" #_123 #_:kw #_nil #_\a #_1.23 #_1/2 
+; ^^ punctuation.definition.comment.edn
+; ^^^^^ comment.block.hashtag.edn
+;      ^ - comment
+;       ^^ punctuation.definition.comment.edn
+;       ^^^^^^^ comment.block.hashtag.edn
+;              ^ - comment
+;               ^^ punctuation.definition.comment.edn
+;               ^^^^^ comment.block.hashtag.edn
+;                    ^ - comment
+;                     ^^ punctuation.definition.comment.edn
+;                     ^^^^^ comment.block.hashtag.edn
+;                          ^ - comment
+;                           ^^ punctuation.definition.comment.edn
+;                           ^^^^^ comment.block.hashtag.edn
+;                                ^ - comment
+;                                 ^^ punctuation.definition.comment.edn
+;                                 ^^^^ comment.block.hashtag.edn
+;                                     ^ - comment
+;                                      ^^ punctuation.definition.comment.edn
+;                                      ^^^^^^ comment.block.hashtag.edn
+;                                            ^ - comment
+;                                             ^^ punctuation.definition.comment.edn
+;                                             ^^^^^ comment.block.hashtag.edn
+;                                                  ^ - comment
+
+  #_[a [b c]] #_[] #_[[]] [#_abc] [[#_abc]] [[#_abc] []] [#_[abc]] [#_[abc[def]] []]
+; ^^^^^^^^^^^ comment.block.hashtag.edn
+;            ^ - comment
+;             ^^^^ comment.block.hashtag.edn
+;                 ^ - comment
+;                  ^^^^^^ comment.block.hashtag.edn
+;                        ^^ - comment
+;                          ^^^^^ comment.block.hashtag.edn
+;                               ^^^^ - comment
+;                                   ^^^^^ comment.block.hashtag.edn
+;                                        ^^^^^ - comment
+;                                             ^^^^^ comment.block.hashtag.edn
+;                                                  ^^^^^^^ - comment
+;                                                         ^^^^^^^ comment.block.hashtag.edn
+;                                                                ^^^ - comment
+;                                                                   ^^^^^^^^^^^^ comment.block.hashtag.edn
+;                                                                               ^^^^ - comment
+
+  #_(a (b c)) #_() #_(()) (#_abc) ((#_abc)) ((#_abc) ()) (#_(abc)) (#_(abc(def)) ())
+; ^^^^^^^^^^^ comment.block.hashtag.edn
+;            ^ - comment
+;             ^^^^ comment.block.hashtag.edn
+;                 ^ - comment
+;                  ^^^^^^ comment.block.hashtag.edn
+;                        ^^ - comment
+;                          ^^^^^ comment.block.hashtag.edn
+;                               ^^^^ - comment
+;                                   ^^^^^ comment.block.hashtag.edn
+;                                        ^^^^^ - comment
+;                                             ^^^^^ comment.block.hashtag.edn
+;                                                  ^^^^^^^ - comment
+;                                                         ^^^^^^^ comment.block.hashtag.edn
+;                                                                ^^^ - comment
+;                                                                   ^^^^^^^^^^^^ comment.block.hashtag.edn
+;                                                                               ^^^^ - comment
+
+  #_{a {b c}} #_{} #_{{}} {#_abc} {{#_abc}} {{#_abc} {}} {#_{abc}} {#_{abc{def}} {}}
+; ^^^^^^^^^^^ comment.block.hashtag.edn
+;            ^ - comment
+;             ^^^^ comment.block.hashtag.edn
+;                 ^ - comment
+;                  ^^^^^^ comment.block.hashtag.edn
+;                        ^^ - comment
+;                          ^^^^^ comment.block.hashtag.edn
+;                               ^^^^ - comment
+;                                   ^^^^^ comment.block.hashtag.edn
+;                                        ^^^^^ - comment
+;                                             ^^^^^ comment.block.hashtag.edn
+;                                                  ^^^^^^^ - comment
+;                                                         ^^^^^^^ comment.block.hashtag.edn
+;                                                                ^^^ - comment
+;                                                                   ^^^^^^^^^^^^ comment.block.hashtag.edn
+;                                                                               ^^^^ - comment
+
+; touching forms
+  #_[abc]def #_abc[def] #_[abc][def]
+; ^^^^^^^ comment.block.hashtag.edn
+;        ^^^^ - comment
+;            ^^^^^ comment.block.hashtag.edn
+;                 ^^^^^^ - comment
+;                       ^^^^^^^ comment.block.hashtag.edn
+;                              ^^^^^ - comment
+
+; whitespace
+  #_ abc def #_,abc def
+; ^^^^^^ comment.block.hashtag.edn
+;       ^^^^^ - comment
+;            ^^^^^^ comment.block.hashtag.edn
+;                  ^^^^ - comment
+
+; double reader comment
+  #_#_abc def ghi
+; ^^^^^^^^^^^ comment.block.hashtag.edn
+;            ^^^^ - comment
+
+  #_#_abc #_def ghi jkl
+; ^^^^^^^^^^^^^^^^^ comment.block.hashtag.edn
+;                  ^^^^ - comment
+
+  #_#_#_#_#_#_#_a b c d e f g h i j k
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment.block.hashtag.edn
+;                            ^^^^^^^^ - comment
+
+  #_#_[abc][def][ghi]
+; ^^^^^^^^^^^^^^ comment.block.hashtag.edn
+;               ^^^^^ - comment
+
+  #_#_[abc]#_[def][ghi][jkl]
+; ^^^^^^^^^^^^^^^^^^^^^ comment.block.hashtag.edn
+;                      ^^^^^ - comment
+
+; multiline
+
+  #_
+; ^^ comment.block.hashtag.edn
+  a
+; ^ comment.block.hashtag.edn
+  b
+; ^ - comment
+
+  #_#_
+; ^^^^ comment.block.hashtag.edn
+  a
+; ^ comment.block.hashtag.edn
+  #_b
+; ^^^ comment.block.hashtag.edn
+  c
+; ^ comment.block.hashtag.edn
+  d
+; ^ - comment
+
+  #_[
+; ^^^ comment.block.hashtag.edn
+  abc
+; ^^^ comment.block.hashtag.edn
+  ] def
+; ^ comment.block.hashtag.edn
+;  ^^^^ - comment
+  ghi
+; ^^^ - comment
 
 
 ;; SYMBOLS

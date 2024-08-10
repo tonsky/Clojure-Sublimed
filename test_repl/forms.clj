@@ -131,6 +131,7 @@ symbol -a +a
 #p "abc"
 ^:false sym
 ^{:meta [true false]} sym
+^{}sym
 [1 2 3]
 '(1 2 3)
 {:a 1 :b 2 :c 3}
@@ -138,6 +139,13 @@ symbol -a +a
 [{() #{}}]
 {[#{()}] '(((())))}
 #{[()]}
+'(let [x ~abc])()
+'(let [x ~(map (list 'abc) def)])()
+'(let [x ~@(map (list 'abc) def)])()
+`(let [x ~abc])()
+`(let [x ~(map (list 'abc) def)])()
+`(let [x ~@(map (list 'abc) def)])()
+`[  ~(  `[  ~( `[ ~(...) ])  ]  )  ][]
 
 ; comment forms
 (comment

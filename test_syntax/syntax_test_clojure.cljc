@@ -41,11 +41,18 @@
 ; ^ keyword.operator.quote
 ; ^^^^^^^^^^^^^^^^ meta.quoted
 ;                 ^^^ -meta.quoted
+  'datascript.core[]
+; ^^^^^^^^^^^^^^^^ meta.quoted
+;                 ^^ -meta.quoted
   ' , datascript.core []
 ; ^ keyword.operator.quote
-;  ^^^^^^^^^^^^^^^^^^ - keyword.operator
 ; ^^^^^^^^^^^^^^^^^^^ meta.quoted
+;  ^^^^^^^^^^^^^^^^^^^^^ - keyword.operator
 ;   ^ punctuation.definition.comma
+;                    ^^^ - meta.quoted
+  '()()
+; ^^^ meta.quoted
+;    ^^ - meta.quoted
 
 
 ; SYNTAX QUOTE, UNQUOTE, UNQUOTE SPLICING
@@ -95,8 +102,13 @@
 ;  ^^^^^^^^^^^^^ - punctuation.definition.metadata
 ;   ^ punctuation.definition.comma
   ^123 x  ^[:dynamic true] x
-;  ^^^ -meta.metadata
-;          ^^^^^^^^^^^^^^^ -meta.metadata
+; ^^^^ meta.metadata
+;     ^^^^ - meta.metadata
+;         ^^^^^^^^^^^^^^^^ meta.metadata
+;                         ^^ - meta.metadata
+  ^^{} {} x
+; ^^^^^^^ meta.metadata
+;        ^^ - meta.metadata
 
 
 ; REGEXPS
@@ -262,6 +274,11 @@
 ; ^^^^^^^^ meta.definition
 ;         ^ -meta.definition
 ;       ^ entity.name
+  (defn
+; ^^^^^ meta.definition
+    f)
+;   ^^ meta.definition
+;   ^ entity.name
 
 
 ; PRECEDING SYMBOLS AND OTHER GARBAGE DO NOT CONFUSE ENTITY.NAME LOOKUP
