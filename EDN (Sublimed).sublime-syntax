@@ -19,14 +19,14 @@ variables:
 contexts:
   main:
     - include: line_comment
-    - include: reader_comments
+    - include: reader_comment
     - match: (?=\S)
       push: forms
 
   forms:
     - include: comma
     - include: line_comment
-    - include: reader_comments
+    - include: reader_comment
     - include: string
     - include: character
     - include: keyword
@@ -40,7 +40,7 @@ contexts:
     - include: vector
     - include: map
     - include: set
-    - include: stray_brackets
+    - include: stray_bracket
 
   comma:
     - match: ','
@@ -81,7 +81,7 @@ contexts:
       captures:
         1: punctuation.definition.comment.line.edn
 
-  reader_comments:
+  reader_comment:
     - match: '#_'
       scope: punctuation.definition.comment.reader.edn
       push: 
@@ -183,7 +183,7 @@ contexts:
         pop:   2
       - include: main
 
-  stray_brackets:
+  stray_bracket:
     - match: '[\]\)\}]'
       scope: invalid.illegal.stray-bracket-end
       pop:   1
