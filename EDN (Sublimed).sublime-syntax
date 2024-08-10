@@ -24,8 +24,7 @@ contexts:
       push: forms
 
   forms:
-    - match: ','
-      scope: punctuation.definition.comma.edn
+    - include: comma
     - include: line_comment
     - include: reader_comments
     - include: string
@@ -42,6 +41,10 @@ contexts:
     - include: map
     - include: set
     - include: stray_brackets
+
+  comma:
+    - match: ','
+      scope: punctuation.definition.comma.edn
 
   constant:
     - match: '{{wsb}}(nil|true|false){{wse}}'
@@ -74,15 +77,15 @@ contexts:
         
   line_comment:
     - match: '(;+).*$'
-      scope: comment.line.semicolon.edn
+      scope: comment.line.edn
       captures:
-        1: punctuation.definition.comment.edn
+        1: punctuation.definition.comment.line.edn
 
   reader_comments:
     - match: '#_'
-      scope: punctuation.definition.comment.edn
+      scope: punctuation.definition.comment.reader.edn
       push: 
-      - meta_scope: comment.block.hashtag.edn
+      - meta_scope: comment.reader.edn
       - include: forms
 
   symbol:

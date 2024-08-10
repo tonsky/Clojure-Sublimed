@@ -5,7 +5,6 @@ name: Clojure (Sublimed)
 file_extensions: [clj, cljs, cljc, cljx, boot, bb]
 scope: source.clojure
 variables:
-  ws:           '(?:\s|(,))*'
   wsb:          '(?<=^|[\s,()\[\]{}~''`"^@]|#_)'
   wse:           '(?=$|[\s,()\[\]{}";])'
   nwse:              '[^\s,()\[\]{}";]'
@@ -26,18 +25,17 @@ contexts:
     - include: syntax_quote
     - include: syntax_unquote
     - include: quote
+    - include: var
+    - include: deref
+    - include: reader_conditionals
     - match: (?=\S)
       push: forms
 
   forms:
-    - match: ','
-      scope: punctuation.definition.comma.clojure
+    - include: comma
     - include: line_comment
     - include: reader_comments
     - include: metadata
-    - include: var_quote
-    - include: deref
-    - include: reader_conditionals
     - include: defs
     - include: anonymous_fn
     - include: regexp
@@ -56,34 +54,33 @@ contexts:
     - include: set
     - include: stray_brackets
 
-  var_quote:
-    - match: '(#''){{ws}}'
-      captures:
-        1: keyword.operator.var.clojure
-        2: punctuation.definition.comma.clojure
-      pop: 1
+  comma:
+    - match: ','
+      scope: punctuation.definition.comma.clojure
+
+  var:
+    - match: '#'''
+      scope: punctuation.definition.var.clojure
+      push: 
+      - meta_scope: meta.var.clojure
+      - include: forms
 
   deref:
-    - match: '(@){{ws}}'
-      captures:
-        1: keyword.operator.deref.clojure
-        2: punctuation.definition.comma.clojure
-      pop: 1
+    - match: '@'
+      scope: keyword.operator.deref.clojure
+      push: 
+      - meta_scope: meta.deref.clojure
+      - include: forms
 
   reader_conditionals:
-    - match: '#\?@?{{ws}}\('
-      scope: punctuation.section.parens.begin.clojure
-      captures:
-        1: punctuation.definition.comma.clojure
-      push:
-        - meta_scope: meta.parens
-        - match: '\)'
-          scope: punctuation.section.parens.end.clojure
-          pop:   2
-        - include: main
+    - match: '#\?@?'
+      scope: punctuation.definition.reader_conditional.clojure
+      push: 
+      - meta_scope: meta.reader_conditional.clojure
+      - include: forms
 
   quote:
-    - match: '('')+'
+    - match: ''''
       scope: keyword.operator.quote.clojure
       push: 
       - meta_scope: meta.quoted.clojure
@@ -105,7 +102,7 @@ contexts:
 
   metadata:
     - match: '\^'
-      scope: punctuation.definition.metadata.begin.clojure
+      scope: punctuation.definition.metadata.clojure
       push: 
       - meta_scope: meta.metadata.clojure
       - include: forms
@@ -134,8 +131,10 @@ contexts:
         - include: main
 
   anonymous_fn:
-    - match: '#\('
-      scope: punctuation.section.parens.begin.clojure
+    - match: '(#)(\()'
+      captures:
+        1: punctuation.definition.anon_fn.clojure
+        2: punctuation.section.parens.begin.clojure
       push:
       - meta_scope: meta.parens.clojure meta.function.clojure
       - match: \)
@@ -240,15 +239,15 @@ contexts:
         
   line_comment:
     - match: '(;+).*$'
-      scope: comment.line.semicolon.clojure
+      scope: comment.line.clojure
       captures:
-        1: punctuation.definition.comment.clojure
+        1: punctuation.definition.comment.line.clojure
 
   reader_comments:
     - match: '#_'
-      scope: punctuation.definition.comment.clojure
+      scope: punctuation.definition.comment.reader.clojure
       push: 
-      - meta_scope: comment.block.hashtag.clojure
+      - meta_scope: comment.reader.clojure
       - include: forms
 
   symbol:

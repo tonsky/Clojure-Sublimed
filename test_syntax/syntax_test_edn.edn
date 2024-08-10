@@ -6,8 +6,8 @@
 ; ^^^ constant.language.edn
 ;     ^^^^ constant.language.edn
 ;          ^^^^^ constant.language.edn
-  Nil
-; ^^^ -constant.language.edn
+  Nil nnil truee
+; ^^^^^^^^^^^^^^ -constant.language.edn
 
 
 ;; STRINGS
@@ -89,157 +89,157 @@ string"
 
 ;; LINE COMMENTS
   ; single semicolon
-; ^^^^^^^^^^^^^^^^^^ comment.line.semicolon.edn
-; ^                  punctuation.definition.comment.edn
-;  ^^^^^^^^^^^^^^^^^ -punctuation.definition.comment.edn
+; ^^^^^^^^^^^^^^^^^^ comment.line.edn
+; ^                  punctuation.definition.comment.line.edn
+;  ^^^^^^^^^^^^^^^^^ -punctuation.definition.comment.line.edn
   "abc" ; after something
-;       ^^^^^^^^^^^^^^^^^ comment.line.semicolon.edn
-;       ^                 punctuation.definition.comment.edn
+;       ^^^^^^^^^^^^^^^^^ comment.line.edn
+;       ^                 punctuation.definition.comment.line.edn
 
-;; READER COMMENTS
+;; FORM COMMENTS
   #_abc #_"abc" #_123 #_:kw #_nil #_\a #_1.23 #_1/2 
-; ^^ punctuation.definition.comment.edn
-; ^^^^^ comment.block.hashtag.edn
+; ^^ punctuation.definition.comment.reader.edn
+; ^^^^^ comment.reader.edn
 ;      ^ - comment
-;       ^^ punctuation.definition.comment.edn
-;       ^^^^^^^ comment.block.hashtag.edn
+;       ^^ punctuation.definition.comment.reader.edn
+;       ^^^^^^^ comment.reader.edn
 ;              ^ - comment
-;               ^^ punctuation.definition.comment.edn
-;               ^^^^^ comment.block.hashtag.edn
+;               ^^ punctuation.definition.comment.reader.edn
+;               ^^^^^ comment.reader.edn
 ;                    ^ - comment
-;                     ^^ punctuation.definition.comment.edn
-;                     ^^^^^ comment.block.hashtag.edn
+;                     ^^ punctuation.definition.comment.reader.edn
+;                     ^^^^^ comment.reader.edn
 ;                          ^ - comment
-;                           ^^ punctuation.definition.comment.edn
-;                           ^^^^^ comment.block.hashtag.edn
+;                           ^^ punctuation.definition.comment.reader.edn
+;                           ^^^^^ comment.reader.edn
 ;                                ^ - comment
-;                                 ^^ punctuation.definition.comment.edn
-;                                 ^^^^ comment.block.hashtag.edn
+;                                 ^^ punctuation.definition.comment.reader.edn
+;                                 ^^^^ comment.reader.edn
 ;                                     ^ - comment
-;                                      ^^ punctuation.definition.comment.edn
-;                                      ^^^^^^ comment.block.hashtag.edn
+;                                      ^^ punctuation.definition.comment.reader.edn
+;                                      ^^^^^^ comment.reader.edn
 ;                                            ^ - comment
-;                                             ^^ punctuation.definition.comment.edn
-;                                             ^^^^^ comment.block.hashtag.edn
+;                                             ^^ punctuation.definition.comment.reader.edn
+;                                             ^^^^^ comment.reader.edn
 ;                                                  ^ - comment
 
   #_[a [b c]] #_[] #_[[]] [#_abc] [[#_abc]] [[#_abc] []] [#_[abc]] [#_[abc[def]] []]
-; ^^^^^^^^^^^ comment.block.hashtag.edn
+; ^^^^^^^^^^^ comment.reader.edn
 ;            ^ - comment
-;             ^^^^ comment.block.hashtag.edn
+;             ^^^^ comment.reader.edn
 ;                 ^ - comment
-;                  ^^^^^^ comment.block.hashtag.edn
+;                  ^^^^^^ comment.reader.edn
 ;                        ^^ - comment
-;                          ^^^^^ comment.block.hashtag.edn
+;                          ^^^^^ comment.reader.edn
 ;                               ^^^^ - comment
-;                                   ^^^^^ comment.block.hashtag.edn
+;                                   ^^^^^ comment.reader.edn
 ;                                        ^^^^^ - comment
-;                                             ^^^^^ comment.block.hashtag.edn
+;                                             ^^^^^ comment.reader.edn
 ;                                                  ^^^^^^^ - comment
-;                                                         ^^^^^^^ comment.block.hashtag.edn
+;                                                         ^^^^^^^ comment.reader.edn
 ;                                                                ^^^ - comment
-;                                                                   ^^^^^^^^^^^^ comment.block.hashtag.edn
+;                                                                   ^^^^^^^^^^^^ comment.reader.edn
 ;                                                                               ^^^^ - comment
 
   #_(a (b c)) #_() #_(()) (#_abc) ((#_abc)) ((#_abc) ()) (#_(abc)) (#_(abc(def)) ())
-; ^^^^^^^^^^^ comment.block.hashtag.edn
+; ^^^^^^^^^^^ comment.reader.edn
 ;            ^ - comment
-;             ^^^^ comment.block.hashtag.edn
+;             ^^^^ comment.reader.edn
 ;                 ^ - comment
-;                  ^^^^^^ comment.block.hashtag.edn
+;                  ^^^^^^ comment.reader.edn
 ;                        ^^ - comment
-;                          ^^^^^ comment.block.hashtag.edn
+;                          ^^^^^ comment.reader.edn
 ;                               ^^^^ - comment
-;                                   ^^^^^ comment.block.hashtag.edn
+;                                   ^^^^^ comment.reader.edn
 ;                                        ^^^^^ - comment
-;                                             ^^^^^ comment.block.hashtag.edn
+;                                             ^^^^^ comment.reader.edn
 ;                                                  ^^^^^^^ - comment
-;                                                         ^^^^^^^ comment.block.hashtag.edn
+;                                                         ^^^^^^^ comment.reader.edn
 ;                                                                ^^^ - comment
-;                                                                   ^^^^^^^^^^^^ comment.block.hashtag.edn
+;                                                                   ^^^^^^^^^^^^ comment.reader.edn
 ;                                                                               ^^^^ - comment
 
   #_{a {b c}} #_{} #_{{}} {#_abc} {{#_abc}} {{#_abc} {}} {#_{abc}} {#_{abc{def}} {}}
-; ^^^^^^^^^^^ comment.block.hashtag.edn
+; ^^^^^^^^^^^ comment.reader.edn
 ;            ^ - comment
-;             ^^^^ comment.block.hashtag.edn
+;             ^^^^ comment.reader.edn
 ;                 ^ - comment
-;                  ^^^^^^ comment.block.hashtag.edn
+;                  ^^^^^^ comment.reader.edn
 ;                        ^^ - comment
-;                          ^^^^^ comment.block.hashtag.edn
+;                          ^^^^^ comment.reader.edn
 ;                               ^^^^ - comment
-;                                   ^^^^^ comment.block.hashtag.edn
+;                                   ^^^^^ comment.reader.edn
 ;                                        ^^^^^ - comment
-;                                             ^^^^^ comment.block.hashtag.edn
+;                                             ^^^^^ comment.reader.edn
 ;                                                  ^^^^^^^ - comment
-;                                                         ^^^^^^^ comment.block.hashtag.edn
+;                                                         ^^^^^^^ comment.reader.edn
 ;                                                                ^^^ - comment
-;                                                                   ^^^^^^^^^^^^ comment.block.hashtag.edn
+;                                                                   ^^^^^^^^^^^^ comment.reader.edn
 ;                                                                               ^^^^ - comment
 
 ; touching forms
   #_[abc]def #_abc[def] #_[abc][def]
-; ^^^^^^^ comment.block.hashtag.edn
+; ^^^^^^^ comment.reader.edn
 ;        ^^^^ - comment
-;            ^^^^^ comment.block.hashtag.edn
+;            ^^^^^ comment.reader.edn
 ;                 ^^^^^^ - comment
-;                       ^^^^^^^ comment.block.hashtag.edn
+;                       ^^^^^^^ comment.reader.edn
 ;                              ^^^^^ - comment
 
 ; whitespace
   #_ abc def #_,abc def
-; ^^^^^^ comment.block.hashtag.edn
+; ^^^^^^ comment.reader.edn
 ;       ^^^^^ - comment
-;            ^^^^^^ comment.block.hashtag.edn
+;            ^^^^^^ comment.reader.edn
 ;                  ^^^^ - comment
 
 ; double reader comment
   #_#_abc def ghi
-; ^^^^^^^^^^^ comment.block.hashtag.edn
+; ^^^^^^^^^^^ comment.reader.edn
 ;            ^^^^ - comment
 
   #_#_abc #_def ghi jkl
-; ^^^^^^^^^^^^^^^^^ comment.block.hashtag.edn
+; ^^^^^^^^^^^^^^^^^ comment.reader.edn
 ;                  ^^^^ - comment
 
   #_#_#_#_#_#_#_a b c d e f g h i j k
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment.block.hashtag.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment.reader.edn
 ;                            ^^^^^^^^ - comment
 
   #_#_[abc][def][ghi]
-; ^^^^^^^^^^^^^^ comment.block.hashtag.edn
+; ^^^^^^^^^^^^^^ comment.reader.edn
 ;               ^^^^^ - comment
 
   #_#_[abc]#_[def][ghi][jkl]
-; ^^^^^^^^^^^^^^^^^^^^^ comment.block.hashtag.edn
+; ^^^^^^^^^^^^^^^^^^^^^ comment.reader.edn
 ;                      ^^^^^ - comment
 
 ; multiline
 
   #_
-; ^^ comment.block.hashtag.edn
+; ^^ comment.reader.edn
   a
-; ^ comment.block.hashtag.edn
+; ^ comment.reader.edn
   b
 ; ^ - comment
 
   #_#_
-; ^^^^ comment.block.hashtag.edn
+; ^^^^ comment.reader.edn
   a
-; ^ comment.block.hashtag.edn
+; ^ comment.reader.edn
   #_b
-; ^^^ comment.block.hashtag.edn
+; ^^^ comment.reader.edn
   c
-; ^ comment.block.hashtag.edn
+; ^ comment.reader.edn
   d
 ; ^ - comment
 
   #_[
-; ^^^ comment.block.hashtag.edn
+; ^^^ comment.reader.edn
   abc
-; ^^^ comment.block.hashtag.edn
+; ^^^ comment.reader.edn
   ] def
-; ^ comment.block.hashtag.edn
+; ^ comment.reader.edn
 ;  ^^^^ - comment
   ghi
 ; ^^^ - comment
@@ -462,7 +462,7 @@ string"
 ; ^^ punctuation.section.braces.begin.edn
 ;    ^ punctuation.section.braces.end.edn
   ; ...
-; ^ punctuation.definition.comment.edn
+; ^ punctuation.definition.comment.line.edn
 ;  ^ -punctuation
 
 ;; BALANCING

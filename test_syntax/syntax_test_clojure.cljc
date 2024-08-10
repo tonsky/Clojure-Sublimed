@@ -3,17 +3,21 @@
 
 ; VAR QUOTE
   #'map
-; ^ keyword.operator.var
-  #' , map
-; ^^ keyword.operator.var
-;   ^^^^^^ - keyword.operator.var
-;    ^ punctuation.definition.comma
+; ^^^^^ meta.var.clojure
+; ^ punctuation.definition.var
+  #' ,,, #_skip map
+; ^^^^^^^^^^^^^^^^^ meta.var.clojure
+; ^^ punctuation.definition.var
+;   ^^^^^^^^^^^^^^^ - punctuation.definition.var
+;    ^^^ punctuation.definition.comma
 
 
 ; DEREF
   @*atom
+; ^^^^^^ meta.deref.clojure
 ; ^ keyword.operator.deref
   @ , *atom
+; ^^^^^^^^^ meta.deref.clojure
 ; ^ keyword.operator.deref
 ;  ^^^^^^^^ - keyword.operator.deref
 ;   ^ punctuation.definition.comma
@@ -21,15 +25,23 @@
 
 ; READER CONDITIONALS
   #?(:clj 1 :cljs 2)
-; ^^^ punctuation.section.parens.begin
-; ^^^^^^^^^^^^^^^^^^ meta.parens
+; ^^^^^^^^^^^^^^^^^^ meta.reader_conditional.clojure
+; ^^ punctuation.definition.reader_conditional.clojure
+;   ^ punctuation.section.parens.begin
+;   ^^^^^^^^^^^^^^^^ meta.parens
 ;                  ^ punctuation.section.parens.end
 ;                   ^ - punctuation - meta.section
   #?@(:clj [3 4] :cljs [5 6])
-; ^^^^ punctuation.section.parens.begin
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.parens
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader_conditional.clojure
+; ^^^ punctuation.definition.reader_conditional.clojure
+;    ^ punctuation.section.parens.begin
+;    ^^^^^^^^^^^^^^^^^^^^^^^^ meta.parens
 ;                           ^ punctuation.section.parens.end
 ;                            ^ - punctuation - meta.section
+  #?  ,,, ,,  (:clj 1 :cljs 2)
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader_conditional.clojure
+; ^^ punctuation.definition.reader_conditional.clojure
+
 
 
 ; QUOTE
@@ -281,9 +293,16 @@
 ;   ^ entity.name
 
 
-; PRECEDING SYMBOLS AND OTHER GARBAGE DO NOT CONFUSE ENTITY.NAME LOOKUP
-  (defn 15 "str" {a b} fname 15 sym \n ("abc") [])
-;                      ^^^^^ entity.name
+; ENTITY.NAME MUST BE SECOND
+  (def #_comment fun boom)
+;                ^^^ entity.name
+;                   ^^^^^^ - entity.name
+  (def ^{:doc "abc"} fun boom)
+;                    ^^^ entity.name
+;                       ^^^^^^ - entity.name
+  (def ^longs fun boom)
+;             ^^^ entity.name
+;                ^^^^^^ - entity.name
 
 
 ; DEF
@@ -330,6 +349,8 @@
 ; ANONYMOUS FN
   #(+ %1 %2)
 ; ^^^^^^^^^^ meta.function & meta.parens
+; ^ punctuation.definition.anon_fn.clojure
+;  ^ punctuation.section.parens.begin
 ;           ^^ - meta.function
-; ^^ punctuation.section.parens.begin
 ;          ^ punctuation.section.parens.end
+
