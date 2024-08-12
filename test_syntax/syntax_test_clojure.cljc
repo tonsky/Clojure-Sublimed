@@ -322,18 +322,20 @@
 ; NAMESPACED DEF
   (rum/defcs x 1)
 ; ^^^^^^^^^^^^^^^ meta.definition & meta.parens
-;            ^ entity.name
 ; ^ punctuation.section.parens.begin
 ;  ^^^^^^^^^ source.symbol
+;  ^^^ meta.namespace.symbol.clojure
 ;     ^ punctuation.definition.symbol.namespace
+;            ^ entity.name
 ;               ^ punctuation.section.parens.end
 
 
 ; DEF OF NAMESPACED SYMBOL
   (defmethod clojure.test/report :error [m])
 ; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.definition & meta.parens
-;            ^^^^^^^^^^^^^^^^^^^ entity.name
 ; ^ punctuation.section.parens.begin
+;            ^^^^^^^^^^^^^^^^^^^ entity.name
+;            ^^^^^^^^^^^^ meta.namespace.symbol.clojure
 ;                        ^ punctuation.definition.symbol.namespace
 ;                                          ^ punctuation.section.parens.end
 
@@ -354,3 +356,9 @@
 ;           ^^ - meta.function
 ;          ^ punctuation.section.parens.end
 
+; COMMENT BLOCK
+  (comment 123)
+; ^^^^^^^^^^^^^ comment.form.clojure
+  (comment
+; ^^^^^^^^ comment.form.clojure
+    123)

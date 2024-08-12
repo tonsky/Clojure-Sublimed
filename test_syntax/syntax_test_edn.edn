@@ -257,7 +257,7 @@ string"
 ;     ^ source.symbol.edn
 ;       ^ source.symbol.edn
 ;         ^ source.symbol.edn
-;           ^ source.symbol.edn
+;           ^ source.symbol
 ;             ^ source.symbol.edn
 ;               ^ source.symbol.edn
 ;                 ^ source.symbol.edn
@@ -277,15 +277,25 @@ string"
 ;                      ^^^^ source.symbol.edn
   a/b a1/b2 абв/где abc.def/uvw.xyz clojure.core//
 ; ^^^ source.symbol.edn
+; ^ meta.namespace.symbol.edn
 ;  ^  punctuation.definition.symbol.namespace.edn
 ;     ^^^^^ source.symbol.edn
+;     ^^ meta.namespace.symbol.edn
 ;       ^ punctuation.definition.symbol.namespace.edn
 ;           ^^^^^^^ source.symbol.edn
+;           ^^^ meta.namespace.symbol.edn
 ;              ^ punctuation.definition.symbol.namespace.edn
 ;                   ^^^^^^^^^^^^^^^ source.symbol.edn
+;                   ^^^^^^^ meta.namespace.symbol.edn
 ;                          ^ punctuation.definition.symbol.namespace.edn
 ;                                   ^^^^^^^^^^^^^^ source.symbol.edn
+;                                   ^^^^^^^^^^^^ meta.namespace.symbol.edn
 ;                                               ^ punctuation.definition.symbol.namespace.edn
+  _ _a _abc x/_a
+; ^ source.symbol.unused.edn
+;   ^^ source.symbol.unused.edn
+;      ^^^^ source.symbol.unused.edn
+;           ^^^^ source.symbol.unused.edn
 ; NOT SYMBOLS
   a/ /b 1a -1a +1a .1a 'a
 ; ^^^^^^^^^^^^^^^^^^^^^^^ -source.symbol.edn

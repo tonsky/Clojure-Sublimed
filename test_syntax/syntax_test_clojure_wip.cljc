@@ -15,12 +15,6 @@
 ;                      ^^^^^ - entity.name
 
 
-; COMMENT BLOCK
-  (comment 123)
-; ^^^^^^^^^^^^^ comment.block.clojure
-  (comment
-; ^^^^^^^^ comment.block.clojure
-    123)
 ; ^^^^^^ comment.block.clojure
   ( , , , #_skip 
 ; ^^^^^^^ comment.block.clojure

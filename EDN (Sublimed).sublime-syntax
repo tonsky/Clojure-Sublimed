@@ -31,6 +31,7 @@ contexts:
     - include: character
     - include: keyword
     - include: constant
+    - include: symbol_unused
     - include: symbol
     - include: integer
     - include: float
@@ -88,11 +89,20 @@ contexts:
       - meta_scope: comment.reader.edn
       - include: forms
 
+  symbol_unused:
+    - match: '{{wsb}}(?:(?=_){{symbol}}|({{ns_symbol}})(/)(?=_){{symbol}}){{wse}}'
+      scope: source.symbol.unused.edn
+      captures:
+        1: meta.namespace.symbol.edn
+        2: punctuation.definition.symbol.namespace.edn
+      pop:   1
+
   symbol:
-    - match: '{{wsb}}(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
+    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/){{symbol}}){{wse}}'
       scope: source.symbol.edn
       captures:
-        1: punctuation.definition.symbol.namespace.edn
+        1: meta.namespace.symbol.edn
+        2: punctuation.definition.symbol.namespace.edn
       pop:   1
 
   keyword:
