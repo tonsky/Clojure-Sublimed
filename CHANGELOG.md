@@ -1,3 +1,16 @@
+### WIP
+
+Syntax has been significantly reworked.
+
+- New syntax that can highlight reader comments `comment.reader` together with the following
+  form
+- Highlight `(comment ...)` blocks as `comment.form`
+- Highlight namespaces in symbols as `meta.namespace.symbol`
+- Highlight unused symbols as `source.symbol.unused`
+- Properly highlight `entity.name` in `def*` forms only at second position, skipping all meta/comments
+- Quote & syntax quote highlight following form as `meta.quoted` and `meta.quoted.syntax`
+- Allow reader-invisible forms like comma, newline, reader comment and meta almost everywhere between meaningful forms
+
 ### 3.8.0 - Aug 8, 2024
 
 - `clojure_sublimed_reindent` command that reindents entire buffer if selection is empty and only selected lines if not

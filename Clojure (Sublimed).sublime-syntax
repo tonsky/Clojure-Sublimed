@@ -19,6 +19,7 @@ variables:
   regexp_name:  '[a-zA-Z][a-zA-Z0-9]*'
 contexts:
   main:
+    - include: comma
     - include: line_comment
     - include: reader_comment
     - include: metadata
@@ -37,7 +38,6 @@ contexts:
     - include: reader_comment
     - include: form_comment
     - include: metadata
-    - include: defs
     - include: anonymous_fn
     - include: regexp
     - include: string
@@ -108,31 +108,6 @@ contexts:
       push: 
       - meta_scope: meta.metadata.clojure
       - include: forms
-
-  defs:
-    - match: '(\()(def{{symbol}}*|({{ns_symbol}})(/)def{{symbol}}*|ns)(?=\s|\))'
-      captures:
-        1: punctuation.section.parens.begin.clojure
-        2: source.symbol.clojure
-        3: meta.namespace.symbol.clojure
-        4: punctuation.definition.symbol.namespace.clojure
-      push:
-        - meta_scope: meta.parens meta.definition.clojure
-        - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/){{symbol}}){{wse}}'
-          scope: source.symbol.clojure entity.name.clojure
-          captures:
-            1: meta.namespace.symbol.clojure
-            2: punctuation.definition.symbol.namespace.clojure
-          set:
-            - meta_content_scope: meta.parens meta.definition.clojure
-            - match: '\)'
-              scope: meta.parens meta.definition.clojure punctuation.section.parens.end.clojure
-              pop: 2
-            - include: main
-        - match: '\)'
-          scope: punctuation.section.parens.begin.clojure
-          pop: 2
-        - include: main
 
   anonymous_fn:
     - match: '(#)(\()'
@@ -265,22 +240,6 @@ contexts:
       - meta_scope: comment.reader.clojure
       - include: forms
 
-  symbol_unused:
-    - match: '{{wsb}}(?:(?=_){{symbol}}|({{ns_symbol}})(/)(?=_){{symbol}}){{wse}}'
-      scope: source.symbol.unused.clojure
-      captures:
-        1: meta.namespace.symbol.clojure
-        2: punctuation.definition.symbol.namespace.clojure
-      pop:   1
-
-  symbol:
-    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/){{symbol}}){{wse}}'
-      scope: source.symbol.clojure
-      captures:
-        1: meta.namespace.symbol.clojure
-        2: punctuation.definition.symbol.namespace.clojure
-      pop:   1
-
   keyword:
     - match: '{{wsb}}(::?){{keyword}}(?:(/){{keyword}})?{{wse}}'
       scope: constant.other.keyword.clojure
@@ -332,12 +291,74 @@ contexts:
   list:
     - match: '\('
       scope: punctuation.section.parens.begin.clojure
-      push: 
-      - meta_scope: meta.parens.clojure
-      - match: \)
-        scope: punctuation.section.parens.end.clojure
-        pop:   2
-      - include: main
+      push: list_first
+
+  list_first:
+    - meta_scope: meta.parens.clojure
+    - match: \)
+      scope: punctuation.section.parens.end.clojure
+      pop:   2
+    - include: comma
+    - include: line_comment
+    - include: reader_comment
+    - include: metadata
+    - include: symbol_def
+    - match: '(?=\S)'
+      set: list_rest
+
+  list_second:
+    - meta_scope: meta.parens.clojure
+    - match: \)
+      scope: punctuation.section.parens.end.clojure
+      pop:   2
+    - include: comma
+    - include: line_comment
+    - include: reader_comment
+    - include: metadata
+    - include: symbol_name
+    - match: '(?=\S)'
+      set: list_rest
+
+  list_rest:
+    - meta_scope: meta.parens.clojure
+    - match: \)
+      scope: punctuation.section.parens.end.clojure
+      pop:   2
+    - include: main
+
+  symbol_def:
+    - match: '{{wsb}}(?:(?=def){{symbol}}|({{ns_symbol}})(/)(?=def){{symbol}}){{wse}}'
+      scope: source.symbol.def.clojure
+      captures:
+        1: meta.namespace.symbol.clojure
+        2: punctuation.definition.symbol.namespace.clojure
+      pop: 1
+      push: list_second
+
+  symbol_name:
+    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/){{symbol}}){{wse}}'
+      scope: source.symbol.clojure entity.name.clojure
+      captures:
+        1: meta.namespace.symbol.clojure
+        2: punctuation.definition.symbol.namespace.clojure
+      pop: 1
+      push: list_rest
+
+  symbol_unused:
+    - match: '{{wsb}}(?:(?=_){{symbol}}|({{ns_symbol}})(/)(?=_){{symbol}}){{wse}}'
+      scope: source.symbol.unused.clojure
+      captures:
+        1: meta.namespace.symbol.clojure
+        2: punctuation.definition.symbol.namespace.clojure
+      pop:   1
+
+  symbol:
+    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/){{symbol}}){{wse}}'
+      scope: source.symbol.clojure
+      captures:
+        1: meta.namespace.symbol.clojure
+        2: punctuation.definition.symbol.namespace.clojure
+      pop:   1
 
   vector:
     - match: \[

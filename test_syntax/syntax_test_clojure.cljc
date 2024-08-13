@@ -262,66 +262,101 @@
 
 ; SIMPLE DEFN
   (defn fname [arg arg2] body)
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.definition & meta.parens
-;                             ^ -meta.definition -meta.parens
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.parens
+;                             ^ -meta.parens
+;  ^^^^ source.symbol.def
 ;       ^^^^^ source.symbol entity.name 
 ; ^ punctuation.section.parens.begin
-;  ^^^^ source.symbol
+;  ^^^^ source.symbol.def
 ;                            ^ punctuation.section.parens.end
 
 
 ; EVERYTHING
-  (defn- ^{:meta :map} fn "doc" {:attr :map} [args] {:pre ()} body)
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.definition
-;  ^^^^^ source.symbol
+  (defn- ^{:meta :map} fn "doc" {:attr :map} [args] {:pre ()} body) 
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.parens
+;                                                                  ^ - meta.parens
+;  ^^^^^ source.symbol.def
 ;        ^^^^^^^^^^^^^ meta.metadata
-;                      ^^ entity.name
+;                      ^^ source.symbol entity.name
 
 
 ; INCOMPLETE FNS ARE STILL CLOSED
   (defn)
-; ^^^^^^ meta.definition
-;       ^ -meta.definition
+; ^^^^^^ meta.parens
+;  ^^^^ source.symbol.def
+;       ^ -meta.parens
   (defn f)
-; ^^^^^^^^ meta.definition
-;         ^ -meta.definition
-;       ^ entity.name
+; ^^^^^^^^ meta.parens
+;  ^^^^ source.symbol.def
+;         ^ -meta.parens
+;       ^ source.symbol entity.name
   (defn
-; ^^^^^ meta.definition
+; ^^^^^ meta.parens
+;  ^^^^ source.symbol.def
     f)
-;   ^^ meta.definition
-;   ^ entity.name
+;   ^^ meta.parens
+;   ^ source.symbol entity.name
+  ( , , defn f) 
+; ^^^^^^^^^^^^^ meta.parens
+;       ^^^^ source.symbol.def
+;              ^ -meta.parens
+;            ^ source.symbol entity.name
+  ( , #_smth
+; ^^^^^^^^^^ meta.parens
+    def
+;   ^^^ meta.parens source.symbol.def
+    , #_smth
+;   ^^^^^^^^ meta.parens
+    sym)
+;   ^^^^ meta.parens
+;   ^^^ source.symbol entity.name
 
 
 ; ENTITY.NAME MUST BE SECOND
   (def #_comment fun boom)
-;                ^^^ entity.name
+;  ^^^ source.symbol.def
+;                ^^^ source.symbol entity.name
 ;                   ^^^^^^ - entity.name
   (def ^{:doc "abc"} fun boom)
-;                    ^^^ entity.name
+;  ^^^ source.symbol.def
+;                    ^^^ source.symbol entity.name
 ;                       ^^^^^^ - entity.name
   (def ^longs fun boom)
-;             ^^^ entity.name
+;  ^^^ source.symbol.def
+;             ^^^ source.symbol entity.name
 ;                ^^^^^^ - entity.name
+
+  (def 15 fun)
+;  ^^^ source.symbol.def
+;         ^^^ - entity.name
+  (def "str" fun)
+;  ^^^ source.symbol.def
+;            ^^^ - entity.name
+  (def {a b} fun)
+;  ^^^ source.symbol.def
+;            ^^^ - entity.name
+  (defn 15 "str" {a b} fname 15 sym \n ("abc") [])
+;  ^^^^ source.symbol.def
+;                      ^^^^^ - entity.name
 
 
 ; DEF
   (def x 1)
-; ^^^^^^^^^ meta.definition
+; ^^^^^^^^^ meta.parens
 ;  ^^^ source.symbol
 ;      ^ entity.name
 
 
 ; DEFMETHOD
   (defmethod x 1)
-; ^^^^^^^^^^^^^^^ meta.definition
+; ^^^^^^^^^^^^^^^ meta.parens
 ;  ^^^^^^^^^ source.symbol
 ;            ^ entity.name
 
 
 ; NAMESPACED DEF
   (rum/defcs x 1)
-; ^^^^^^^^^^^^^^^ meta.definition & meta.parens
+; ^^^^^^^^^^^^^^^ meta.parens
 ; ^ punctuation.section.parens.begin
 ;  ^^^^^^^^^ source.symbol
 ;  ^^^ meta.namespace.symbol.clojure
@@ -332,7 +367,7 @@
 
 ; DEF OF NAMESPACED SYMBOL
   (defmethod clojure.test/report :error [m])
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.definition & meta.parens
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.parens
 ; ^ punctuation.section.parens.begin
 ;            ^^^^^^^^^^^^^^^^^^^ entity.name
 ;            ^^^^^^^^^^^^ meta.namespace.symbol.clojure
@@ -342,7 +377,7 @@
 
 ; NON-TOP DEF
   #?(:clj (def x 1))
-;         ^^^^^^^^^ meta.definition & meta.parens
+;         ^^^^^^^^^ meta.parens
 ;              ^ entity.name
 ;         ^ punctuation.section.parens.begin
 ;                 ^ punctuation.section.parens.end
