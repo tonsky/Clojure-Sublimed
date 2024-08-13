@@ -397,3 +397,16 @@
   (comment
 ; ^^^^^^^^ comment.form.clojure
     123)
+; ^^^^^^ comment.form.clojure
+  ( , , , #_skip 
+; ^^^^^^^ comment.form.clojure
+   comment
+; ^^^^^^^^ comment.form.clojure
+    123)
+; ^^^^^^ comment.form.clojure
+  (not comment)
+; ^^^^^^^^^^^^^ - comment
+  (nested (comment smth))
+; ^^^^^^^^ - comment
+;         ^^^^^^^^^^^^^^ comment.form
+;                       ^ - comment

@@ -115,7 +115,7 @@ contexts:
         1: punctuation.definition.anon_fn.clojure
         2: punctuation.section.parens.begin.clojure
       push:
-      - meta_scope: meta.parens.clojure meta.function.clojure
+      - meta_scope: meta.parens.clojure meta.function.anon.clojure
       - match: \)
         scope: punctuation.section.parens.end.clojure
         pop:   2
@@ -291,7 +291,32 @@ contexts:
   list:
     - match: '\('
       scope: punctuation.section.parens.begin.clojure
-      push: list_first
+      branch_point: open_parens
+      branch:
+        - comment_first
+        - list_first
+
+  comment_first:
+    - meta_scope: comment.form.clojure
+    - match: \)
+      scope: punctuation.section.parens.end.clojure
+      pop:   2
+    - include: comma
+    - include: line_comment
+    - include: reader_comment
+    - include: metadata
+    - match: 'comment'
+      pop: 1
+      push: comment_rest
+    - match: '(?=\S)'
+      fail: open_parens
+
+  comment_rest:
+    - meta_scope: comment.form.clojure
+    - match: \)
+      scope: punctuation.section.parens.end.clojure
+      pop:   2
+    - include: main
 
   list_first:
     - meta_scope: meta.parens.clojure

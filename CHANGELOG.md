@@ -9,6 +9,7 @@ Syntax has been significantly reworked.
 - Highlight unused symbols as `source.symbol.unused`
 - Properly highlight `entity.name` in `def*` forms only at second position, skipping all meta/comments
 - Quote & syntax quote highlight following form as `meta.quoted` and `meta.quoted.syntax`
+- Metadata highlights following form as `meta.metadata`
 - Allow reader-invisible forms like comma, newline, reader comment and meta almost everywhere between meaningful forms
 
 ### 3.8.0 - Aug 8, 2024
