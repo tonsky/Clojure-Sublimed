@@ -392,6 +392,8 @@
 ;          ^ punctuation.section.parens.end
 
 ; COMMENT BLOCK
+  ()
+; ^^ - comment
   (comment 123)
 ; ^^^^^^^^^^^^^ comment.form.clojure
   (comment

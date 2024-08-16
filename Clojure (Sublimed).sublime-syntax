@@ -36,7 +36,6 @@ contexts:
     - include: comma
     - include: line_comment
     - include: reader_comment
-    - include: form_comment
     - include: metadata
     - include: anonymous_fn
     - include: regexp
@@ -76,7 +75,7 @@ contexts:
 
   reader_conditional:
     - match: '#\?@?'
-      scope: punctuation.definition.reader_conditional.clojure
+      scope: punctuation.definition.reader_conditional.clojure meta.parens.clojure punctuation.section.parens.begin.clojure
       push: 
       - meta_scope: meta.reader_conditional.clojure
       - include: forms
@@ -113,20 +112,9 @@ contexts:
     - match: '(#)(\()'
       captures:
         1: punctuation.definition.anon_fn.clojure
-        2: punctuation.section.parens.begin.clojure
+      scope: punctuation.section.parens.begin.clojure
       push:
       - meta_scope: meta.parens.clojure meta.function.anon.clojure
-      - match: \)
-        scope: punctuation.section.parens.end.clojure
-        pop:   2
-      - include: main
-
-  form_comment:
-    - match: '(\()[\s,]*comment'
-      captures:
-        1: punctuation.section.parens.begin.clojure
-      push: 
-      - meta_scope: meta.parens.clojure comment.form.clojure
       - match: \)
         scope: punctuation.section.parens.end.clojure
         pop:   2
@@ -293,25 +281,23 @@ contexts:
       scope: punctuation.section.parens.begin.clojure
       branch_point: open_parens
       branch:
-        - comment_first
+        - form_comment_first
         - list_first
 
-  comment_first:
+  form_comment_first:
     - meta_scope: comment.form.clojure
-    - match: \)
-      scope: punctuation.section.parens.end.clojure
-      pop:   2
     - include: comma
     - include: line_comment
     - include: reader_comment
     - include: metadata
     - match: 'comment'
-      pop: 1
-      push: comment_rest
+      set: form_comment_rest
+    - match: \)
+      fail: open_parens
     - match: '(?=\S)'
       fail: open_parens
 
-  comment_rest:
+  form_comment_rest:
     - meta_scope: comment.form.clojure
     - match: \)
       scope: punctuation.section.parens.end.clojure
