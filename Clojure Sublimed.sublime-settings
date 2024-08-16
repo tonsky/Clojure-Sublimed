@@ -48,6 +48,9 @@
   // E.g. (set! *warn-on-reflection* true)
   "eval_shared": "",
 
+  // formatter, "sublimed" or "cljfmt". Latter requires `cljfmt` to be on $PATH
+  "formatter": "sublimed",
+
   // reformat file on save, false by default
   "format_on_save": false
 }

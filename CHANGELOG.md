@@ -12,6 +12,10 @@ Syntax has been significantly reworked.
 - Metadata highlights following form as `meta.metadata`
 - Allow reader-invisible forms like comma, newline, reader comment and meta almost everywhere between meaningful forms
 
+Other changes:
+
+- Allow using `cljfmt` for formatting (requires `cljfmt` binary on `$PATH`)
+
 ### 3.8.0 - Aug 8, 2024
 
 - `clojure_sublimed_reindent` command that reindents entire buffer if selection is empty and only selected lines if not

@@ -1,5 +1,5 @@
 import sublime, sublime_plugin
-from . import cs_common, cs_parser
+from . import cs_cljfmt, cs_common, cs_parser
 
 def search_path(node, pos):
     """
@@ -119,20 +119,26 @@ def indent_lines(view, selections, edit):
 
 class ClojureSublimedReindentBufferOnSave(sublime_plugin.EventListener):
     def on_pre_save(self, view):
-        if cs_common.setting("format_on_save", False) and view.syntax().name == 'Clojure (Sublimed)':
+        if cs_common.setting("format_on_save", False) and ('Clojure' in view.syntax().name or 'EDN' in view.syntax().name):
             view.run_command('clojure_sublimed_reindent_buffer')
 
 class ClojureSublimedReindentBufferCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         with cs_common.Measure("Reindent Buffer {} chars", view.size()):
-            indent_lines(view, [sublime.Region(0, view.size())], edit)
+            if 'cljfmt' == cs_common.setting('formatter'):
+                cs_cljfmt.indent_lines(view, [sublime.Region(0, view.size())], edit)
+            else:
+                indent_lines(view, [sublime.Region(0, view.size())], edit)
 
 class ClojureSublimedReindentLinesCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         with cs_common.Measure("Reindent Lines {}", view.sel()):
-            indent_lines(view, view.sel(), edit)
+            if 'cljfmt' == cs_common.setting('formatter'):
+                cs_cljfmt.indent_lines(view, view.sel(), edit)
+            else:
+                indent_lines(view, view.sel(), edit)
 
 class ClojureSublimedReindentCommand(sublime_plugin.TextCommand):
     def run(self, edit):

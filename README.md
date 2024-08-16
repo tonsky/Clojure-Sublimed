@@ -33,11 +33,15 @@ Want to put your parser to test? Check out [syntax_test_edn.edn](./test_syntax/s
 
 # Formatter/indenter
 
-Clojure Sublimed includes optional support for [Simple Clojure Formatting rules](https://tonsky.me/blog/clojurefmt/). It doesn’t require REPL connection, any Clojure runtime or external tools.
+Clojure Sublimed includes support for both [Simple Clojure Formatting rules](https://tonsky.me/blog/clojurefmt/) and [cljfmt](https://github.com/weavejester/cljfmt/).
+
+Simple Clojure Formatting doesn’t require REPL connection, any Clojure runtime or external tools. It is enabled by default.
+
+`cljfmt` requires `cljfmt` binary to be on `$PATH`. Enable it by setting `"formatter": "cljfmt"` in Clojure Sublimed settings.
 
 To reformat whole file, run `Clojure Sublimed: Reindent`. If you have non-empty selection, it will only reformat selected lines.
 
-To enable reindenting/formatting on save, add `format_on_save: true` to settings. ([See how to edit settings](#editing-settings))
+To enable reindenting/formatting on save, add `"format_on_save": true` to settings. ([See how to edit settings](#editing-settings))
 
 To enable correct indentations as you type code, rebind `Enter` to `Clojure Sublimed: Insert Newline`:
 
