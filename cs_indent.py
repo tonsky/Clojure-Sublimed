@@ -70,6 +70,9 @@ def indent(view, point, parsed = None):
                 offset = 1
         return ('indent', row, col + offset)
 
+def newline_indent(view, point):
+    return indent(view, point)[2]
+
 def skip_spaces(view, point):
     """
     Starting from point, skips as much spaces as it can without going to the new line,
@@ -148,15 +151,24 @@ class ClojureSublimedReindentCommand(sublime_plugin.TextCommand):
         else:
             view.run_command('clojure_sublimed_reindent_lines')
 
+def cljfmt_indent(view, point):
+    i = None
+    try:
+        i = cs_cljfmt.newline_indent(view, point)
+    except:
+        pass
+    return newline_indent(view, point) if i is None else i
+
 class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
+        newline_indent_fn = cljfmt_indent if 'cljfmt' == cs_common.setting('formatter') else newline_indent
         
         # Calculate all replacements first
         replacements = []
         for sel in view.sel():
             end = skip_spaces(view, sel.end())
-            _, _, i = indent(view, sel.begin())
+            i = newline_indent_fn(view, sel.begin())
             replacements.append((sublime.Region(sel.begin(), end), "\n" + " " * i))
 
         # Now apply them all at once
