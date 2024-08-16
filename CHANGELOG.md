@@ -2,8 +2,7 @@
 
 Syntax has been significantly reworked.
 
-- New syntax that can highlight reader comments `comment.reader` together with the following
-  form
+- New syntax that can highlight reader comments `comment.reader` together with the following form
 - Highlight `(comment ...)` blocks as `comment.form`
 - Highlight namespaces in symbols as `meta.namespace.symbol`
 - Highlight unused symbols as `source.symbol.unused`
@@ -15,6 +14,7 @@ Syntax has been significantly reworked.
 Other changes:
 
 - Allow using `cljfmt` for formatting (requires `cljfmt` binary on `$PATH`)
+- Settings can now be specified in main `Preferences.sublime-settings` as well. Just prepend `clojure_sublimed_` to each setting’s name.
 
 ### 3.8.0 - Aug 8, 2024
 

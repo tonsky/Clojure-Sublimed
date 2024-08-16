@@ -38,25 +38,36 @@ def settings():
     """
     return sublime.load_settings("Clojure Sublimed.sublime-settings")
 
+def main_settings():
+    return sublime.load_settings("Preferences.sublime-settings")
+
 def setting(key, default = None):
     """
     Shortcut to get value of a particular plugin setting
     """
-    return settings().get(key, default)
+    s = main_settings()
+    if s and (res := s.get("clojure_sublimed_" + key)) is not None:
+        return res
+    s = settings()
+    if s and (res := s.get(key)) is not None:
+        return res
+    return default
 
 def on_settings_change(tag, callback):
     """
     Subscribe to settings change
     """
-    settings().add_on_change(tag, lambda: callback(settings()))
-    callback(settings())
+    main_settings().add_on_change(tag, callback)
+    settings().add_on_change(tag, callback)
+    callback()
 
 def clear_settings_change(tag):
     """
     Unsubscribe from settings change
     """
+    main_settings().clear_on_change(tag)
     settings().clear_on_change(tag)
-
+    
 def wrap_width(view):
     if (w := setting('wrap_width')):
         return w
@@ -257,7 +268,7 @@ def plugin_loaded():
     elif os.path.isdir(package_path):
         # Package is a directory, so get its basename
         package = os.path.basename(package_path)
-    on_settings_change(__name__, lambda _: colors.clear())
+    on_settings_change(__name__, lambda: colors.clear())
 
 def plugin_unloaded():
     for state in states.values(): 

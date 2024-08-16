@@ -297,6 +297,20 @@ Finally, to clear evaluation results run `Clojure Sublimed: Clear Evaluation Res
 
 To edit settings, run `Preferences: Clojure Sublimed Settings` command.
 
+If you prefer setting settings in main file, you can do so by prepending `"clojure_sublimed_"` to each setting name. E.g.
+
+```
+"debug": True,
+```
+
+in `Clojure Sublimed.sublime-settings` becomes
+
+```
+"clojure_sublimed_debug": True,
+```
+
+in `Preferences.sublime-settings`. Settings from `Preferences.sublime-settings` take priority.
+
 ## Session-wide settings
 
 It is sometimes desirable to set dynamic Clojure vars for the whole session. To do that, edit `"eval_shared"` setting. For example:
