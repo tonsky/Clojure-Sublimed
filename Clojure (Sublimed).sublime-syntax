@@ -277,32 +277,16 @@ contexts:
       pop:   1
 
   list:
-    - match: '\('
-      scope: punctuation.section.parens.begin.clojure
+    - match: '(?=\()'
       branch_point: open_parens
       branch:
-        - form_comment_first
-        - list_first
+        - list_paren
+        - form_comment_paren
 
-  form_comment_first:
-    - meta_scope: comment.form.clojure
-    - include: comma
-    - include: line_comment
-    - include: reader_comment
-    - include: metadata
-    - match: 'comment'
-      set: form_comment_rest
-    - match: \)
-      fail: open_parens
-    - match: '(?=\S)'
-      fail: open_parens
-
-  form_comment_rest:
-    - meta_scope: comment.form.clojure
-    - match: \)
-      scope: punctuation.section.parens.end.clojure
-      pop:   2
-    - include: main
+  list_paren:
+    - match: '\('
+      scope: punctuation.section.parens.begin.clojure
+      set: list_first
 
   list_first:
     - meta_scope: meta.parens.clojure
@@ -313,6 +297,8 @@ contexts:
     - include: line_comment
     - include: reader_comment
     - include: metadata
+    - match: 'comment'
+      fail: open_parens
     - include: symbol_def
     - match: '(?=\S)'
       set: list_rest
@@ -332,6 +318,31 @@ contexts:
 
   list_rest:
     - meta_scope: meta.parens.clojure
+    - match: \)
+      scope: punctuation.section.parens.end.clojure
+      pop:   2
+    - include: main
+
+  form_comment_paren:
+    - match: '\('
+      scope: punctuation.section.parens.begin.clojure
+      set: form_comment_first
+
+  form_comment_first:
+    - meta_scope: comment.form.clojure
+    - include: comma
+    - include: line_comment
+    - include: reader_comment
+    - include: metadata
+    - match: 'comment'
+      set: form_comment_rest
+    - match: \)
+      fail: open_parens
+    - match: '(?=\S)'
+      fail: open_parens
+
+  form_comment_rest:
+    - meta_scope: comment.form.clojure
     - match: \)
       scope: punctuation.section.parens.end.clojure
       pop:   2
