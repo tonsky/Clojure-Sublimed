@@ -1,0 +1,168 @@
+{
+    "name": "Clojure Sublimed Dark",
+    "author": "Nikita Prokopov",
+    "variables":
+    {
+        "active":     "#CD974B",
+        "fg":         "#CECECE",
+        "bg":         "#0E1415",
+        "blue":       "#71ADE7",
+        "green":      "#95CB82",
+        "green-bg":   "#203028",
+        "red":        "#FF6060",
+        "red-bg":     "#2B1D1E",
+        "magenta":    "#CC8BC9",
+        "yellow":     "#FFF080",
+        // "orange":     "#FFBC5D",
+        "gray":       "#606060",
+    },
+    "globals":
+    {
+        "foreground":                  "var(fg)",
+        "background":                  "var(bg)",
+        "caret":                       "var(active)",
+        "line_highlight":              "#ffffff10",
+        "misspelling":                 "#ff0000",
+        "selection":                   "#293334",
+        "inactive_selection":          "#ffffff10",
+        "selection_border_width":      "0",
+        "selection_corner_radius":     "2",
+        "highlight":                   "var(active)",
+        "find_highlight_foreground":   "#000",
+        "find_highlight":              "var(active)",
+        "brackets_options":            "underline",
+        "brackets_foreground":         "var(active)",
+        "bracket_contents_options":    "underline",
+        "bracket_contents_foreground": "var(active)",
+        "tags_options":                "underline",
+        "tags_foreground":             "var(active)",
+    },
+    "rules":
+    [
+        {"name":       "Strings",
+         "scope":      "string - meta.metadata, meta.quoted string - meta.metadata",
+         "foreground": "var(green)"},
+        
+        {"name":       "Escapes",
+         "scope":      "constant.character.escape - meta.metadata, constant.other.placeholder - meta.metadata",
+         "background": "var(green-bg)"},
+
+        {"name":       "Constants",
+         "scope":      "constant - constant.character.escape, punctuation.definition.constant",
+         "foreground": "var(magenta)"},
+
+        {"name":       "Definitions",
+         "scope":      "entity.name - entity.name.tag - meta.metadata",
+         "foreground": "var(blue)"},
+
+        {"name":       "Namespaces",
+         "scope":      "meta.namespace, punctuation.definition.symbol.namespace",
+         "foreground": "var(gray)"},
+
+        {"name":       "Unused symbol",
+         "scope":      "source.symbol.unused",
+         "foreground": "var(gray)",
+         "background": "var(bg)"},
+
+        {"name":       "Punctuation",
+         "scope":      "punctuation - punctuation.section - punctuation.definition",
+         "foreground": "var(gray)"},
+
+        {"name":       "Comma",
+         "scope":      "punctuation.definition.comma",
+         "foreground": "var(gray)"},
+
+        {"name":       "Line Comments",
+         "scope":      "comment - comment.reader - comment.form, invalid comment, meta.quoted comment.line, meta.quoted comment.line punctuation.definition.comment, meta.metadata comment.line punctuation.definition.comment",
+         "foreground": "var(yellow)"
+        },
+
+        {"name":       "Reader comments",
+         "scope":      "comment.reader, comment.reader keyword.operator, comment.reader string, comment.reader constant, comment.reader punctuation.definition.constant, comment.reader punctuation, comment.reader constant.character.escape, comment.reader invalid.illegal.escape, comment.reader string invalid, comment.reader string invalid punctuation, comment.reader entity.name, comment.reader meta.quoted",
+         "foreground": "var(gray)",
+         "background": "var(bg)"},
+
+        {"name":       "Form comments",
+         "scope":      "comment.form, comment.form keyword.operator, comment.form string, comment.form constant, comment.form punctuation.definition.constant, comment.form punctuation, comment.form constant.character.escape, comment.form invalid.illegal.escape, comment.form string invalid, comment.form string invalid punctuation, comment.form entity.name, comment.form meta.quoted",
+         "foreground": "var(gray)",
+         "background": "var(bg)"},
+
+        {"name":       "Metadata",
+         "scope":      "meta.metadata, meta.metadata keyword.operator, meta.metadata string, meta.metadata constant, meta.metadata punctuation.definition.constant, meta.metadata punctuation",
+         "foreground": "var(gray)"},
+
+        {"scope":      "meta.metadata meta.quoted",
+         "background": "var(bg)"},
+
+        {"name":       "Quoted",
+         "scope":      "meta.quoted - meta.quoted meta.unquoted, meta.quoted meta.unquoted meta.quoted - meta.quoted meta.unquoted meta.quoted meta.unquoted, meta.quoted meta.unquoted meta.quoted meta.unquoted meta.quoted - meta.quoted meta.unquoted meta.quoted meta.unquoted meta.quoted meta.unquoted, meta.quoted comment.reader, meta.quoted punctuation.definition.comment, meta.quoted comment.form, meta.quoted comment.form punctuation",
+         "background": "#FFFFFF10"},
+
+        {"name":       "Inner brackets",
+         "scope":      "meta.parens meta.parens punctuation.section, meta.parens meta.brackets punctuation.section, meta.parens meta.braces punctuation.section, meta.brackets meta.parens punctuation.section, meta.brackets meta.brackets punctuation.section, meta.brackets meta.braces punctuation.section, meta.braces meta.parens punctuation.section, meta.braces meta.brackets punctuation.section, meta.braces meta.braces punctuation.section",
+         "foreground": "var(gray)"},
+
+        {"name":       "Mistakes",
+         "scope":      "invalid, invalid string, invalid constant, invalid entity.name, invalid punctuation, invalid source.symbol",
+         "foreground": "var(red)",
+         "background": "var(red-bg)"},
+
+        // MARKUP
+
+        {"scope": "markup.inserted",
+         "foreground": "var(green)"},
+
+        {"scope": "markup.deleted",
+         "foreground": "hsl(2, 65%, 50%)"},
+         
+        {"scope": "markup.changed",
+         "foreground": "hsl(30, 85%, 50%)"},
+
+        {"scope": "markup.ignored",
+         "foreground": "#aaa"},
+
+        {"scope": "markup.untracked",
+         "foreground": "#aaa"},
+
+        // REGIONS
+
+        {"scope": "region.eval.success",
+         "foreground": "var(green)"},
+
+        {"scope": "region.eval.exception",
+         "foreground": "var(red)"},
+         
+        {"scope": "region.eval.pending",
+         "foreground": "var(gray)"},
+
+        {"scope": "region.watch",
+         "foreground": "var(magenta)"},
+
+        {"scope": "region.redish",
+         "background": "#F04F5080"},
+
+        {"scope": "region.orangish",
+         "background": "#FF935680"},
+
+        {"scope": "region.yellowish",
+         "background": "#FFBC5D80"},
+
+        {"scope": "region.greenish",
+         "background": "#60CB0080"},
+
+        {"scope": "region.cyanish",
+         "background": "#00AACB80"},
+
+        {"scope": "region.bluish",
+         "background": "#017ACC80"},
+
+        {"scope": "region.purplish",
+         "background": "#C171FF80"},
+
+        {"scope": "region.pinkish",
+         "background": "#E64CE680"},
+
+        // {"scope": "region.eval.lookup",
+        //  "foreground": "hsl(208, 100%, 50%)"},
+    ]
+}
