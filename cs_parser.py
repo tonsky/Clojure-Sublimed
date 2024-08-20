@@ -428,7 +428,9 @@ def namespace(view, point):
     for child in parsed.children:
         if child.end >= point:
             break
-        elif child.name == 'parens':
+        if child.name == 'meta':
+            child = child.body.children[0]
+        if child.name == 'parens':
             body = child.body
             if len(body.children) >= 2:
                 first_form = body.children[0]
