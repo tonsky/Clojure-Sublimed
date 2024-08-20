@@ -137,7 +137,7 @@ class ClojureSublimedReindentBufferCommand(sublime_plugin.TextCommand):
 class ClojureSublimedReindentLinesCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        with cs_common.Measure("Reindent Lines {}", view.sel()):
+        with cs_common.Measure("Reindent Lines {} chars", sum([r.size() for r in view.sel()])):
             if 'cljfmt' == cs_common.setting('formatter'):
                 cs_cljfmt.indent_lines(view, view.sel(), edit)
             else:

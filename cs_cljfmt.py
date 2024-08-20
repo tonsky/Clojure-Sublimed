@@ -2,26 +2,25 @@ import os, re, sublime, subprocess
 from . import cs_common, cs_parser
 
 def format_string(view, text):
-    with cs_common.Measure("cljfmt fix {} chars", len(text)):
-        try:
-            cmd = 'cljfmt.exe' if 'windows' == sublime.platform() else 'cljfmt'
-            cwd = None
-            if file := view.file_name():
-                cwd = os.path.dirname(file)
-            elif folders := view.window().folders():
-                cwd = folders[0]
+    try:
+        cmd = 'cljfmt.exe' if 'windows' == sublime.platform() else 'cljfmt'
+        cwd = None
+        if file := view.file_name():
+            cwd = os.path.dirname(file)
+        elif folders := view.window().folders():
+            cwd = folders[0]
 
-            proc = subprocess.run([cmd, 'fix', '-'],
-                     input = text,
-                     text = True,
-                     capture_output = True,
-                     check = True,
-                     cwd = cwd)
-        except FileNotFoundError:
-            sublime.error_message(f'`{cmd}` is not on $PATH')
-            raise
-        if 'Failed' not in proc.stderr:
-            return proc.stdout
+        proc = subprocess.run([cmd, 'fix', '-'],
+                 input = text,
+                 text = True,
+                 capture_output = True,
+                 check = True,
+                 cwd = cwd)
+    except FileNotFoundError:
+        sublime.error_message(f'`{cmd}` is not on $PATH')
+        raise
+    if 'Failed' not in proc.stderr:
+        return proc.stdout
 
 def indent_lines(view, selections, edit):
     regions = [region for region in selections if not region.empty()]
@@ -48,9 +47,7 @@ def indent_lines(view, selections, edit):
 
 def newline_indent(view, point):
     text = view.substr(sublime.Region(0, point))
-    parsed = None
-    with cs_common.Measure("parse {} chars", len(text)):
-        parsed = cs_parser.parse(text)
+    parsed = cs_parser.parse(text)
     to_close = []
     node = parsed
     start = node.children[-1].start if node.children else 0
