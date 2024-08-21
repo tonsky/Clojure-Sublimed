@@ -539,12 +539,14 @@ string"
   #'map
 ; ^^^^^ meta.var
 ; ^ punctuation.definition.var
-  #' ,,, #_skip map
-; ^^^^^^^^^^^^^^^^^ meta.var
+  #' ,,, map
+; ^^^^^^^^^^ meta.var
 ; ^^ punctuation.definition.var
-;   ^^^^^^^^^^^^^^^ - punctuation.definition.var
+;   ^^^^^^^^ - punctuation.definition.var
 ;    ^^^ punctuation.definition.comma
-
+  #'123
+; ^^ meta.var
+;   ^^^ - meta.var
 
 ;;;;;;;;;; DEREF ;;;;;;;;;;
 
@@ -561,22 +563,32 @@ string"
 ;;;;;;;;;; READER CONDITIONALS ;;;;;;;;;;
 
   #?(:clj 1 :cljs 2)
-; ^^^^^^^^^^^^^^^^^^ meta.reader_conditional
+; ^^^^^^^^^^^^^^^^^^ meta.reader_conditional meta.parens
+; ^^^ punctuation.section.parens.begin
 ; ^^ punctuation.definition.reader_conditional
-;   ^ punctuation.section.parens.begin
-;   ^^^^^^^^^^^^^^^^ meta.parens
 ;                  ^ punctuation.section.parens.end
 ;                   ^ - punctuation - meta.section
   #?@(:clj [3 4] :cljs [5 6])
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader_conditional
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader_conditional meta.parens
 ; ^^^ punctuation.definition.reader_conditional
-;    ^ punctuation.section.parens.begin
-;    ^^^^^^^^^^^^^^^^^^^^^^^^ meta.parens
+; ^^^^ punctuation.section.parens.begin
 ;                           ^ punctuation.section.parens.end
 ;                            ^ - punctuation - meta.section
   #?  ,,, ,,  (:clj 1 :cljs 2)
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader_conditional
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader_conditional meta.parens
 ; ^^ punctuation.definition.reader_conditional
+; ^^ punctuation.section.parens.begin
+;             ^ punctuation.section.parens.begin
+;     ^^^ punctuation.definition.comma
+;         ^^ punctuation.definition.comma
+  [[#?(:clj 1 :cljs 2)]]
+;   ^^^^^^^^^^^^^^^^^^ meta.reader_conditional meta.parens
+  #? #_clj (:clj 123)
+; ^^ meta.reader_conditional
+;    ^^^^^^^^^^^^^^^^ - meta.reader_conditional
+  #? [123]
+; ^^ meta.reader_conditional
+;    ^^^^^ - meta.reader_conditional
 
 
 ;;;;;;;;;; QUOTE ;;;;;;;;;;
