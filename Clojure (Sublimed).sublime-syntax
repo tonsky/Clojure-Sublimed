@@ -1,8 +1,8 @@
 %YAML 1.2
 ---
-# http://www.sublimetext.com/docs/3/syntax.html
+# https://www.sublimetext.com/docs/syntax.html
 name: Clojure (Sublimed)
-file_extensions: [clj, cljs, cljc, cljx, boot, bb]
+file_extensions: [clj, cljs, cljc, cljx, boot, bb, edn]
 scope: source.clojure
 variables:
   wsb:          '(?<=^|[\s,()\[\]{}~''`"^@]|#_)'
@@ -229,11 +229,12 @@ contexts:
       - include: forms
 
   keyword:
-    - match: '{{wsb}}(::?){{keyword}}(?:(/){{keyword}})?{{wse}}'
+    - match: '{{wsb}}(::?)(?:{{keyword}}|({{keyword}})(/){{keyword}}){{wse}}'
       scope: constant.other.keyword.clojure
       captures:
-        1: punctuation.definition.constant.begin.clojure
-        2: punctuation.definition.constant.namespace.clojure
+        1: punctuation.definition.keyword.begin.clojure
+        2: meta.namespace.keyword.clojure
+        3: punctuation.definition.namespace.clojure
       pop:   1
 
   integer:
@@ -353,7 +354,7 @@ contexts:
       scope: source.symbol.def.clojure
       captures:
         1: meta.namespace.symbol.clojure
-        2: punctuation.definition.symbol.namespace.clojure
+        2: punctuation.definition.namespace.clojure
       pop: 1
       push: list_second
 
@@ -362,7 +363,7 @@ contexts:
       scope: source.symbol.clojure entity.name.clojure
       captures:
         1: meta.namespace.symbol.clojure
-        2: punctuation.definition.symbol.namespace.clojure
+        2: punctuation.definition.namespace.clojure
       pop: 1
       push: list_rest
 
@@ -371,7 +372,7 @@ contexts:
       scope: source.symbol.unused.clojure
       captures:
         1: meta.namespace.symbol.clojure
-        2: punctuation.definition.symbol.namespace.clojure
+        2: punctuation.definition.namespace.clojure
       pop:   1
 
   symbol:
@@ -379,7 +380,7 @@ contexts:
       scope: source.symbol.clojure
       captures:
         1: meta.namespace.symbol.clojure
-        2: punctuation.definition.symbol.namespace.clojure
+        2: punctuation.definition.namespace.clojure
       pop:   1
 
   vector:

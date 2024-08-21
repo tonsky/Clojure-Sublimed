@@ -15,8 +15,9 @@ Other changes:
 
 - Built-in color scheme to utilize REPL and new syntax features.
 - Allow using `cljfmt` for formatting (requires `cljfmt` binary on `$PATH`)
+- Removed separate EDN syntax, merged with main Clojure (Sublimed)
 - Settings can now be specified in main `Preferences.sublime-settings` as well. Just prepend `clojure_sublimed_` to each setting’s name.
-- Detect namespaces with meta
+- REPL can detect namespaces with meta on ns form
 
 ### 3.8.0 - Aug 8, 2024
 

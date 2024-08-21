@@ -1,9 +1,12 @@
 
 ; Constants
-nil true false \c \tab 1 1.0 1/2 :a :a.b/c.d #inst "1985-01-25"
+nil true false \c \tab 1 1.0 1/2 #inst "1985-01-25"
 
 ; Symbols
 abc ab/cd _abc
+
+; Keywords
+:a :a.b/c.d ::ab ::a.b/c.d
 
 ; Strings
 "" "abc" "\" \u221e \x"

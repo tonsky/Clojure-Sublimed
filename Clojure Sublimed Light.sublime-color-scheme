@@ -53,8 +53,8 @@
          "scope":      "entity.name - entity.name.tag - meta.metadata",
          "background": "var(blue)"},
 
-        {"name":       "Namespaces",
-         "scope":      "meta.namespace, punctuation.definition.symbol.namespace",
+        {"name":       "Symbol namespaces",
+         "scope":      "meta.namespace.symbol, source.symbol punctuation.definition.namespace",
          "foreground": "var(gray)"},
 
         {"name":       "Unused symbol",
