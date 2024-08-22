@@ -19,49 +19,45 @@ variables:
   regexp_name:  '[a-zA-Z][a-zA-Z0-9]*'
 contexts:
   main:
-    - include: comma
-    - include: line_comment
-    - include: reader_comment
-    - include: metadata
-    - include: quote
-    - include: syntax_quote
-    - include: syntax_unquote
-    - include: deref
+    - include: skip_forms
+    - include: wrap_forms
     - match: (?=\S)
-      push: forms
+      push:
+        - include: forms
 
   forms:
+    - include: skip_forms
+    - include: wrap_forms
+    - include: normal_forms
+    - include: stray_bracket
+
+  deep_forms:
+    - include: skip_forms
+    - include: deep_normal_forms
+    - include: stray_bracket
+
+
+  # SKIP FORMS
+
+  skip_forms:
     - include: comma
+    - include: deref
+    - include: var
     - include: line_comment
     - include: reader_comment
     - include: metadata
-    - include: quote
-    - include: syntax_quote
-    - include: syntax_unquote
-    - include: deref
-    - include: character
-    - include: string
-    - include: regexp
-    - include: constant
-    - include: keyword
-    - include: integer
-    - include: float
-    - include: ratio
-    - include: symbol_unused
-    - include: symbol
-    - include: var
-    - include: list
-    - include: anonymous_fn
-    - include: reader_conditional
-    - include: vector
-    - include: map
-    - include: set
-    - include: tag
-    - include: stray_bracket
 
   comma:
     - match: ','
       scope: punctuation.definition.comma.clojure
+
+  deref:
+    - match: '@'
+      scope: keyword.operator.deref.clojure
+
+  var:
+    - match: '#'''
+      scope: punctuation.definition.var.clojure
 
   line_comment:
     - match: '(;+).*$'
@@ -82,6 +78,13 @@ contexts:
       push: 
       - meta_scope: meta.metadata.clojure
       - include: forms
+
+  # WRAP FORMS
+
+  wrap_forms:
+    - include: quote
+    - include: syntax_quote
+    - include: syntax_unquote
 
   quote:
     - match: ''''
@@ -104,12 +107,27 @@ contexts:
       - meta_scope: meta.unquoted.clojure
       - include: forms
 
-  deref:
-    - match: '@'
-      scope: keyword.operator.deref.clojure
-      push: 
-      - meta_scope: meta.deref.clojure
-      - include: forms
+
+  # NORMAL FORMS
+
+  normal_forms:
+    - include: character
+    - include: string
+    - include: regexp
+    - include: constant
+    - include: keyword
+    - include: integer
+    - include: float
+    - include: ratio
+    - include: symbol_unused
+    - include: symbol
+    - include: list
+    - include: anonymous_fn
+    - include: reader_conditional
+    - include: vector
+    - include: map
+    - include: set
+    - include: tag
 
   character:
     - match: '{{wsb}}((\\)(u\h{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s]){{wse}}|((\\){{nwse}}*))'
@@ -274,30 +292,6 @@ contexts:
         2: punctuation.definition.namespace.clojure
       pop:   1
 
-  var:
-    - match: '#'''
-      scope: punctuation.definition.var.clojure
-      push: 
-      - meta_scope: meta.var.clojure
-      - include: symbol
-      - include: comma
-      - include: fail
-
-  tag:
-    - match: '{{wsb}}(#inst\s*"\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?"|(#inst\s*"[^"]*")){{wse}}'
-      scope: constant.other.instant.clojure
-      captures:
-        2: invalid.illegal.instant.clojure
-      pop:   1
-    - match: '{{wsb}}(#uuid\s*"\h{8}-\h{4}-\h{4}-\h{4}-\h{12}"|(#uuid\s*"[^"]*")){{wse}}'
-      scope: constant.other.uuid.clojure
-      captures:
-        2: invalid.illegal.uuid.clojure
-      pop:   1
-    - match: '{{wsb}}#(?![_#{])(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
-      scope: storage.type.tag.clojure
-      pop:   1
-
   list:
     - match: '(?=\()'
       branch_point: open_parens
@@ -379,23 +373,20 @@ contexts:
       - meta_scope: meta.parens.clojure meta.function.anon.clojure
       - match: \)
         scope: punctuation.section.parens.end.clojure
-        pop:   2
+        pop: 2
       - include: main
 
   reader_conditional:
-    - match: '#\?@?'
-      scope: punctuation.definition.reader_conditional.clojure punctuation.section.parens.begin.clojure
+    - match: '(#\?@?)\s*\('
+      captures:
+        1: punctuation.definition.reader_conditional.clojure
+      scope: punctuation.section.parens.begin.clojure
       push:
-      - meta_scope: meta.reader_conditional.clojure meta.parens.clojure
-      - include: comma
-      - match: '\('
-        scope: punctuation.section.parens.begin.clojure
-        push:
-          - match: '\)'
-            scope: punctuation.section.parens.end.clojure
-            pop: 3
-          - include: main
-      - include: fail
+      - meta_scope: meta.parens.clojure meta.reader_conditional.clojure
+      - match: '\)'
+        scope: punctuation.section.parens.end.clojure
+        pop: 2
+      - include: main
 
   vector:
     - match: \[
@@ -426,6 +417,47 @@ contexts:
         scope: punctuation.section.braces.end.clojure
         pop:   2
       - include: main
+
+  tag:
+    - match: '{{wsb}}(#inst\s*"\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?"|(#inst\s*"[^"]*")){{wse}}'
+      scope: constant.other.instant.clojure
+      captures:
+        2: invalid.illegal.instant.clojure
+      pop:   1
+    - match: '{{wsb}}(#uuid\s*"\h{8}-\h{4}-\h{4}-\h{4}-\h{12}"|(#uuid\s*"[^"]*")){{wse}}'
+      scope: constant.other.uuid.clojure
+      captures:
+        2: invalid.illegal.uuid.clojure
+      pop:   1
+    - match: '{{wsb}}#(?![_#{])(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
+      scope: storage.type.tag.clojure
+      pop:   1
+
+
+  # DEEP FORMS
+
+  deep_normal_forms:
+    - include: deep_character
+    - include: deep_string
+    - include: deep_regexp
+    - include: deep_constant
+    - include: deep_keyword
+    - include: deep_integer
+    - include: deep_float
+    - include: deep_ratio
+    - include: deep_symbol_unused
+    - include: deep_symbol
+    - include: deep_var
+    - include: deep_list
+    - include: deep_anonymous_fn
+    - include: deep_reader_conditional
+    - include: deep_vector
+    - include: deep_map
+    - include: deep_set
+    - include: deep_tag
+
+
+  # ERRORS
 
   stray_bracket:
     - match: '[\]\)\}]'

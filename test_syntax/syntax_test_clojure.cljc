@@ -253,6 +253,9 @@ string"
   ghi
 ; ^^^ - comment
 
+  (((#_x)))
+;   ^^^^^ meta.parens meta.parens meta.parens
+;    ^^^ comment.reader
 
 ;;;;;;;;;; SYMBOLS ;;;;;;;;;;
 
@@ -537,58 +540,44 @@ string"
 ;;;;;;;;;; VAR QUOTE ;;;;;;;;;;
 
   #'map
-; ^^^^^ meta.var
-; ^ punctuation.definition.var
-  #' ,,, map
-; ^^^^^^^^^^ meta.var
 ; ^^ punctuation.definition.var
-;   ^^^^^^^^ - punctuation.definition.var
-;    ^^^ punctuation.definition.comma
-  #'123
-; ^^ meta.var
-;   ^^^ - meta.var
+  #' ,,, map
+; ^^ punctuation.definition.var
+  (((#'map)))
+;   ^^^^^^^ meta.parens meta.parens meta.parens
+;    ^^ punctuation.definition.var
+
 
 ;;;;;;;;;; DEREF ;;;;;;;;;;
 
   @*atom
-; ^^^^^^ meta.deref
 ; ^ keyword.operator.deref
   @ , *atom
-; ^^^^^^^^^ meta.deref
 ; ^ keyword.operator.deref
 ;  ^^^^^^^^ - keyword.operator.deref
 ;   ^ punctuation.definition.comma
+  (((@map)))
+;   ^^^^^^ meta.parens meta.parens meta.parens
+;    ^ keyword.operator.deref
 
 
 ;;;;;;;;;; READER CONDITIONALS ;;;;;;;;;;
-
   #?(:clj 1 :cljs 2)
-; ^^^^^^^^^^^^^^^^^^ meta.reader_conditional meta.parens
+; ^^^^^^^^^^^^^^^^^^ meta.parens meta.reader_conditional
 ; ^^^ punctuation.section.parens.begin
 ; ^^ punctuation.definition.reader_conditional
 ;                  ^ punctuation.section.parens.end
 ;                   ^ - punctuation - meta.section
   #?@(:clj [3 4] :cljs [5 6])
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader_conditional meta.parens
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.parens meta.reader_conditional
 ; ^^^ punctuation.definition.reader_conditional
 ; ^^^^ punctuation.section.parens.begin
 ;                           ^ punctuation.section.parens.end
 ;                            ^ - punctuation - meta.section
-  #?  ,,, ,,  (:clj 1 :cljs 2)
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader_conditional meta.parens
-; ^^ punctuation.definition.reader_conditional
-; ^^ punctuation.section.parens.begin
-;             ^ punctuation.section.parens.begin
-;     ^^^ punctuation.definition.comma
-;         ^^ punctuation.definition.comma
   [[#?(:clj 1 :cljs 2)]]
-;   ^^^^^^^^^^^^^^^^^^ meta.reader_conditional meta.parens
-  #? #_clj (:clj 123)
-; ^^ meta.reader_conditional
-;    ^^^^^^^^^^^^^^^^ - meta.reader_conditional
+;   ^^^^^^^^^^^^^^^^^^ meta.parens meta.reader_conditional
   #? [123]
-; ^^ meta.reader_conditional
-;    ^^^^^ - meta.reader_conditional
+; ^^^^^^^^ - meta.reader_conditional
 
 
 ;;;;;;;;;; QUOTE ;;;;;;;;;;
@@ -630,6 +619,10 @@ string"
   ''()()()
 ; ^^^^ meta.quoted
 ;     ^^^^ - meta.quoted
+  (('x))
+;  ^^^^ meta.parens meta.parens
+;   ^^ meta.quoted
+;     ^^ - meta.quoted
   (((''x y z)))
 ; ^^^^^^^^^^^^^ meta.parens
 ;  ^^^^^^^^^^^ meta.parens meta.parens
@@ -639,6 +632,11 @@ string"
 
 
 ;;;;;;;;;; SYNTAX QUOTE, UNQUOTE, UNQUOTE SPLICING ;;;;;;;;;;
+
+  ((`x))
+;  ^^^^ meta.parens meta.parens
+;   ^^ meta.quoted.syntax
+;     ^^ - meta.quoted.syntax
 
   `(let [x# ~x] ~@(do `(...))) []
 ; ^ keyword.operator.quote.syntax
@@ -711,6 +709,10 @@ string"
   ^^()()()
 ; ^^^^ meta.metadata
 ;     ^^^^ - meta.metadata
+  (((^x y)))
+;   ^^^^^^ meta.parens meta.parens meta.parens
+;    ^^ meta.metadata
+;      ^^ - meta.metadata
   (((^^x y z)))
 ; ^^^^^^^^^^^^^ meta.parens
 ;  ^^^^^^^^^^^ meta.parens meta.parens
