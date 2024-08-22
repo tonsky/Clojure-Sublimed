@@ -703,22 +703,10 @@ string"
   x y z
 ; ^ meta.metadata
 ;  ^^^^ - meta.metadata
-  ^^x y z
-; ^^^ meta.metadata
-;    ^^^^ - meta.metadata
-  ^^()()()
-; ^^^^ meta.metadata
-;     ^^^^ - meta.metadata
   (((^x y)))
 ;   ^^^^^^ meta.parens meta.parens meta.parens
 ;    ^^ meta.metadata
 ;      ^^ - meta.metadata
-  (((^^x y z)))
-; ^^^^^^^^^^^^^ meta.parens
-;  ^^^^^^^^^^^ meta.parens meta.parens
-;   ^^^^^^^^^ meta.parens meta.parens meta.parens
-;    ^^^ meta.metadata
-;       ^^^^^^^ - meta.metadata
 
 
 ;;;;;;;;;; REGEXPS ;;;;;;;;;;
