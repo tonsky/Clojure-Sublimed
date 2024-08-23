@@ -10,6 +10,7 @@ Syntax has been significantly reworked.
 - Quote & syntax quote highlight following form as `meta.quoted` and `meta.quoted.syntax`
 - Metadata highlights following form as `meta.metadata`
 - Octal & arbitrary radix integers
+- Better keyword detection
 
 Other changes:
 

@@ -13,9 +13,7 @@ variables:
   sym_body:     '[\p{Alpha}*!_?$%&=<>''\-+.#:0-9]'
   ns_symbol:    '(?:[\-+.]|[\-+.]{{sym_head_lax}}{{sym_body}}*|{{sym_head}}{{sym_body}}*)'
   symbol:       '(?:/|{{ns_symbol}})'
-  kw_head:      '[\p{Alpha}*!_?$%&=<>''\-+.#0-9]'
-  kw_body:      '[\p{Alpha}*!_?$%&=<>''\-+.#0-9:]'
-  keyword:      '{{kw_head}}{{kw_body}}*'
+  kw:           '\p{Alpha}*!_?$%&=<>''\-+.#0-9' 
   regexp_name:  '[a-zA-Z][a-zA-Z0-9]*'
 contexts:
   main:
@@ -225,13 +223,18 @@ contexts:
       pop: 1
 
   keyword:
-    - match: '{{wsb}}(::?)(?:{{keyword}}|({{keyword}})(/){{keyword}}){{wse}}'
+    - match: '{{wsb}}(::?)([{{kw}}][{{kw}}:]*[{{kw}}]|[{{kw}}])(/)([{{kw}}:/]*[{{kw}}]|[{{kw}}]){{wse}}'
       scope: constant.other.keyword.clojure
       captures:
         1: punctuation.definition.keyword.begin.clojure
         2: meta.namespace.keyword.clojure
         3: punctuation.definition.namespace.clojure
-      pop:   1
+      pop: 1
+    - match: '{{wsb}}(::?)([{{kw}}][{{kw}}:]*[{{kw}}]|[{{kw}}]){{wse}}'
+      scope: constant.other.keyword.clojure
+      captures:
+        1: punctuation.definition.keyword.begin.clojure
+      pop: 1
 
   integer:
     - match: '{{wsb}}[+-]?(?:0[xX][0-9A-Fa-f]+|0[1-7]+|[1-9][0-9]*|[1-9][0-9]?[rR][0-9A-Za-z]+|0)(N)?{{wse}}'
@@ -540,12 +543,17 @@ contexts:
       pop: 2
 
   deep_keyword:
-    - match: '{{wsb}}(::?)(?:{{keyword}}|({{keyword}})(/){{keyword}}){{wse}}'
+    - match: '{{wsb}}(::?)([{{kw}}][{{kw}}:]*[{{kw}}]|[{{kw}}])(/)([{{kw}}:/]*[{{kw}}]|[{{kw}}]){{wse}}'
       scope: constant.other.keyword.clojure
       captures:
         1: punctuation.definition.keyword.begin.clojure
         2: meta.namespace.keyword.clojure
         3: punctuation.definition.namespace.clojure
+      pop: 2
+    - match: '{{wsb}}(::?)([{{kw}}][{{kw}}:]*[{{kw}}]|[{{kw}}]){{wse}}'
+      scope: constant.other.keyword.clojure
+      captures:
+        1: punctuation.definition.keyword.begin.clojure
       pop: 2
 
   deep_integer:

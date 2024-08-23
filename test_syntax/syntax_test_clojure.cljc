@@ -324,7 +324,7 @@ string"
 ;   ^ -constant.other.keyword
 ;    ^^^^ constant.other.keyword
 ;         ^^^^ constant.other.keyword
-  :. :* :+ :! :- :_ :? :$ :% :& := :< :> :# :1 :' :a: :k::v
+  :. :* :+ :! :- :_ :? :$ :% :& := :< :> :# :1 :' :k::v
 ; ^^ constant.other.keyword
 ;    ^^ constant.other.keyword
 ;       ^^ constant.other.keyword
@@ -341,8 +341,7 @@ string"
 ;                                        ^^ constant.other.keyword
 ;                                           ^^ constant.other.keyword
 ;                                              ^^ constant.other.keyword
-;                                                 ^^^ constant.other.keyword
-;                                                     ^^^^^ constant.other.keyword
+;                                                 ^^^^^ constant.other.keyword
   :a/b :1/2 :абв/где :abc.def/uvw.xyz
 ; ^^^^ constant.other.keyword
 ; ^    punctuation.definition.keyword.begin
@@ -365,10 +364,16 @@ string"
 ;      ^^ punctuation.definition.keyword.begin
 ;        ^ meta.namespace.keyword
 ;         ^ punctuation.definition.namespace
+  :a:b :a/:b :a:b/c:d :a//b :k/v/v
+; ^^^^ constant.other.keyword
+;      ^^^^^ constant.other.keyword
+;            ^^^^^^^^ constant.other.keyword
+;                     ^^^^^ constant.other.keyword
+;                           ^^^^^^ constant.other.keyword
 
-;; NOT KEYWORDS
-  :kv/ :/kv :/ :k/:v :k/v/v :::kv 
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ -constant.other.keyword
+;;;;; NOT KEYWORDS
+  :kv: :kv/ :/kv :/ :kv/ab: :kv/ab/ :::kv 
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ -constant.other.keyword
 
 
 ;;;;;;;;;; INTEGERS ;;;;;;;;;;
