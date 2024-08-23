@@ -19,6 +19,7 @@ Other changes:
 - Removed separate EDN syntax, merged with main Clojure (Sublimed)
 - Settings can now be specified in main `Preferences.sublime-settings` as well. Just prepend `clojure_sublimed_` to each setting’s name.
 - REPL can detect namespaces with meta on ns form
+- Detect `.shadow-cljs/nrepl.port` and `.shadow-cljs/socket-repl.port`
 
 ### 3.8.0 - Aug 8, 2024
 

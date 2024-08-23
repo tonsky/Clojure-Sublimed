@@ -200,11 +200,12 @@ class ClojureSublimedConnectSocketReplCommand(sublime_plugin.WindowCommand):
         state = cs_common.get_state(self.window)
         state.last_conn = ('clojure_sublimed_connect_socket_repl', {'address': address})
         if address == 'auto':
-            address = cs_conn.AddressInputHandler(port_file = '.repl-port').initial_text()
+            address = self.input({}).initial_text()
         ConnectionSocketRepl(address).connect()
 
     def input(self, args):
-        return cs_conn.AddressInputHandler(port_file = '.repl-port')
+        if 'address' not in args:
+            return cs_conn.AddressInputHandler(port_files = ['.repl-port', '.shadow-cljs/socket-repl.port'])
 
     def is_enabled(self):
         state = cs_common.get_state(self.window)

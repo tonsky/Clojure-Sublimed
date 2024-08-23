@@ -147,8 +147,8 @@ class Connection:
         cs_common.set_status(self.window, status_key, status)
 
 class AddressInputHandler(sublime_plugin.TextInputHandler):
-    def __init__(self, port_file = None, next_input = None):
-        self.port_file = port_file
+    def __init__(self, port_files = [], next_input = None):
+        self.port_files = port_files
         self.next = next_input
 
     """
@@ -159,13 +159,14 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
 
     def initial_text(self):
         # .nrepl-port file present
-        if self.port_file and (window := sublime.active_window()):
+        if self.port_files and (window := sublime.active_window()):
             for folder in window.folders():
-                if os.path.exists(folder + "/" + self.port_file):
-                    with open(folder + "/" + self.port_file, "rt") as f:
-                        content = f.read(10).strip()
-                        if re.fullmatch(r'[1-9][0-9]*', content):
-                            return f'localhost:{content}'
+                for port_file in self.port_files:
+                    if os.path.exists(folder + "/" + port_file):
+                        with open(folder + "/" + port_file, "rt") as f:
+                            content = f.read(10).strip()
+                            if re.fullmatch(r'[1-9][0-9]*', content):
+                                return f'localhost:{content}'
         state = cs_common.get_state()
         return state.last_conn[1]['address'] if state.last_conn else 'localhost:'
 

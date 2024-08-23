@@ -140,11 +140,12 @@ class ClojureSublimedConnectNreplJvmCommand(sublime_plugin.WindowCommand):
         state = cs_common.get_state(self.window)
         state.last_conn = ('clojure_sublimed_connect_nrepl_jvm', {'address': address})
         if address == 'auto':
-            address = cs_conn.AddressInputHandler(port_file = '.nrepl-port').initial_text()
+            address = self.input({}).initial_text()
         ConnectionNreplJvm(address).connect()
 
     def input(self, args):
-        return cs_conn.AddressInputHandler(port_file = '.nrepl-port')
+        if 'address' not in args:
+            return cs_conn.AddressInputHandler(port_files = ['.nrepl-port', '.shadow-cljs/nrepl.port'])
 
     def is_enabled(self):
         state = cs_common.get_state(self.window)

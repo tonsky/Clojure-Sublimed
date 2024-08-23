@@ -91,10 +91,14 @@ class ClojureSublimedConnectShadowCljsCommand(sublime_plugin.WindowCommand):
         ConnectionShadowCljs(address, build).connect()
 
     def input(self, args):
-        if 'build' not in args:
-            return cs_conn.AddressInputHandler(next_input = BuildInputHandler())
+        if 'address' in args and 'build' in args:
+            pass
+        elif 'address' in args:
+            return BuildInputHandler()
+        elif 'build' in args:
+            return cs_conn.AddressInputHandler(port_files = ['.nrepl-port', '.shadow-cljs/nrepl.port'])
         else:
-            return cs_conn.AddressInputHandler()
+            return cs_conn.AddressInputHandler(port_files = ['.nrepl-port', '.shadow-cljs/nrepl.port'], next_input = BuildInputHandler())
 
     def is_enabled(self):
         state = cs_common.get_state(self.window)
