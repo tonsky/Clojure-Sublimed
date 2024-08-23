@@ -234,7 +234,7 @@ contexts:
       pop:   1
 
   integer:
-    - match: '{{wsb}}[+-]?(?:0x0|0x[1-9a-fA-F][0-9a-fA-F]*|0|[1-9][0-9]*)(N)?{{wse}}'
+    - match: '{{wsb}}[+-]?(?:0[xX][0-9A-Fa-f]+|0[1-7]+|[1-9][0-9]*|[1-9][0-9]?[rR][0-9A-Za-z]+|0)(N)?{{wse}}'
       scope: constant.numeric.integer.clojure
       captures:
         1: punctuation.definition.integer.precision.clojure
@@ -549,7 +549,7 @@ contexts:
       pop: 2
 
   deep_integer:
-    - match: '{{wsb}}[+-]?(?:0x0|0x[1-9a-fA-F][0-9a-fA-F]*|0|[1-9][0-9]*)(N)?{{wse}}'
+    - match: '{{wsb}}[+-]?(?:0[xX][0-9A-Fa-f]+|0[1-7]+|[1-9][0-9]*|[1-9][0-9]?[rR][0-9A-Za-z]+|0)(N)?{{wse}}'
       scope: constant.numeric.integer.clojure
       captures:
         1: punctuation.definition.integer.precision.clojure

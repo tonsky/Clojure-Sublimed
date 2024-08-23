@@ -9,7 +9,7 @@ Syntax has been significantly reworked.
 - Properly highlight `entity.name` in `def*` forms only at second position, skipping all meta/comments
 - Quote & syntax quote highlight following form as `meta.quoted` and `meta.quoted.syntax`
 - Metadata highlights following form as `meta.metadata`
-- Allow reader-invisible forms like comma, newline, reader comment and meta almost everywhere between meaningful forms
+- Octal & arbitrary radix integers
 
 Other changes:
 

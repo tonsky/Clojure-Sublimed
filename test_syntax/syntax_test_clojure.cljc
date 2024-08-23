@@ -383,9 +383,19 @@ string"
 ;                      ^^ constant.numeric.integer
 ;                         ^^ constant.numeric.integer
 ;                          ^ punctuation.definition.integer.precision
+  0123 -0123
+; ^^^^ constant.numeric.integer
+;      ^^^^^ constant.numeric.integer
+  0x0123 -0x123 0XFF
+; ^^^^^^ constant.numeric.integer
+;        ^^^^^^ constant.numeric.integer
+;               ^^^^ constant.numeric.integer
+  36r0123abyz -32R0123ABYZ
+; ^^^^^^^^^^^ constant.numeric.integer
+;             ^^^^^^^^^^^^ constant.numeric.integer
 
 ;; NOT INTEGERS
-  01 1n ++1 --1 +N -N
+  09 1n ++1 --1 +N -N
 ; ^^^^^^^^^^^^^^^^^^^ -constant.numeric.integer
 
 
