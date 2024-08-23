@@ -16,8 +16,8 @@ class ConnectionNreplRaw(cs_conn.Connection):
         self.output_view = None
 
     def connect_impl(self):
-        self.set_status(0, 'Connecting to {}...', self.addr)
-        self.socket = cs_common.socket_connect(self.addr)
+        self.set_status(0, 'Connecting to {}...', self.get_addr())
+        self.socket = cs_common.socket_connect(self.get_addr())
         self.reader = threading.Thread(daemon=True, target=self.read_loop)
         self.reader.start()
 
@@ -84,7 +84,7 @@ class ConnectionNreplRaw(cs_conn.Connection):
     def handle_connect(self, msg):
         if 1 == msg.get('id') and 'new-session' in msg:
             self.session = msg['new-session']
-            self.set_status(4, self.addr)
+            self.set_status(4, self.get_addr())
             return True
 
     def handle_disconnect(self, msg):
@@ -160,12 +160,13 @@ class ConnectionNreplRaw(cs_conn.Connection):
         or self.handle_done(msg)
 
 class ClojureSublimedConnectNreplRawCommand(sublime_plugin.WindowCommand):
-    def run(self, address):
+    def run(self, address, timeout = 0):
         state = cs_common.get_state(self.window)
         state.last_conn = ('clojure_sublimed_connect_nrepl_raw', {'address': address})
         if address == 'auto':
             address = self.input({}).initial_text()
-        ConnectionNreplRaw(address).connect()
+        while not state.conn:
+            ConnectionNreplRaw(address).try_connect(timeout = timeout)
 
     def input(self, args):
         if 'address' not in args:

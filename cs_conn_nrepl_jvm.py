@@ -86,7 +86,7 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
             return True
 
         elif 5 == msg.get('id') and 'done' in msg.get('status', []):
-            self.set_status(4, self.addr)
+            self.set_status(4, self.get_addr())
             return True
 
     def handle_new_session(self, msg):
@@ -136,12 +136,12 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
         or self.handle_lookup(msg)
 
 class ClojureSublimedConnectNreplJvmCommand(sublime_plugin.WindowCommand):
-    def run(self, address):
+    def run(self, address, timeout = 0):
         state = cs_common.get_state(self.window)
         state.last_conn = ('clojure_sublimed_connect_nrepl_jvm', {'address': address})
         if address == 'auto':
             address = self.input({}).initial_text()
-        ConnectionNreplJvm(address).connect()
+        ConnectionNreplJvm(address).try_connect(timeout = timeout)
 
     def input(self, args):
         if 'address' not in args:

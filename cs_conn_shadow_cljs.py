@@ -27,7 +27,7 @@ class ConnectionShadowCljs(cs_conn_nrepl_raw.ConnectionNreplRaw):
 
             return True
         elif 2 == msg.get('id') and msg.get('status') == ['done']:
-            self.set_status(4, self.addr)
+            self.set_status(4, self.get_addr())
             return True
 
     def handle_value(self, msg):
@@ -85,10 +85,10 @@ class BuildInputHandler(sublime_plugin.TextInputHandler):
         """)
 
 class ClojureSublimedConnectShadowCljsCommand(sublime_plugin.WindowCommand):
-    def run(self, address, build):
+    def run(self, address, build, timeout = 0):
         state = cs_common.get_state(self.window)
         state.last_conn = ('clojure_sublimed_connect_shadow_cljs', {'address': address, 'build': build})
-        ConnectionShadowCljs(address, build).connect()
+        ConnectionShadowCljs(address, build).try_connect(timeout = timeout)
 
     def input(self, args):
         if 'address' in args and 'build' in args:

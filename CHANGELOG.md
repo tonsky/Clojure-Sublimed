@@ -20,6 +20,7 @@ Other changes:
 - Settings can now be specified in main `Preferences.sublime-settings` as well. Just prepend `clojure_sublimed_` to each setting’s name.
 - REPL can detect namespaces with meta on ns form
 - Detect `.shadow-cljs/nrepl.port` and `.shadow-cljs/socket-repl.port`
+- Connect commands now accept `timeout` argument for automation scenarios like “start clojure, start trying to connect to REPL until port is available”
 
 ### 3.8.0 - Aug 8, 2024
 

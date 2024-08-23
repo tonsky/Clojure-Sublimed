@@ -1,4 +1,4 @@
-import os, re, sublime, sublime_plugin
+import os, re, sublime, sublime_plugin, threading, time
 from . import cs_common, cs_eval, cs_eval_status, cs_parser, cs_warn
 
 status_key = 'clojure-sublimed-conn'
@@ -17,6 +17,9 @@ class Connection:
         self.disconnecting = False
         self.window = sublime.active_window()
 
+    def get_addr(self):
+        return self.addr() if callable(self.addr) else self.addr
+
     def connect_impl(self):
         pass
 
@@ -33,6 +36,31 @@ class Connection:
             self.disconnect()
             if window := sublime.active_window():
                 window.status_message(f'Connection failed')
+
+    def try_connect_impl(self, timeout):
+        state = cs_common.get_state(self.window)
+        t0 = time.time()
+        attempt = 1
+        while time.time() - t0 <= timeout:
+            time.sleep(0.25)
+            try:
+                cs_common.debug('Connection attempt #{} to {}', attempt, self.get_addr())
+                self.connect_impl()
+                state.conn = self
+                return
+            except Exception as e:
+                attempt += 1
+        cs_common.error('Giving up after {} sec connecting to {}', round(time.time() - t0, 2), self.get_addr())
+        self.disconnect()
+        if window := sublime.active_window():
+            window.status_message(f'Connection failed')
+
+    def try_connect(self, timeout = 0):
+        state = cs_common.get_state(self.window)
+        if timeout:
+            threading.Thread(target = self.try_connect_impl, args=(timeout,)).start()
+        else:
+            self.connect()
 
     def ready(self):
         return bool(self.status and self.status[0] == phases[4])
