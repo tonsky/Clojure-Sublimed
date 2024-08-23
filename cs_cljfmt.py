@@ -1,4 +1,4 @@
-import os, re, sublime, subprocess
+import difflib, os, re, sublime, subprocess
 from . import cs_common, cs_parser
 
 def format_string(view, text):
@@ -30,14 +30,25 @@ def indent_lines(view, selections, edit):
     for region in regions:
         text = view.substr(region)
         if text_formatted := format_string(view, text):
-            replacements.append((region, text_formatted))
-
+            pos = region.begin()
+            diff = difflib.ndiff(text.splitlines(keepends=True), text_formatted.splitlines(keepends=True))
+            for line in diff:
+                if line[:2] == '- ':
+                    replacements.append((sublime.Region(pos, pos + len(line) - 2), ''))
+                    pos = pos + len(line) - 2
+                elif line[:2] == '+ ':
+                    replacements.append((sublime.Region(pos, pos), line[2:]))
+                elif line[:2] == '  ':
+                    pos = pos + len(line) - 2
+                elif line[:2] == '? ':
+                    pass
     if replacements:
         selections = [(view.rowcol(r.a), view.rowcol(r.b)) for r in selections]
-        change_id_sel = view.change_id()
+        delta = 0
         for region, string in replacements:
-            transformed_region = view.transform_region_from(region, change_id_sel)
+            transformed_region = sublime.Region(region.a + delta, region.b + delta)
             view.replace(edit, transformed_region, string)
+            delta = delta - region.size() + len(string)
 
         selections.clear()
         for ((rowa, cola), (rowb, colb)) in selections:
