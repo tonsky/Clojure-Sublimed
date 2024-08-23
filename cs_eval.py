@@ -135,7 +135,8 @@ class Eval:
         del evals[self.id]
         del evals_by_view[self.view.id()][self.id]
         if interrupt and self.status == "pending" and self.session:
-            cs_common.conn.send({"op": "interrupt", "interrupt-id": self.id, "session": self.session})
+            state = cs_common.get_state()
+            state.conn.send({"op": "interrupt", "interrupt-id": self.id, "session": self.session})
 
 def by_id(id):
     """
@@ -150,7 +151,7 @@ def by_region(view, region):
     """
     Find an eval touching region
     """
-    for eval in evals_by_view[view.id()].values():
+    for eval in list(evals_by_view[view.id()].values()):
         if cs_common.regions_touch(eval.region(), region):
             return eval
 
@@ -158,7 +159,7 @@ def by_status(view, status):
     """
     Find evals by status
     """
-    return (eval for eval in evals_by_view[view.id()].values() if eval.status == status)
+    return (eval for eval in list(evals_by_view[view.id()].values()) if eval.status == status)
 
 def erase_evals(predicate = lambda x: True, view = None):
     """
