@@ -1,4 +1,4 @@
-### WIP
+### 4.0.0 - Aug 23, 2024
 
 Syntax has been significantly reworked.
 

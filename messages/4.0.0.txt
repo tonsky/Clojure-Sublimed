@@ -1,0 +1,27 @@
+Clojure Sublimed 4.0.0
+----------------------
+
+Two major new features:
+
+# Code formatting
+
+By default, Clojure Sublimed uses [Better Clojure Formatting style](https://tonsky.me/blog/clojurefmt/).
+
+Starting with 4.0.0, you can switch to `cljftm` instead:
+
+- Download `cljfmt` binary from `https://github.com/weavejester/cljfmt/releases/latest`
+- Add `cljfmt` to `$PATH`
+- In Sublime Text, open `Preferences: Settings`
+- Add `"clojure_sublimed_formatter": "cljfmt"`
+
+# Color scheme
+
+4.0.0 ships major improvement in syntax definitons for Clojure.
+
+To make best use of them, we now offer color scheme that makes use of many of these features.
+
+- Cmd/Ctrl + Shift + P (Command Palette)
+- `UI: Select Color Scheme`
+- Select `Auto` -> `Clojure Sublimed Light` -> `Clojure Sublimed Dark`
+
+These color schemes will work for other languages, too.

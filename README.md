@@ -2,46 +2,70 @@
 
 This package provides Clojure support for Sublime Text and includes:
 
-- Clojure and EDN syntax grammars (Sublime Text 3+)
-- Code formatter/indenter (Sublime Text 4075+)
-- nREPL, Socket REPL, ShadowCLJS REPL clients (Sublime Text 4075+)
+- Clojure syntax
+- Color scheme
+- Code formatter/indenter
+- Clients for nREPL, Socket REPL, ShadowCLJS REPL
+
 
 # Installation
 
 `Package Control: Install Package` → `Clojure Sublimed`
 
+
 # Clojure syntax
 
-<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/syntaxes.png" width="463" height="362" alt="Syntaxes">
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/syntaxes.png" width="710" height="796" alt="Syntaxes">
 
-Clojure Sublimed ships with its own syntax definition for Clojure and EDN. Unlike default Clojure syntax, this package is:
+Clojure Sublimed ships with its own syntax definition for Clojure and EDN. Unlike default Clojure syntax, our syntax can:
 
-- slightly more pedantic as per [EDN spec](https://github.com/edn-format/edn) and [Clojure Reader](https://clojure.org/reference/reader),
-- rigorously tested,
-- can be used to highlight rainbow parentheses,
-- punctuation and validation _inside_ regexps,
-- quoted and unquoted regions are marked for highlighting,
-- semantically correct tokenization, perfect for fonts with ligatures,
-- has separate EDN syntax, same way JSON is separate from JavaScript in Sublime Text.
+- mark reader comments `#_` with the following form, including stacked comments,
+- mark `comment` forms,
+- mark quoted/unquoted forms,
+- mark metadata,
+- mark parentheses nesting,
+- mark and validate punctuation inside regexps,
+- do semantically correct tokenization, perfect for fonts with ligatures,
 
 How to enable? Assign syntax to Clojure files:
 
-- open any clj/cljc/cljs file,
-- run `View` → `Syntax` → `Open all with current extension as...` → `Clojure Sublimed` → `Clojure (Sublimed)`.
+For each file type (.clj, .cljs, .cljc, .edn) do:
 
-Want to put your parser to test? Check out [syntax_test_edn.edn](./test_syntax/syntax_test_edn.edn) and [syntax_test_clojure.cljc](./test_syntax/syntax_test_clojure.cljc).
+- Open any file with that extension
+- Go to menu -> `View` → `Syntax` → `Open all with current extension as...`
+- Select `Clojure (Sublimed)`
+
+Want to put your parser to test? Check out [syntax_test_clojure.cljc](./test_syntax/syntax_test_clojure.cljc).
+
+
+# Color scheme
+
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/scheme.png" width="850" height="508" alt="Color Scheme">
+
+To make best use of improved syntax definitions, Clojure Submiled offers its own color scheme:
+
+- Cmd/Ctrl + Shift + P (Command Palette)
+- `UI: Select Color Scheme`
+- Select `Auto` -> `Clojure Sublimed Light` -> `Clojure Sublimed Dark`
+
+These color schemes will work for other languages, too.
+
 
 # Formatter/indenter
 
-Clojure Sublimed includes support for both [Simple Clojure Formatting rules](https://tonsky.me/blog/clojurefmt/) and [cljfmt](https://github.com/weavejester/cljfmt/).
+Clojure Sublimed includes support for both [Better Clojure Formatting](https://tonsky.me/blog/clojurefmt/) and [cljfmt](https://github.com/weavejester/cljfmt/).
 
-Simple Clojure Formatting doesn’t require REPL connection, any Clojure runtime or external tools. It is enabled by default.
+Better Clojure Formatting doesn’t require REPL connection, Clojure runtime or external tools. It is enabled by default.
 
-`cljfmt` requires `cljfmt` binary to be on `$PATH`. Enable it by setting `"formatter": "cljfmt"` in Clojure Sublimed settings.
+To enable `cljfmt`:
+
+- Download `cljfmt` binary from `https://github.com/weavejester/cljfmt/releases/latest`
+- Add `cljfmt` to `$PATH`
+- Add `"clojure_sublimed_formatter": "cljfmt"` to `Preferences: Settings`
 
 To reformat whole file, run `Clojure Sublimed: Reindent`. If you have non-empty selection, it will only reformat selected lines.
 
-To enable reindenting/formatting on save, add `"format_on_save": true` to settings. ([See how to edit settings](#editing-settings))
+To enable reindenting/formatting on save, add `"clojure_sublimed_format_on_save": true` to `Preferences: Settings`.
 
 To enable correct indentations as you type code, rebind `Enter` to `Clojure Sublimed: Insert Newline`:
 
@@ -53,7 +77,6 @@ To enable correct indentations as you type code, rebind `Enter` to `Clojure Subl
              {"key": "panel_has_focus", "operator": "equal", "operand": false}]}
 ```
 
-Best way to do it is through running `Preferences: Clojure Sublimed Key Bindings`.
 
 # REPL clients
 
@@ -89,7 +112,7 @@ How to choose which REPL to use?
 1. Are you on JVM? Use Socket REPL.
 2. On JVM and only have nREPL? Use JVM nREPL.
 3. CLJS? Use ShadowCLJS REPL.
-4. Otherwise (e.g. babashka) use Raw nREPL.
+4. Otherwise (e.g. babashka, sci, ...) use Raw nREPL.
 
 We intentionally excluded following features:
 
@@ -97,7 +120,14 @@ We intentionally excluded following features:
 
 Look at [Sublime LSP](https://github.com/sublimelsp/LSP) with [Clojure LSP](https://github.com/clojure-lsp/clojure-lsp) or [SublimeLinter](https://github.com/SublimeLinter/SublimeLinter) with [clj-kondo](https://github.com/ToxicFrog/SublimeLinter-contrib-clj-kondo) if you need autocompletion.
 
+
 # How to use
+
+Clojure Sublimed will not run your app for you. Use any other way, e.g.:
+
+- Separate terminal app
+- Terminus plugin
+- Sublime Executor plugin
 
 For Clojure apps:
 
@@ -126,6 +156,7 @@ For other nREPL apps:
 1. Run nREPL server.
 2. Run `Clojure Sublimed: Connect to raw nREPL` command.
 
+
 ## Evaluating code from buffer
 
 From here you have three options:
@@ -150,15 +181,18 @@ By default, Clojure Sublimed will also print evaluation time if it takes more th
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/eval_elapsed.png" width="500" height="139" alt="Elapsed time">
 
+
 ## Copying evaluation results
 
 Sometimes you want to copy evaluation result. It is recommended to rebind `Cmd+C`/`Ctrl+C` from `copy` to `sublime_clojure_copy`. This will copy evaluation result if inside evaluated region and fallback to default `copy` otherwise.
+
 
 ## Interrupting
 
 If your evaluation runs too long and you want to interrupt it, run `Clojure Sublimed: Interrupt Pending Evaluations`:
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/interrupt.png" width="587" height="39" alt="Interrupt">
+
 
 ## Opening stacktrace
 
@@ -169,6 +203,7 @@ If your evaluation failed, put your cursor inside failed region and run `Clojure
 Clojure Sublimed will display stacktraces in a Clojure-friendly way. Compare with the default REPL:
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/stacktraces.png" width="806" height="390" alt="Stacktraces">
+
 
 ## Watches
 
@@ -184,6 +219,7 @@ This is how they work:
 
 Watches are only supported in Socket REPL.
 
+
 ## Looking up symbol
 
 To show symbol info, run `Clojure Sublimed: Toggle Symbol Info`:
@@ -191,6 +227,7 @@ To show symbol info, run `Clojure Sublimed: Toggle Symbol Info`:
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/symbol_info.png" width="580" height="172" alt="Toggle Symbol Info">
 
 Universal `Clojure Sublimed: Toggle Info` command acts as either `Toggle Stacktrace` or `Toggle Symbol Info`, depending on context.
+
 
 ## Binding keys to eval custom code
 
@@ -225,6 +262,7 @@ Reload code with [clj-reload](https://github.com/tonsky/clj-reload):
  "command": "clojure_sublimed_eval_code",
  "args":    {"code": "(clj-reload.core/reload)"}}
 ```
+
 
 ## Transforming code before eval
 
@@ -289,9 +327,11 @@ Run test under cursor at work:
 
 ![](./screenshots/test_under_cursor.gif)
 
+
 ## Clearing results
 
 Finally, to clear evaluation results run `Clojure Sublimed: Clear Evaluation Results`.
+
 
 ## Editing settings
 
@@ -311,6 +351,7 @@ in `Clojure Sublimed.sublime-settings` becomes
 
 in `Preferences.sublime-settings`. Settings from `Preferences.sublime-settings` take priority.
 
+
 ## Session-wide settings
 
 It is sometimes desirable to set dynamic Clojure vars for the whole session. To do that, edit `"eval_shared"` setting. For example:
@@ -320,6 +361,7 @@ It is sometimes desirable to set dynamic Clojure vars for the whole session. To 
 ```
 
 This will be applied to every evaluation.
+
 
 # Default Key Bindings
 

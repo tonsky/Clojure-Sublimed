@@ -1,10 +1,84 @@
 Hi there! Thank you for installing Clojure Sublimed.
 
-A few important points to help you get started:
+How to get started:
 
-- Assign `Clojure (Sublimed)` syntax to your Clojure files: `View` → `Syntax` → `Open all with current extension as...` → `Clojure Sublimed` → `Clojure (Sublimed)` (this step is required for everything else to work)
-- Make sure you have nREPL version 0.8+
-- Connect using `Clojure Sublimed: Connect`
-- Configure key bindings using `Preferences: Clojure Sublimed Key Bindings`
+
+Associate syntax with *.clj* files (only needs to be done once)
+---------------------------------------------------------------
+
+For each file type (.clj, .cljs, .cljc, .edn) do:
+
+- Open any file with that extension
+- Go to menu -> `View` → `Syntax` → `Open all with current extension as...`
+- Select `Clojure (Sublimed)`
+
+
+Key bindings
+------------
+
+Sublime has no good way to ship optional key bindings with plugin. So
+
+- Cmd/Ctrl + Shift + P (Command Palette)
+- `Preferences: Clojure Sublimed Key Bindings`
+- Copy examples from the left to your config on the right
+
+I recomment at least:
+
+- Evaluate
+- Evaluate Buffer
+- Interrupt Pending Evaluations
+- Clear Evaluation Results
+- Reindent
+- Insert New Line
+
+
+Code formatting
+---------------
+
+By default, Clojure Sublimed uses [Better Clojure Formatting style](https://tonsky.me/blog/clojurefmt/).
+
+If you want to use `cljftm`:
+
+- Download `cljfmt` binary from `https://github.com/weavejester/cljfmt/releases/latest`
+- Add `cljfmt` to `$PATH`
+- In Sublime Text, open `Preferences: Settings`
+- Add `"clojure_sublimed_formatter": "cljfmt"`
+
+Color scheme
+------------
+
+If you want to try our color scheme:
+
+- Cmd/Ctrl + Shift + P (Command Palette)
+- `UI: Select Color Scheme`
+- Select `Auto` -> `Clojure Sublimed Light` -> `Clojure Sublimed Dark`
+
+These color schemes will work for other languages, too.
+
+
+Running your app
+----------------
+
+Clojure Sublimed will not run your app for you. A few alternatives instead:
+
+- Use separate terminal app
+- Terminus plugin
+- Sublime Executor plugin
+
+
+Connecting to REPLs
+-------------------
+
+Depending on what type of REPL your run, use following commands:
+
+- JVM nREPL → `Clojure Sublimed: Connect to nREPL JVM`
+- Shadow CLJS client-side → `Clojure Sublimed: Connect to shadow-cljs`
+- Shadow CLJS server-side → `Clojure Sublimed: Connect to raw nREPL`
+- Socket REPL on JVM → `Clojure Sublimed: Connect to Socket REPL`
+- Any other nREPL (babashka, sci, ...) → `Clojure Sublimed: Connect to raw nREPL`
+
+Clojure Sublimed can only run one REPL connection per window.
+
+Minimal supported nREPL version is 0.9.
 
 Read more at https://github.com/tonsky/Clojure-Sublimed/blob/master/README.md
