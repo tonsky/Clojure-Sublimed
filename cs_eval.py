@@ -296,7 +296,7 @@ class ClojureSublimedEvalCommand(sublime_plugin.WindowCommand):
         if expand:
             on_finish = lambda _: view.run_command("clojure_sublimed_toggle_info", {})
 
-        regions = [sublime.Region(a, b) for (a, b) in regions]
+        regions = [sublime.Region(a, b) for (a, b) in regions or []]
         state.conn.eval(view, regions or view.sel(), transform_fn = transform_fn, print_quota = print_quota, on_finish = on_finish)
 
     def is_enabled(self):    
