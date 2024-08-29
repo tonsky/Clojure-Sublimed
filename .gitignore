@@ -5,3 +5,4 @@ __pycache__
 TODO.md
 .repl-port
 .nrepl-port
+.clj-kondo

@@ -37,6 +37,10 @@
         "command": "clojure_sublimed_eval_buffer"
     },
     {
+        "caption": "Clojure Sublimed: Evaluate Previous Form at Current Level",
+        "command": "clojure_sublimed_eval_previous_form"
+    },
+    {
         "caption": "Clojure Sublimed: Interrupt Pending Evaluations",
         "command": "clojure_sublimed_interrupt_eval"
     },

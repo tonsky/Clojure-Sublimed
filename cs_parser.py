@@ -419,6 +419,28 @@ def topmost_form(view, point):
                         node = inner
         return sublime.Region(node.start, node.end)
 
+def previous_form_at_level(view, point):
+    """
+    Finds last form before cursor on the same level. E.g.
+
+    (+ 1 (* 2 3) 3)
+                ^ cursor
+         ^^^^^^^ result
+    """
+    parsed = parse_tree(view)
+    def find_previous(node):
+        if not node:
+            return
+        children = node.body.children if node.body else node.children
+        if not children:
+            return
+        for child in reversed(children):
+            if child.end <= point:
+                return child
+            if child.start < point < child.end:
+                return find_previous(child)
+    return find_previous(parsed)
+
 def namespace(view, point):
     """
     Finds name of last namespace defined in buffer up to the point

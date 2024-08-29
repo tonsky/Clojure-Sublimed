@@ -284,7 +284,7 @@ class ClojureSublimedEvalCommand(sublime_plugin.WindowCommand):
     """
     Eval selected code or topmost form is selection is collapsed
     """
-    def run(self, print_quota = None, transform = None, expand = False):
+    def run(self, regions = None, print_quota = None, transform = None, expand = False):
         view = self.window.active_view()
         state = cs_common.get_state(self.window)
         
@@ -295,8 +295,26 @@ class ClojureSublimedEvalCommand(sublime_plugin.WindowCommand):
         on_finish = None
         if expand:
             on_finish = lambda _: view.run_command("clojure_sublimed_toggle_info", {})
+
+        regions = [sublime.Region(a, b) for (a, b) in regions]
+        state.conn.eval(view, regions or view.sel(), transform_fn = transform_fn, print_quota = print_quota, on_finish = on_finish)
+
+    def is_enabled(self):    
+        return self.window.active_view() and cs_conn.ready(self.window)
+
+class ClojureSublimedEvalPreviousFormCommand(sublime_plugin.WindowCommand):
+    def run(self, print_quota = None, transform = None, expand = False):
+        view = self.window.active_view()
+        regions = []
         
-        state.conn.eval(view, view.sel(), transform_fn = transform_fn, print_quota = print_quota, on_finish = on_finish)
+        for sel in view.sel():
+            if sel.empty():
+                if form := cs_parser.previous_form_at_level(view, sel.begin()):
+                    regions.append((form.start, form.end))
+        
+        if regions:
+            args = {"regions": regions, "print_quota": print_quota, "transform": transform, "expand": expand}
+            self.window.run_command("clojure_sublimed_eval", args)
 
     def is_enabled(self):    
         return self.window.active_view() and cs_conn.ready(self.window)

@@ -1,3 +1,7 @@
+### WIP
+
+- Eval previous form at current level #118
+
 ### 4.0.0 - Aug 23, 2024
 
 Syntax has been significantly reworked.
@@ -9,7 +13,7 @@ Syntax has been significantly reworked.
 - Properly highlight `entity.name` in `def*` forms only at second position, skipping all meta/comments
 - Quote & syntax quote highlight following form as `meta.quoted` and `meta.quoted.syntax`
 - Metadata highlights following form as `meta.metadata`
-- Octal & arbitrary radix integers
+- Octal & arbitrary radix integers #71
 - Better keyword detection
 
 Other changes:
@@ -18,8 +22,8 @@ Other changes:
 - Allow using `cljfmt` for formatting (requires `cljfmt` binary on `$PATH`)
 - Removed separate EDN syntax, merged with main Clojure (Sublimed)
 - Settings can now be specified in main `Preferences.sublime-settings` as well. Just prepend `clojure_sublimed_` to each setting’s name.
-- REPL can detect namespaces with meta on ns form
-- Detect `.shadow-cljs/nrepl.port` and `.shadow-cljs/socket-repl.port`
+- REPL can detect namespaces with meta on ns form #116
+- Detect `.shadow-cljs/nrepl.port` and `.shadow-cljs/socket-repl.port` #114
 - Connect commands now accept `timeout` argument for automation scenarios like “start clojure, start trying to connect to REPL until port is available”
 
 ### 3.8.0 - Aug 8, 2024
