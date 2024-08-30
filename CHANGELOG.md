@@ -1,7 +1,8 @@
-### WIP
+### 4.1.0 - Aug 30, 2024
 
 - Eval previous form at current level #118
 - Auto-detect UNIX sockets, support relative paths
+- Correctly parse escaped comma #120 via @oakmac
 
 ### 4.0.0 - Aug 23, 2024
 
