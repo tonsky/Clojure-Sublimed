@@ -195,6 +195,23 @@ def phantom_styles(view, scope):
     except:
         pass
 
+def find_in_folders(name = None, pred = None):
+    if window := sublime.active_window():
+        if name and os.path.isabs(name):
+            if os.path.exists(name):
+                return name
+            else:
+                return None
+        for folder in window.folders():
+            if name:
+                path = folder + "/" + name
+                if os.path.exists(path):
+                    return path
+            if pred:
+                for file in os.listdir(folder):
+                    path = folder + "/" + file
+                    if pred(folder + '/' + file):
+                        return path
 
 class SocketIO:
     """
@@ -221,7 +238,7 @@ def socket_connect(addr):
         return socket.create_connection((host, port))
     else: # path == unix domain socket
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(addr)
+        s.connect(find_in_folders(addr))
         return s
 
 def set_status(window, key, value):

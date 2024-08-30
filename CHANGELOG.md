@@ -1,6 +1,7 @@
 ### WIP
 
 - Eval previous form at current level #118
+- Auto-detect UNIX sockets, support relative paths
 
 ### 4.0.0 - Aug 23, 2024
 

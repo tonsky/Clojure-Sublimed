@@ -1,4 +1,4 @@
-import os, re, sublime, sublime_plugin, threading, time
+import os, re, stat, sublime, sublime_plugin, threading, time
 from . import cs_common, cs_eval, cs_eval_status, cs_parser, cs_warn
 
 status_key = 'clojure-sublimed-conn'
@@ -174,6 +174,9 @@ class Connection:
         self.status = status
         cs_common.set_status(self.window, status_key, status)
 
+def is_socket(path):
+    return stat.S_ISSOCK(os.stat(path).st_mode)
+
 class AddressInputHandler(sublime_plugin.TextInputHandler):
     def __init__(self, port_files = [], next_input = None):
         self.port_files = port_files
@@ -187,14 +190,15 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
 
     def initial_text(self):
         # .nrepl-port file present
-        if self.port_files and (window := sublime.active_window()):
-            for folder in window.folders():
-                for port_file in self.port_files:
-                    if os.path.exists(folder + "/" + port_file):
-                        with open(folder + "/" + port_file, "rt") as f:
-                            content = f.read(10).strip()
-                            if re.fullmatch(r'[1-9][0-9]*', content):
-                                return f'localhost:{content}'
+        if self.port_files:
+            for port_file in self.port_files:
+                if path := cs_common.find_in_folders(name = port_file):
+                    with open(path, "rt") as f:
+                        content = f.read(10).strip()
+                        if re.fullmatch(r'[1-9][0-9]*', content):
+                            return f'localhost:{content}'
+        if path := cs_common.find_in_folders(pred = is_socket):
+            return path
         state = cs_common.get_state()
         return state.last_conn[1]['address'] if state.last_conn else 'localhost:'
 
@@ -212,14 +216,17 @@ class AddressInputHandler(sublime_plugin.TextInputHandler):
 
     def validate(self, text):
         text = text.strip()
-        if 'auto' == text:
+        if not text:
+            return False
+        elif 'auto' == text:
             return True
         elif match := re.fullmatch(r'([a-zA-Z0-9\.]+):(\d{1,5})', text):
             _, port = match.groups()
             return 1 <= int(port) and int(port) < 65536
         else:
-            return os.path.isfile(text)
-
+            path = cs_common.find_in_folders(name = text)
+            return bool(path and is_socket(path))
+    
     def next_input(self, args):
         return self.next
 
