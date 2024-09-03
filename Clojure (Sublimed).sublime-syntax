@@ -271,7 +271,7 @@ contexts:
       push: list_second
 
   symbol_name:
-    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/){{symbol}}){{wse}}'
+    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/)(?:/|{{sym_body}}+)){{wse}}'
       scope: source.symbol.clojure entity.name.clojure
       captures:
         1: meta.namespace.symbol.clojure
@@ -288,7 +288,7 @@ contexts:
       pop:   1
 
   symbol:
-    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/){{symbol}}){{wse}}'
+    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/)(?:/|{{sym_body}}+)){{wse}}'
       scope: source.symbol.clojure
       captures:
         1: meta.namespace.symbol.clojure

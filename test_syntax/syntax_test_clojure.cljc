@@ -288,7 +288,7 @@ string"
 ;                ^^ source.symbol
 ;                   ^^ source.symbol
 ;                      ^^^^ source.symbol
-  a/b a1/b2 абв/где abc.def/uvw.xyz clojure.core//
+  a/b a1/b2 абв/где abc.def/uvw.xyz
 ; ^^^ source.symbol
 ; ^ meta.namespace.symbol
 ;  ^  punctuation.definition.namespace
@@ -301,9 +301,22 @@ string"
 ;                   ^^^^^^^^^^^^^^^ source.symbol
 ;                   ^^^^^^^ meta.namespace.symbol
 ;                          ^ punctuation.definition.namespace
-;                                   ^^^^^^^^^^^^^^ source.symbol
-;                                   ^^^^^^^^^^^^ meta.namespace.symbol
-;                                               ^ punctuation.definition.namespace
+  abc.def// abc.def/+ abc.def/+' abc.def/1
+; ^^^^^^^^^ source.symbol
+; ^^^^^^^ meta.namespace.symbol
+;        ^ punctuation.definition.namespace
+;          ^ - source.symbol
+;           ^^^^^^^^^ source.symbol
+;           ^^^^^^^ meta.namespace.symbol
+;                  ^ punctuation.definition.namespace
+;                    ^ - source.symbol
+;                     ^^^^^^^^^^ source.symbol
+;                     ^^^^^^^ meta.namespace.symbol
+;                            ^ punctuation.definition.namespace
+;                               ^ - source.symbol
+;                                ^^^^^^^^^ source.symbol
+;                                ^^^^^^^ meta.namespace.symbol
+;                                       ^ punctuation.definition.namespace
   _ _a _abc x/_a
 ; ^ source.symbol.unused
 ;   ^^ source.symbol.unused
@@ -680,7 +693,7 @@ string"
 
 ;;;;;;;;;; METADATA ;;;;;;;;;;
 
-  ^{:a 1 :b 2} ^String ^"String" ^:dynamic x
+  ^{:a 1 :b 2} ^String ^"String" ^double/1 ^:dynamic x
 ; ^ punctuation.definition.metadata
 ; ^^^^^^^^^^^^ meta.metadata
 ;             ^ - meta.metadata
@@ -691,8 +704,11 @@ string"
 ;                      ^^^^^^^^^ meta.metadata
 ;                               ^ - meta.metadata
 ;                                ^ punctuation.definition.metadata
-;                                 ^^^^^^^^ meta.metadata
+;                                ^^^^^^^^^ meta.metadata
 ;                                         ^ - meta.metadata
+;                                          ^ punctuation.definition.metadata
+;                                           ^^^^^^^^ meta.metadata
+;                                                   ^ - meta.metadata
   ^ , :dynamic x
 ; ^^^^^^^^^^^^ meta.metadata
 ;             ^^ - meta.metadata

@@ -20,7 +20,7 @@
         "foreground":                  "var(fg)",
         "background":                  "var(bg)",
         "caret":                       "var(active)",
-        "line_highlight":              "#00000010",
+        "line_highlight":              "#00000008",
         "misspelling":                 "#f00",
         "selection":                   "#B4D8FD",
         "inactive_selection":          "#E0E0E0",

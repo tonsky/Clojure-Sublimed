@@ -1,3 +1,7 @@
+### WIP
+
+- Support Clojure 1.12 array type annotations
+
 ### 4.1.0 - Aug 30, 2024
 
 - Eval previous form at current level #118
