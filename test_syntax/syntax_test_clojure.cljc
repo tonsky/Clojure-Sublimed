@@ -317,6 +317,26 @@ string"
 ;                                ^^^^^^^^^ source.symbol
 ;                                ^^^^^^^ meta.namespace.symbol
 ;                                       ^ punctuation.definition.namespace
+  String/format String/.chars String/new
+; ^^^^^^^^^^^^^ source.symbol
+; ^^^^^^ meta.namespace.symbol
+;       ^ punctuation.definition.namespace
+;               ^^^^^^^^^^^^^ source.symbol
+;               ^^^^^^ meta.namespace.symbol
+;                     ^ punctuation.definition.namespace
+;                             ^^^^^^^^^^ source.symbol
+;                             ^^^^^^ meta.namespace.symbol
+;                                   ^ punctuation.definition.namespace
+  String/1 java.lang.String/1 long/1
+; ^^^^^^^^ source.symbol
+; ^^^^^^ meta.namespace.symbol
+;       ^ punctuation.definition.namespace
+;          ^^^^^^^^^^^^^^^^^^ source.symbol
+;          ^^^^^^^^^^^^^^^^ meta.namespace.symbol
+;                          ^ punctuation.definition.namespace
+;                             ^^^^^^ source.symbol
+;                             ^^^^ meta.namespace.symbol
+;                                 ^ punctuation.definition.namespace
   _ _a _abc x/_a
 ; ^ source.symbol.unused
 ;   ^^ source.symbol.unused
@@ -715,11 +735,11 @@ string"
 ; ^ punctuation.definition.metadata
 ;  ^^^^^^^^^^^^^ - punctuation.definition.metadata
 ;   ^ punctuation.definition.comma
-  ^123 x  ^[:dynamic true] x
+  ^123 x  ^[long long/1 String String/1 clojure.lang.IDeref clojure.lang.IDeref/1] x
 ; ^^^^ meta.metadata
 ;     ^^^^ - meta.metadata
-;         ^^^^^^^^^^^^^^^^ meta.metadata
-;                         ^^ - meta.metadata
+;         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.metadata
+;                                                                                 ^^ - meta.metadata
   ^x()
 ; ^^ meta.metadata
 ;   ^^ - meta.metadata
