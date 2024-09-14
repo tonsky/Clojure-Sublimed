@@ -36,7 +36,8 @@ class ConnectionNreplRaw(cs_conn.Connection):
             for msg in cs_bencode.decode_file(cs_common.SocketIO(self.socket)):
                 self.handle_msg(msg)
         except OSError:
-            pass
+            self.socket.close()
+            self.socket = None
         self.disconnect()
 
     def send(self, msg):
