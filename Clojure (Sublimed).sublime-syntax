@@ -262,7 +262,7 @@ contexts:
       pop:   1
 
   symbol_def:
-    - match: '{{wsb}}(?:(?=def){{symbol}}|({{ns_symbol}})(/)(?=def){{symbol}}){{wse}}'
+    - match: '{{wsb}}(?:ns|(?=def){{symbol}}|({{ns_symbol}})(/)(?=def){{symbol}}){{wse}}'
       scope: source.symbol.def.clojure
       captures:
         1: meta.namespace.symbol.clojure

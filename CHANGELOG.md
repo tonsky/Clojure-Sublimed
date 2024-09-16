@@ -1,3 +1,7 @@
+### WIP
+
+- Highlight namespace name as `entity.name`, same as defs
+
 ### 4.1.1 - Sep 6, 2024
 
 - Support Clojure 1.12 array type annotations
