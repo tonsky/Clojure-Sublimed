@@ -241,7 +241,7 @@ parsers['wrap'] = Seq(Regex(r"(@|'|`|~@|~|#')", name = ".marker"),
                       name = "wrap")
 
 token = '[^' + r'()\[\]{}\"@~^;`#\'' + ws + '][^' + r'()\[\]{}\"@^;`' + ws + ']*'
-parsers['token'] = Regex(r'(##)?(\\[()\[\]{}\"@^;`,]|' + token + ")", name = "token")
+parsers['token'] = Regex(r'(##)?(\\[()\[\]{}\"@^;`, ]|' + token + ")", name = "token")
 
 parsers['string'] = Seq(Regex(r'#?"', name=".open"),
                         Optional(Regex(r'([^"\\]+|\\.)+', name = ".body")),
