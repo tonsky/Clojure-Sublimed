@@ -1,6 +1,7 @@
 ### WIP
 
 - Highlight namespace name as `entity.name`, same as defs
+- No exceptions on disconnect
 
 ### 4.1.1 - Sep 6, 2024
 
