@@ -34,11 +34,25 @@ body)
 
 {::key-1 v1
 :key-2 v2}
- 
+
+(1 2
+3 4)
+
+(ns abc
+(:require
+a b
+c))
+
 #{a b c
 d e f}
 
 #:ns{:key v}
+
+#?(:clj 1
+:cljs 2)
+
+#?@(:clj [1]
+:cljs [2])
 
 (abcdef abcde abcd abc ab a)
 

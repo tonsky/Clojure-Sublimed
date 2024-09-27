@@ -3,6 +3,7 @@
 - Highlight namespace name as `entity.name`, same as defs
 - No exceptions on disconnect
 - Removed background on unused symbols inside quotes
+- Simplified formatting rules: if list's first form is a symbol, indent next line by +2 spaces, in all other cases, indent to opening paren (1 space)
 
 ### 4.1.1 - Sep 6, 2024
 

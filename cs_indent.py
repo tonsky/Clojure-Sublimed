@@ -57,17 +57,10 @@ def indent(view, point, parsed = None):
         if node.name == 'string':
             return ('string', row, col)
         elif node.name == 'parens' or (node.name == 'error' and node.text == '('):
-            # no first form -- indent to paren 
-            if not first_form:
-                offset = 0
-            # first form is a list/map/vector -- indent to paren
-            elif first_form.end <= point and first_form.name in ['parens', 'braces', 'brackets']:
-                offset = 0
-            # form itself is a reader conditional
-            elif node.open and node.open.text in ['#?(', '#?@(']:
-                offset = 0
-            else:
+            if first_form and cs_parser.is_symbol(first_form):
                 offset = 1
+            else:
+                offset = 0
         return ('indent', row, col + offset)
 
 def newline_indent(view, point):
