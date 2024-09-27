@@ -1,4 +1,4 @@
-### WIP
+### 4.2.0 - Sep 27, 2024
 
 - Simplified formatting rules: if list's first form is a symbol, indent next line by +2 spaces, in all other cases, indent to opening paren (1 space)
 - We now provide `cljfmt.edn` that tries to match our default formatting
