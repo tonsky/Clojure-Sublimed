@@ -56,7 +56,7 @@ abc ab/cd _abc
   (comment form))))} sym
 
 ; Quotes
-'{:symbol  name/space
+'{:symbols [name/space _ _abc]
   :string  "str\n\x"
   :regexp  #"\p{L}) \y"
   :number  123.456
@@ -71,7 +71,7 @@ abc ab/cd _abc
   (comment form))))}
 
 ; Syntax quotes
-`{:symbol  name/space
+`{:symbols [name/space _ _abc]
   :string  "str\n\x"
   :regexp  #"\p{L}) \y"
   :number  123.456
@@ -85,7 +85,7 @@ abc ab/cd _abc
   #_#_reader comment
   (comment form))))}
 
-`{:symbol  name/space
+`{:symbols [name/space _ _abc]
   :string  "str\n\x"
   :regexp  #"\p{L}) \y"
   :number  123.456
@@ -99,7 +99,7 @@ abc ab/cd _abc
   #_#_reader comment
   (comment form))))}
 
-`~{:symbol  name/space
+`~{:symbols [name/space _ _abc]
    :string  "str\n\x"
    :regexp  #"\p{L}) \y"
    :number  123.456
@@ -114,7 +114,7 @@ abc ab/cd _abc
    (comment form))))}
 
 ; Line comments
-; {:symbol  name/space
+; {:symbols [name/space _ _abc]
 ;  :string  "str\n\x"
 ;  :regexp  #"\p{L}) \y"
 ;  :number  123.456
@@ -129,7 +129,7 @@ abc ab/cd _abc
 ;  (comment form))))}
 
 ; Reader comments
-#_{:symbol  name/space
+#_{:symbols [name/space _ _abc]
    :string  "str\n\x"
    :regexp  #"\p{L}) \y"
    :number  123.456
@@ -145,7 +145,7 @@ abc ab/cd _abc
 
 ; Form comments
 (comment
-  {:symbol  name/space
+  {:symbols [name/space _ _abc]
    :string  "str\n\x"
    :regexp  #"\p{L}) \y"
    :number  123.456

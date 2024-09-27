@@ -59,8 +59,7 @@
 
         {"name":       "Unused symbol",
          "scope":      "source.symbol.unused",
-         "foreground": "var(gray)",
-         "background": "var(bg)"},
+         "foreground": "var(gray)"},
 
         {"name":       "Punctuation",
          "scope":      "punctuation - punctuation.section - punctuation.definition",

@@ -2,6 +2,7 @@
 
 - Highlight namespace name as `entity.name`, same as defs
 - No exceptions on disconnect
+- Removed background on unused symbols inside quotes
 
 ### 4.1.1 - Sep 6, 2024
 
