@@ -1,14 +1,14 @@
 import difflib, os, re, sublime, subprocess
 from . import cs_common, cs_parser
 
-def format_string(view, text):
+def format_string(text, view = None, cwd = None):
     try:
         cmd = 'cljfmt.exe' if 'windows' == sublime.platform() else 'cljfmt'
-        cwd = None
-        if file := view.file_name():
-            cwd = os.path.dirname(file)
-        elif folders := view.window().folders():
-            cwd = folders[0]
+        if not cwd:
+            if file := view.file_name():
+                cwd = os.path.dirname(file)
+            elif folders := view.window().folders():
+                cwd = folders[0]
 
         proc = subprocess.run([cmd, 'fix', '-'],
                  input = text,
@@ -29,7 +29,7 @@ def indent_lines(view, regions, edit):
     replacements = []
     for region in regions:
         text = view.substr(region)
-        if text_formatted := format_string(view, text):
+        if text_formatted := format_string(text, view = view):
             pos = region.begin()
             diff = difflib.ndiff(text.splitlines(keepends=True), text_formatted.splitlines(keepends=True))
             for line in diff:
@@ -75,7 +75,7 @@ def newline_indent(view, point):
     if to_close and '"' == to_close[0]:
         return None
     text = text[start:] + "\nCLOJURE_SUBLIMED_SYM" + "".join(to_close)
-    formatted = format_string(view, text)
+    formatted = format_string(text, view = view)
     last_line = formatted.splitlines()[-1]
     indent = re.match(r"^\s*", last_line)[0]
     return len(indent)

@@ -104,10 +104,11 @@ def indent_lines(view, selections, edit):
                 replacements[row] = (begin, delta_i)
 
     # Now apply all replacements, recalculating begins as we go
-    change_id = view.change_id()
+    delta_total = 0
     for row in replacements:
         begin, delta_i = replacements[row]
-        begin = view.transform_region_from(sublime.Region(begin, begin), change_id).begin()
+        begin = begin + delta_total
+        delta_total += delta_i
         if delta_i < 0:
             view.replace(edit, sublime.Region(begin, begin - delta_i), "")
         else:

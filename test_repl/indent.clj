@@ -91,3 +91,12 @@ lkjdlk")
 \(
 ;; ((([[[{{{
 nil)
+
+(letfn [(square [x]
+(* x x))
+(sum [x y]
+(+ x y))]
+(let [x 3
+y 4]
+(sum (square x)
+(square y))))
