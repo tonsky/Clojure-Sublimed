@@ -22,8 +22,8 @@ def format_string(view, text):
     if 'Failed' not in proc.stderr:
         return proc.stdout
 
-def indent_lines(view, selections, edit):
-    regions = [region for region in selections if not region.empty()]
+def indent_lines(view, regions, edit):
+    regions = [region for region in regions if not region.empty()]
     if not regions:
         regions = [sublime.Region(0, view.size())]
     replacements = []
@@ -43,18 +43,18 @@ def indent_lines(view, selections, edit):
                 elif line[:2] == '? ':
                     pass
     if replacements:
-        selections = [(view.rowcol(r.a), view.rowcol(r.b)) for r in selections]
+        selections_before = [(view.rowcol(r.a), view.rowcol(r.b)) for r in view.sel()]
         delta = 0
         for region, string in replacements:
             transformed_region = sublime.Region(region.a + delta, region.b + delta)
             view.replace(edit, transformed_region, string)
             delta = delta - region.size() + len(string)
 
-        selections.clear()
-        for ((rowa, cola), (rowb, colb)) in selections:
+        view.sel().clear()
+        for ((rowa, cola), (rowb, colb)) in selections_before:
             a = view.text_point(rowa, cola)
             b = view.text_point(rowb, colb)
-            selections.add(sublime.Region(a, b))
+            view.sel().add(sublime.Region(a, b))
 
 def newline_indent(view, point):
     text = view.substr(sublime.Region(0, point))
