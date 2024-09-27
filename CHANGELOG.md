@@ -1,3 +1,7 @@
+### 4.2.1 - Sep 27, 2024
+
+- cljfmt correctly indents forms with custom rules
+
 ### 4.2.0 - Sep 27, 2024
 
 - Simplified formatting rules: if list's first form is a symbol, indent next line by +2 spaces, in all other cases, indent to opening paren (1 space)

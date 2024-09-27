@@ -74,8 +74,26 @@ def newline_indent(view, point):
         node = node.children[-1] if node.children else None
     if to_close and '"' == to_close[0]:
         return None
-    text = text[start:] + "\nCLOJURE_SUBLIMED_SYM" + "".join(to_close)
-    formatted = format_string(text, view = view)
+
+    ns = None
+    for child in parsed.children:
+        if child.end >= start:
+            break
+        if child.name == 'meta':
+            child = child.body.children[0]
+        if child.name == 'parens':
+            body = child.body
+            if len(body.children) >= 2:
+                first_form = body.children[0]
+                if first_form.name == 'token' and first_form.text == 'ns':
+                    ns = child
+
+    excerpt = ''
+    if ns:
+        excerpt = ns + '\n'
+
+    excerpt = excerpt + text[start:] + "\nCLOJURE_SUBLIMED_SYM" + "".join(to_close)
+    formatted = format_string(excerpt, view = view)
     last_line = formatted.splitlines()[-1]
     indent = re.match(r"^\s*", last_line)[0]
     return len(indent)
