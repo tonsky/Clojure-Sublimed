@@ -90,7 +90,7 @@ def newline_indent(view, point):
 
     excerpt = ''
     if ns:
-        excerpt = ns + '\n'
+        excerpt = text[ns.start:ns.end] + '\n'
 
     excerpt = excerpt + text[start:] + "\nCLOJURE_SUBLIMED_SYM" + "".join(to_close)
     formatted = format_string(excerpt, view = view)

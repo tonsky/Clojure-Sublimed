@@ -1,3 +1,7 @@
+### 4.2.2 - Sep 27, 2024
+
+- cljfmt correctly indents forms with custom rules - again
+
 ### 4.2.1 - Sep 27, 2024
 
 - cljfmt correctly indents forms with custom rules
