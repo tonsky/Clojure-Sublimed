@@ -38,7 +38,7 @@
     },
     "rules":
     [   {"name":       "Strings",
-         "scope":      "string - meta.metadata, meta.quoted string - meta.metadata",
+         "scope":      "string - meta.metadata, meta.quoted string - meta.metadata - comment",
          "background": "var(green)"},
         
         {"name":       "Escapes",

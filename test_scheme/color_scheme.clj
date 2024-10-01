@@ -57,7 +57,7 @@ abc ab/cd _abc
 
 ; Quotes
 '{:symbols [name/space _ _abc]
-  :string  "str\n\x"
+  :strings ["str\n\x" '"str"]
   :regexp  #"\p{L}) \y"
   :number  123.456
   :keyword :key/word
@@ -72,7 +72,7 @@ abc ab/cd _abc
 
 ; Syntax quotes
 `{:symbols [name/space _ _abc]
-  :string  "str\n\x"
+  :strings ["str\n\x" '"str"]
   :regexp  #"\p{L}) \y"
   :number  123.456
   :keyword :key/word
@@ -86,7 +86,7 @@ abc ab/cd _abc
   (comment form))))}
 
 `{:symbols [name/space _ _abc]
-  :string  "str\n\x"
+  :strings ["str\n\x" '"str"]
   :regexp  #"\p{L}) \y"
   :number  123.456
   :keyword :key/word
@@ -100,7 +100,7 @@ abc ab/cd _abc
   (comment form))))}
 
 `~{:symbols [name/space _ _abc]
-   :string  "str\n\x"
+   :strings ["str\n\x" '"str"]
    :regexp  #"\p{L}) \y"
    :number  123.456
    :keyword :key/word
@@ -115,7 +115,7 @@ abc ab/cd _abc
 
 ; Line comments
 ; {:symbols [name/space _ _abc]
-;  :string  "str\n\x"
+;  :strings ["str\n\x" '"str"]
 ;  :regexp  #"\p{L}) \y"
 ;  :number  123.456
 ;  :keyword :key/word
@@ -130,7 +130,7 @@ abc ab/cd _abc
 
 ; Reader comments
 #_{:symbols [name/space _ _abc]
-   :string  "str\n\x"
+   :strings ["str\n\x" '"str"]
    :regexp  #"\p{L}) \y"
    :number  123.456
    :keyword :key/word
@@ -146,7 +146,7 @@ abc ab/cd _abc
 ; Form comments
 (comment
   {:symbols [name/space _ _abc]
-   :string  "str\n\x"
+   :strings ["str\n\x" '"str"]
    :regexp  #"\p{L}) \y"
    :number  123.456
    :keyword :key/word

@@ -1,3 +1,7 @@
+### WIP
+
+- Remove bg on quoted strings inside metadata
+
 ### 4.2.2 - Sep 27, 2024
 
 - cljfmt correctly indents forms with custom rules - again
