@@ -29,6 +29,9 @@ class Node:
             if child.name == "." + name:
                 return child
 
+    def restore_text(self, text):
+        return text[self.start:self.end]
+
 class Named:
     """
     Parser that assigns name to Node
@@ -411,7 +414,22 @@ def topmost_form(view, point):
 
     parsed = parse_tree(view)
     if node := search(parsed, point, max_depth = 1):
-        if body := node.body:
+        # look inside ;; ...
+        if node.name == "comment":
+            comment_start = node.start
+            comment_text = node.restore_text(view.substr(sublime.Region(0, view.size())))
+            comment_inside_start = re.match(r'^[; ]*', comment_text).end()
+            delta = comment_start + comment_inside_start
+            comment_inside_text = comment_text[comment_inside_start:]
+            parsed2 = parse(comment_inside_text)
+            if node2 := search(parsed2, point - delta, max_depth = 1):
+                return sublime.Region(delta + node2.start, delta + node2.end)
+        # look inside #_...
+        elif node.name == "discard" and node.body.children[0] and point >= node.body.start:
+            node2 = node.body.children[0]
+            return sublime.Region(node2.start, node2.end)
+        # look inside (comment ...)
+        elif body := node.body:
             if body.children:
                 first_form = body.children[0]
                 if first_form.name == "token" and first_form.text == "comment" and point > first_form.end:

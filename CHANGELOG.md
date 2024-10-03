@@ -2,6 +2,7 @@
 
 - Remove bg on quoted strings inside metadata
 - Handle eval of `#_` forms in nREPL JVM
+- Execute code from inside top-level `; ...` and `#_...` #124
 
 ### 4.2.2 - Sep 27, 2024
 
