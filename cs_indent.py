@@ -1,3 +1,4 @@
+import re
 import sublime, sublime_plugin
 from . import cs_cljfmt, cs_common, cs_parser, cs_printer
 
@@ -157,6 +158,27 @@ class ClojureSublimedPrettyPrintCommand(sublime_plugin.TextCommand):
             node = cs_parser.parse(form)
             formatted = cs_printer.format(form, node, limit = cs_common.wrap_width(view))
             view.replace(edit, region, formatted)
+
+class ClojureSublimedToggleCommentCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view      = self.view
+        change_id = view.change_id()
+        for region in [r for r in view.sel()]:
+            region = view.transform_region_from(region, change_id)
+            line = view.line(region)
+            line_text = view.substr(line)
+            # uncomment ;
+            if m := re.match(r'^(\s*)(;[;\s]*)(.*)', line_text):
+                view.replace(edit, line, m[1] + m[3])
+                continue
+            parsed = cs_parser.parse_tree(view)
+            # uncomment #_
+            if node := cs_parser.search(parsed, region.begin(), pred = lambda node: node.name == "discard"):
+                view.replace(edit, sublime.Region(node.start, node.body.start), '')
+                continue
+            # prepend ;
+            if m := re.match(r'^(\s*)([^\s].*)', line_text):
+                view.replace(edit, line, m[1] + '; ' + m[2])
 
 def cljfmt_indent(view, point):
     i = None

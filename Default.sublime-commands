@@ -81,6 +81,10 @@
         "command": "clojure_sublimed_pretty_print"
     },
     {
+        "caption": "Clojure Sublimed: Toggle comment",
+        "command": "clojure_sublimed_toggle_comment"
+    },
+    {
         "caption": "Clojure Sublimed: Insert Newline",
         "command": "clojure_sublimed_insert_newline"
     },

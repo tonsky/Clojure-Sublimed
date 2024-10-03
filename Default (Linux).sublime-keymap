@@ -54,7 +54,12 @@
  // // Insert New Line
  // {"keys": ["enter"],
  //  "command": "clojure_sublimed_insert_newline",
- //  "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"},
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"},
  //              {"key": "auto_complete_visible", "operator": "equal", "operand": false},
  //              {"key": "panel_has_focus", "operator": "equal", "operand": false}]},
+
+ // // Toggle Comment
+ // {"keys": ["ctrl+/"],
+ //  "command": "clojure_sublimed_toggle_comment",
+ //  "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 ]

@@ -2,6 +2,7 @@
 
 - Pretty print selection #123
 - Execute code from inside top-level `; ...` and `#_...` #124
+- Clojure-aware `clojure_sublimed_toggle_comment` command
 - Remove background color on quoted strings inside metadata
 - Better handle eval of `#_` forms in nREPL JVM
 

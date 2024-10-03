@@ -363,17 +363,19 @@ def parse_as_dict(string):
         dict[key] = val
     return dict
 
-def search(node, pos, pred = lambda x: True, max_depth = 1000):
+def search(node, pos, pred = None, max_depth = 1000):
     """
     Search inside node what’s the deepest node that includes pos.
     Stops at max_depth and if pred evals to true.
     If two nodes touch around pos, checks both for pred.
     """
     if max_depth <= 0 or not node.children:
-        if pred(node):
+        if not pred or pred(node):
             return node
         else:
             return None
+    if pred and pred(node):
+        return node
     for child in node.children:
         if child.start <= pos <= child.end:
             if res := search(child, pos, pred = pred, max_depth = max_depth - 1):
@@ -388,7 +390,6 @@ def parse_tree(view, region = None):
     """
     Parses current buffer content and return AST
     """
-    id = view.buffer_id()
     text = view.substr(region or sublime.Region(0, view.size()))
     return parse(text)
 
@@ -397,7 +398,6 @@ def symbol_at_point(view, point):
     Returns symbol left/right/around cursor 
     """
     parsed = parse_tree(view)
-    start = time.time()
     if node := search(parsed, point, pred = is_symbol):
         return sublime.Region(node.start, node.end)
 
