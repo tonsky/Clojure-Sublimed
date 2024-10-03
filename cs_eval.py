@@ -258,7 +258,7 @@ def format_lookup(view, info):
 
         if doc:
             body += "<p>" + "</p><p>".join(html.escape(doc).split("\n")) + "</p>"
-    body += "</div>"
+    body += "</body>"
     return body
 
 def on_lookup(id, value):

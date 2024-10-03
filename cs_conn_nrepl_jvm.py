@@ -133,7 +133,8 @@ class ConnectionNreplJvm(cs_conn_nrepl_raw.ConnectionNreplRaw):
         or self.handle_new_session(msg) \
         or self.handle_value(msg) \
         or self.handle_exception(msg) \
-        or self.handle_lookup(msg)
+        or self.handle_lookup(msg) \
+        or self.handle_done(msg)
 
 class ClojureSublimedConnectNreplJvmCommand(sublime_plugin.WindowCommand):
     def run(self, address, timeout = 0):
