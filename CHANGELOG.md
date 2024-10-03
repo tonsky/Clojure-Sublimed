@@ -1,8 +1,9 @@
 ### WIP
 
-- Remove bg on quoted strings inside metadata
-- Handle eval of `#_` forms in nREPL JVM
+- Pretty print selection #123
 - Execute code from inside top-level `; ...` and `#_...` #124
+- Remove background color on quoted strings inside metadata
+- Better handle eval of `#_` forms in nREPL JVM
 
 ### 4.2.2 - Sep 27, 2024
 

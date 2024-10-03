@@ -77,6 +77,10 @@
         "command": "clojure_sublimed_reindent_buffer"
     },
     {
+        "caption": "Clojure Sublimed: Pretty-print selection",
+        "command": "clojure_sublimed_pretty_print"
+    },
+    {
         "caption": "Clojure Sublimed: Insert Newline",
         "command": "clojure_sublimed_insert_newline"
     },

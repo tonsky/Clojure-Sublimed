@@ -77,6 +77,10 @@ To enable correct indentations as you type code, rebind `Enter` to `Clojure Subl
              {"key": "panel_has_focus", "operator": "equal", "operand": false}]}
 ```
 
+Indent will fix indentation, but will not create new lines. To format a completely unformatted source, use `Pretty-print selection` command:
+
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/pretty_print.gif" width="830" height="550" alt="Pretty print">
+
 
 # REPL clients
 

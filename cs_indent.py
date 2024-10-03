@@ -1,5 +1,5 @@
 import sublime, sublime_plugin
-from . import cs_cljfmt, cs_common, cs_parser
+from . import cs_cljfmt, cs_common, cs_parser, cs_printer
 
 def search_path(node, pos):
     """
@@ -144,6 +144,19 @@ class ClojureSublimedReindentCommand(sublime_plugin.TextCommand):
             view.run_command('clojure_sublimed_reindent_buffer')
         else:
             view.run_command('clojure_sublimed_reindent_lines')
+
+class ClojureSublimedPrettyPrintCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        change_id = view.change_id()
+        for region in [r for r in view.sel()]:
+            region = view.transform_region_from(region, change_id)
+            if region.empty():
+                region = cs_parser.topmost_form(view, region.begin())
+            form = view.substr(region)
+            node = cs_parser.parse(form)
+            formatted = cs_printer.format(form, node, limit = cs_common.wrap_width(view))
+            view.replace(edit, region, formatted)
 
 def cljfmt_indent(view, point):
     i = None
