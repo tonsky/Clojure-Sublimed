@@ -46,17 +46,27 @@ def print_table(titles, cols):
         print("".join(['─'] * (width + 2)), end = "┴" if i < len(widths) - 1 else "┘")
     print("\n")
 
-def run_tests(dir, test_fn, col_input = True):
+def gen_test_case(name, input, expected):
+    return [(name, input, expected)]
+
+def run_tests(dir, test_fn, col_input = True, gen_test_case = gen_test_case):
     """
     Looks for all *.txt files in dir, parses them as `input` + `expected`,
     then compares `expected` to `test_fn(input)`. Prints errors and execution stats
     """
-    files = [file for file in os.listdir(dir) if file.endswith(".txt")]
+    if os.path.isdir(dir):
+        files = [file for file in os.listdir(dir) if file.endswith(".txt")]
+    elif os.path.isfile(dir):
+        files = [os.path.basename(dir)]
+        dir = os.path.dirname(dir)
+    else:
+        raise Exception(dir + " is neither file nor dir")
+
     width = max(len(file) for file in files)
     tests = 0
     failed = 0
     for file in files:
-        with open(dir + file) as f:
+        with open(os.path.join(dir, file)) as f:
             content = f.read()
         print(file.ljust(width), "[", end = "")
         failures = []
@@ -66,14 +76,16 @@ def run_tests(dir, test_fn, col_input = True):
             input = match.group(2).strip('\n')
             expected = match.group(3).strip('\n')
             expected = "\n".join(line.rstrip(' ') for line in expected.split('\n'))
-            actual = test_fn(input)
-            if actual != expected:
-                failed += 1
-                print("F", end = "")
-                failures.append((name, input, expected, actual))
-            else:
-                print(".", end = "")
-            sys.stdout.flush()
+
+            for name, input, expected in gen_test_case(name, input, expected):
+                actual = test_fn(input)
+                if actual != expected:
+                    failed += 1
+                    print("F", end = "")
+                    failures.append((name, input, expected, actual))
+                else:
+                    print(".", end = "")
+                sys.stdout.flush()
         print("]")
         for (name, input, expected, actual) in failures:
             if col_input:

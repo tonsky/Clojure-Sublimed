@@ -32,6 +32,15 @@ class Node:
     def restore_text(self, text):
         return text[self.start:self.end]
 
+    def is_terminal(self):
+        return self.name in ["discard", "wrap", "meta", "tagged"]
+
+    def nested(self):
+        if self.name in ["brackets", "braces", "parens"]:
+            return self.body.children if self.body else []
+        elif self.name == "source":
+            return self.children
+
 class Named:
     """
     Parser that assigns name to Node

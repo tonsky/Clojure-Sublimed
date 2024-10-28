@@ -2,4 +2,5 @@ class EventListener:
     pass
 
 class TextCommand:
-    pass
+    def __init__(self, view):
+        self.view: sublime.View = view

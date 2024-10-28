@@ -45,7 +45,7 @@ class Region:
         return iter((self.a, self.b))
 
     def __str__(self) -> str:
-        return "(" + str(self.a) + ", " + str(self.b) + ")"
+        return "Region(" + str(self.a) + ", " + str(self.b) + ")"
 
     def __repr__(self) -> str:
         if self.xpos == -1:
@@ -159,6 +159,131 @@ class Region:
             (lb == rb and le == re) or
             (rb > lb and rb < le) or (re > lb and re < le) or
             (lb > rb and lb < re) or (le > rb and le < re))
+
+class Selection:
+    """
+    Maintains a set of sorted non-overlapping Regions. A selection may be
+    empty.
+
+    This is primarily used to represent the textual selection.
+    """
+
+    def __init__(self, regions):
+        self.regions = list(regions)
+
+    def __iter__(self) -> Iterator[Region]:
+        """
+        Iterate through all the regions in the selection.
+
+        .. since:: 4023 3.8
+        """
+        return iter(self.regions)
+
+    def __len__(self) -> int:
+        """ :returns: The number of regions in the selection. """
+        return len(self.regions)
+
+    def __getitem__(self, index: int) -> Region:
+        """ :returns: The region at the given ``index``. """
+        return self.regions(index)
+
+    def __delitem__(self, index: int):
+        """ Delete the region at the given ``index``. """
+        del self.regions[index]
+
+    def __eq__(self, rhs: object) -> bool:
+        """ :returns: Whether the selections are identical. """
+        return rhs is not None and isinstance(rhs, Selection) and list(self) == list(rhs)
+
+    def __lt__(self, rhs: Optional[Selection]) -> bool:
+        """ """
+        return rhs is not None and list(self) < list(rhs)
+
+    def __bool__(self) -> bool:
+        """ The selection is ``True`` when not empty. """
+        return len(self) > 0
+
+    def __str__(self) -> str:
+        return f"{self!r}[{', '.join(map(str, self))}]"
+
+    def __repr__(self) -> str:
+        return f'Selection'
+
+    # def is_valid(self) -> bool:
+    #     """ :returns: Whether this selection is for a valid view. """
+    #     return True
+
+    def clear(self):
+        """ Remove all regions from the selection. """
+        self.regions.clear()
+
+    def add(self, x: Region):
+        """
+        Add a `Region` or `Point` to the selection. It will be merged with the
+        existing regions if intersecting.
+        """
+        self.regions.append(x)
+
+    def add_all(self, regions: Iterable[Region]):
+        """ Add all the regions from the given iterable. """
+        for r in regions:
+            self.add(r)
+
+    # def subtract(self, region: Region):
+    #     """
+    #     Subtract a region from the selection, such that the whole region is no
+    #     longer contained within the selection.
+    #     """
+    #     sublime_api.view_selection_subtract_region(self.view_id, region.a, region.b)
+
+    # def contains(self, region: Region) -> bool:
+    #     """ :returns: Whether the provided region is contained within the selection. """
+    #     return sublime_api.view_selection_contains(self.view_id, region.a, region.b)
+
+class View:
+    def __init__(self, text="", sel = None):
+        self.text = text
+        self.text_lines = text.split('\n')
+        self._sel = Selection(sel) if sel else Selection([Region(0, 0)])
+
+    def sel(self):
+        return self._sel
+
+    def rowcol(self, point):
+        row = 0
+        offset = 0
+        for line in self.text_lines:
+            line_len = len(line) + 1
+            if offset + line_len <= point:
+                row += 1
+                offset += line_len
+            else:
+                col = point - offset
+                return (row, col)
+        return (row, offset)
+        # lines = self.text[:point].split('\n')
+        # row = len(lines) - 1
+        # col = len(lines[-1]) if lines else 0
+        # return (row, col)
+
+    def substr(self, region):
+        return self.text[region.begin():region.end()]
+
+    def size(self):
+        return len(self.text)
+
+    def replace(self, edit, region, new_text):
+        self.text = self.text[:region.begin()] + new_text + self.text[region.end():]
+        self.text_lines = self.text.split('\n')
+
+    def lines(self, region):
+        start = 0
+        res = []
+        for line in self.text_lines:
+            if start + len(line) >= region.begin() or start < region.end():
+                res.append(Region(start, start + len(line)))
+            start += len(line) + 1
+        return res
 
 platform = {'Darwin': 'osx', 'Linux': 'linux', 'Windows': 'windows'}[platform.system()]
 

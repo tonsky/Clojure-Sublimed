@@ -82,6 +82,19 @@ Indent will fix indentation, but will not create new lines. To format a complete
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/pretty_print.gif" width="830" height="550" alt="Pretty print">
 
 
+# Toggle comment command
+
+There are three types of comment in Clojure:
+
+- Line comments `;;` are intended for textual / unstructured comments about code
+- Reader discard form `#_` is intended for temporarily disabling parts of code
+- `comment` form for coding snippets for future use
+
+By default Sublime will try to use `;;` because it’s most similar to other languages and is simple to implmenet. One can argue, however, that we disable/enable parts of the code way more often that write textual comments about them. Therefore `#_` might work better.
+
+Clojure Sublimed offer `Toggle Comment` command that can be used instead of Sublime provided one in Clojure sources. See Keymap on how to enable.
+
+
 # REPL clients
 
 Clojure Sublimed REPL clients enable interactive development from the comfort of your editor.
@@ -383,6 +396,7 @@ Clear Evaluation Results      | <kbd>Ctrl</kbd> <kbd>L</kbd>     | <kbd>Ctrl</kb
 Copy Evaluation Results       | <kbd>Command</kbd> <kbd>C</kbd>  | <kbd>Ctrl</kbd> <kbd>C</kbd>                    | [C]opy
 Reindent Lines                | <kbd>Ctrl</kbd> <kbd>F</kbd> | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>F</kbd> | [F]ormat
 Reindent Buffer               | <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>F</kbd> | <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Shift</kbd> <kbd>F</kbd> | Capital [F]ormat
+Toggle Comment                | <kbd>Command</kbd> <kbd>/</kbd> | <kbd>Ctrl</kbd> <kbd>/</kbd> | Comment [/]
 
 To set it up, run `Preferences: Clojure Sublimed Key Bindings` command and copy example keybindings to your local Key Bindings file.
 
