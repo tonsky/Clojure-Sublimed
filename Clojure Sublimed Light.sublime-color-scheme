@@ -35,6 +35,9 @@
         "bracket_contents_foreground": "var(active)",
         "tags_options":                "underline",
         "tags_foreground":             "var(active)",
+        "gutter":                      "#F8F8F8",
+        "gutter_foreground":           "#DDDDDD",
+        "gutter_foreground_highlight": "#DDDDDD",
     },
     "rules":
     [   {"name":       "Strings",

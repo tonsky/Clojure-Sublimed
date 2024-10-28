@@ -5,6 +5,7 @@
 - Clojure-aware `clojure_sublimed_toggle_comment` command
 - Remove background color on quoted strings inside metadata
 - Better handle eval of `#_` forms in nREPL JVM
+- Made line numbers much more transparent
 
 ### 4.2.2 - Sep 27, 2024
 

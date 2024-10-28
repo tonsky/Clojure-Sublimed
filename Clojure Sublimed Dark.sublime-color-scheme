@@ -36,6 +36,9 @@
         "bracket_contents_foreground": "var(active)",
         "tags_options":                "underline",
         "tags_foreground":             "var(active)",
+        "gutter":                      "#121819",
+        "gutter_foreground":           "#282828",
+        "gutter_foreground_active":    "#282828",
     },
     "rules":
     [
