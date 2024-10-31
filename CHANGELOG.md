@@ -1,4 +1,4 @@
-### WIP
+### 4.3.0 - Oct 31, 2024
 
 - Pretty print selection #123
 - Execute code from inside top-level `; ...` and `#_...` #124
