@@ -83,7 +83,7 @@ def newline_indent(view, point):
             child = child.body.children[0]
         if child.name == 'parens':
             body = child.body
-            if len(body.children) >= 2:
+            if body and len(body.children) >= 2:
                 first_form = body.children[0]
                 if first_form.name == 'token' and first_form.text == 'ns':
                     ns = child

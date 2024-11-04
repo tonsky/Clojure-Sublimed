@@ -1,3 +1,7 @@
+### 4.3.1 - Nov 4, 2024
+
+- Fixed evaluation of `()` #131
+
 ### 4.3.0 - Oct 31, 2024
 
 - Pretty print selection #123

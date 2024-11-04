@@ -481,7 +481,7 @@ def namespace(view, point):
             child = child.body.children[0]
         if child.name == 'parens':
             body = child.body
-            if len(body.children) >= 2:
+            if body and len(body.children) >= 2:
                 first_form = body.children[0]
                 if first_form.name == 'token' and first_form.text == 'ns':
                     second_form = body.children[1]
@@ -503,7 +503,7 @@ def defsym(node):
     """
     if node.name == 'parens':
         body = node.body
-        if len(body.children) >= 2:
+        if body and len(body.children) >= 2:
             first_form = body.children[0]
             if first_form.name == 'token' and re.fullmatch(r'(ns|([^/]+/)?def.*)', first_form.text):
                 second_form = body.children[1]
