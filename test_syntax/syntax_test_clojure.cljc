@@ -343,9 +343,37 @@ string"
 ;      ^^^^ source.symbol.unused
 ;           ^^^^ source.symbol.unused
 
+  ns// ns//sym ns/sym/sym ns/.1a ns/+1a ns/-1a .1a 
+; ^^^^ source.symbol
+; ^^ meta.namespace.symbol
+;   ^ punctuation.definition.namespace
+;     ^ -source.symbol
+;      ^^^^^^^ source.symbol
+;      ^^ meta.namespace.symbol
+;        ^ punctuation.definition.namespace
+;             ^ -source.symbol
+;              ^^^^^^^^^^ source.symbol
+;              ^^ meta.namespace.symbol
+;                ^ punctuation.definition.namespace
+;                        ^ -source.symbol
+;                         ^^^^^^ source.symbol
+;                         ^^ meta.namespace.symbol
+;                           ^ punctuation.definition.namespace
+;                               ^ -source.symbol
+;                                ^^^^^^ source.symbol
+;                                ^^ meta.namespace.symbol
+;                                  ^ punctuation.definition.namespace
+;                                      ^ -source.symbol
+;                                       ^^^^^^ source.symbol
+;                                       ^^ meta.namespace.symbol
+;                                         ^ punctuation.definition.namespace
+;                                             ^ -source.symbol
+;                                              ^^^ source.symbol
+;                                                 ^ -source.symbol
+
 ; NOT SYMBOLS
-  a/ /b 1a -1a +1a .1a
-; ^^^^^^^^^^^^^^^^^^^^ -source.symbol
+  a/ /b 1a -1a +1a 
+; ^^^^^^^^^^^^^^^^^ -source.symbol
 
 
 ;;;;;;;;;; KEYWORDS ;;;;;;;;;;
@@ -403,10 +431,18 @@ string"
 ;            ^^^^^^^^ constant.other.keyword
 ;                     ^^^^^ constant.other.keyword
 ;                           ^^^^^^ constant.other.keyword
+  :/ :/// :ns// :ns///
+; ^^ constant.other.keyword
+;   ^ -constant.other.keyword
+;    ^^^^ constant.other.keyword
+;        ^ -constant.other.keyword
+;         ^^^^^ constant.other.keyword
+;              ^ -constant.other.keyword
+;               ^^^^^^ constant.other.keyword
 
 ;;;;; NOT KEYWORDS
-  :kv: :kv/ :/kv :/ :kv/ab: :kv/ab/ :::kv 
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ -constant.other.keyword
+  :kv: :kv/ :/kv :kv/ab: :kv/ab/ :::kv :// ::/ :://
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ -constant.other.keyword
 
 
 ;;;;;;;;;; INTEGERS ;;;;;;;;;;

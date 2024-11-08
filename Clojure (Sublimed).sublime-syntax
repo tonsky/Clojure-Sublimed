@@ -8,11 +8,13 @@ variables:
   wsb:          '(?<=^|[\s,()\[\]{}~''`"^@]|#_)'
   wse:           '(?=$|[\s,()\[\]{}";])'
   nwse:              '[^\s,()\[\]{}";]'
-  sym_head:     '[\p{Alpha}*!_?$%&=<>]'
-  sym_head_lax: '[\p{Alpha}*!_?$%&=<>''\-+.#:]'
-  sym_body:     '[\p{Alpha}*!_?$%&=<>''\-+.#:0-9]'
+  
+  sym_head:     '[\p{Alpha}*!_?$%&=<>.]'
+  sym_head_lax: '[\p{Alpha}*!_?$%&=<>.''\-+#:]'
+  sym_body:     '[\p{Alpha}*!_?$%&=<>.''\-+#:0-9]'
   ns_symbol:    '(?:[\-+.]|[\-+.]{{sym_head_lax}}{{sym_body}}*|{{sym_head}}{{sym_body}}*)'
   symbol:       '(?:/|{{ns_symbol}})'
+  
   kw:           '\p{Alpha}*!_?$%&=<>''\-+.#0-9' 
   regexp_name:  '[a-zA-Z][a-zA-Z0-9]*'
 contexts:
@@ -223,7 +225,7 @@ contexts:
       pop: 1
 
   keyword:
-    - match: '{{wsb}}(::?)([{{kw}}][{{kw}}:]*[{{kw}}]|[{{kw}}])(/)([{{kw}}:/]*[{{kw}}]|[{{kw}}]){{wse}}'
+    - match: '{{wsb}}(::?)([{{kw}}][{{kw}}:]*[{{kw}}]|[{{kw}}])(/)([{{kw}}:/]*[{{kw}}]|[{{kw}}]|/+){{wse}}'
       scope: constant.other.keyword.clojure
       captures:
         1: punctuation.definition.keyword.begin.clojure
@@ -234,6 +236,17 @@ contexts:
       scope: constant.other.keyword.clojure
       captures:
         1: punctuation.definition.keyword.begin.clojure
+      pop: 1
+    - match: '{{wsb}}(:)/{{wse}}'
+      scope: constant.other.keyword.clojure
+      captures:
+        1: punctuation.definition.keyword.begin.clojure
+      pop: 1
+    - match: '{{wsb}}(:)/(//+){{wse}}'
+      scope: constant.other.keyword.clojure
+      captures:
+        1: punctuation.definition.keyword.begin.clojure
+        2: punctuation.definition.namespace.clojure
       pop: 1
 
   integer:
@@ -271,7 +284,7 @@ contexts:
       push: list_second
 
   symbol_name:
-    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/)(?:/|{{sym_body}}+)){{wse}}'
+    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/)(?:/|{{sym_body}})+){{wse}}'
       scope: source.symbol.clojure entity.name.clojure
       captures:
         1: meta.namespace.symbol.clojure
@@ -280,7 +293,7 @@ contexts:
       push: list_rest
 
   symbol_unused:
-    - match: '{{wsb}}(?:(?=_){{symbol}}|({{ns_symbol}})(/)(?=_){{symbol}}){{wse}}'
+    - match: '{{wsb}}(?:(?=_){{symbol}}|({{ns_symbol}})(/)(?=_)(?:/|{{sym_body}})*){{wse}}'
       scope: source.symbol.unused.clojure
       captures:
         1: meta.namespace.symbol.clojure
@@ -288,7 +301,7 @@ contexts:
       pop:   1
 
   symbol:
-    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/)(?:/|{{sym_body}}+)){{wse}}'
+    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/)(?:/|{{sym_body}})+){{wse}}'
       scope: source.symbol.clojure
       captures:
         1: meta.namespace.symbol.clojure
@@ -543,7 +556,7 @@ contexts:
       pop: 2
 
   deep_keyword:
-    - match: '{{wsb}}(::?)([{{kw}}][{{kw}}:]*[{{kw}}]|[{{kw}}])(/)([{{kw}}:/]*[{{kw}}]|[{{kw}}]){{wse}}'
+    - match: '{{wsb}}(::?)([{{kw}}][{{kw}}:]*[{{kw}}]|[{{kw}}])(/)([{{kw}}:/]*[{{kw}}]|[{{kw}}]|/+){{wse}}'
       scope: constant.other.keyword.clojure
       captures:
         1: punctuation.definition.keyword.begin.clojure
@@ -554,6 +567,17 @@ contexts:
       scope: constant.other.keyword.clojure
       captures:
         1: punctuation.definition.keyword.begin.clojure
+      pop: 2
+    - match: '{{wsb}}(:)/{{wse}}'
+      scope: constant.other.keyword.clojure
+      captures:
+        1: punctuation.definition.keyword.begin.clojure
+      pop: 2
+    - match: '{{wsb}}(:)/(//+){{wse}}'
+      scope: constant.other.keyword.clojure
+      captures:
+        1: punctuation.definition.keyword.begin.clojure
+        2: punctuation.definition.namespace.clojure
       pop: 2
 
   deep_integer:
@@ -582,7 +606,7 @@ contexts:
       pop: 2
 
   deep_symbol_def:
-    - match: '{{wsb}}(?:(?=def){{symbol}}|({{ns_symbol}})(/)(?=def){{symbol}}){{wse}}'
+    - match: '{{wsb}}(?:ns|(?=def){{symbol}}|({{ns_symbol}})(/)(?=def){{symbol}}){{wse}}'
       scope: source.symbol.def.clojure
       captures:
         1: meta.namespace.symbol.clojure
@@ -591,7 +615,7 @@ contexts:
       push: deep_list_second
 
   deep_symbol_name:
-    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/){{symbol}}){{wse}}'
+    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/)(?:/|{{sym_body}})+){{wse}}'
       scope: source.symbol.clojure entity.name.clojure
       captures:
         1: meta.namespace.symbol.clojure
@@ -600,7 +624,7 @@ contexts:
       push: deep_list_rest
 
   deep_symbol_unused:
-    - match: '{{wsb}}(?:(?=_){{symbol}}|({{ns_symbol}})(/)(?=_){{symbol}}){{wse}}'
+    - match: '{{wsb}}(?:(?=_){{symbol}}|({{ns_symbol}})(/)(?=_)(?:/|{{sym_body}})*){{wse}}'
       scope: source.symbol.unused.clojure
       captures:
         1: meta.namespace.symbol.clojure
@@ -608,7 +632,7 @@ contexts:
       pop: 2
 
   deep_symbol:
-    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/){{symbol}}){{wse}}'
+    - match: '{{wsb}}(?:{{symbol}}|({{ns_symbol}})(/)(?:/|{{sym_body}})+){{wse}}'
       scope: source.symbol.clojure
       captures:
         1: meta.namespace.symbol.clojure
