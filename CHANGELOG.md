@@ -1,6 +1,7 @@
 ### WIP
 
 - Clarified some symbol/keyword edge cases in syntax
+- Add `clojure_sublimed_select_topmost_form` command
 
 ### 4.3.1 - Nov 4, 2024
 

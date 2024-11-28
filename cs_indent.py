@@ -159,6 +159,13 @@ class ClojureSublimedPrettyPrintCommand(sublime_plugin.TextCommand):
             formatted = cs_printer.format(form, node, limit = cs_common.wrap_width(view))
             view.replace(edit, region, formatted)
 
+class ClojureSublimedSelectTopmostFormCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        sel = view.sel()
+        for region in [r for r in sel]:
+            sel.add(cs_parser.topmost_form(view, region.begin()))
+
 def cljfmt_indent(view, point):
     i = None
     try:

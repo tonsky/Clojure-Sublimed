@@ -81,6 +81,10 @@
         "command": "clojure_sublimed_pretty_print"
     },
     {
+        "caption": "Clojure Sublimed: Select topmost form",
+        "command": "clojure_sublimed_select_topmost_form"
+    },
+    {
         "caption": "Clojure Sublimed: Toggle comment",
         "command": "clojure_sublimed_toggle_comment"
     },
