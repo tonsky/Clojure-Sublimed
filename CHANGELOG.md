@@ -1,7 +1,8 @@
-### WIP
+### 4.3.2 - Dec 9, 2024
 
 - Clarified some symbol/keyword edge cases in syntax
 - Add `clojure_sublimed_select_topmost_form` command
+- Add `|` to the allowed symbols chars #132
 
 ### 4.3.1 - Nov 4, 2024
 

@@ -9,9 +9,9 @@ variables:
   wse:           '(?=$|[\s,()\[\]{}";])'
   nwse:              '[^\s,()\[\]{}";]'
   
-  sym_head:     '[\p{Alpha}*!_?$%&=<>.]'
-  sym_head_lax: '[\p{Alpha}*!_?$%&=<>.''\-+#:]'
-  sym_body:     '[\p{Alpha}*!_?$%&=<>.''\-+#:0-9]'
+  sym_head:     '[\p{Alpha}*!_?$%&=<>.|]'
+  sym_head_lax: '[\p{Alpha}*!_?$%&=<>.|''\-+#:]'
+  sym_body:     '[\p{Alpha}*!_?$%&=<>.|''\-+#:0-9]'
   ns_symbol:    '(?:[\-+.]|[\-+.]{{sym_head_lax}}{{sym_body}}*|{{sym_head}}{{sym_body}}*)'
   symbol:       '(?:/|{{ns_symbol}})'
   
