@@ -45,7 +45,7 @@ clojure.string/index-of
 
 
 (defn reverse
-  "Returns a seq of the items in reverse order."
+  "Returns a seq of \"items\" in reverse order."
   {:added "1.0"
    :static true}
   [coll]
@@ -70,3 +70,5 @@ clojure.string/index-of
 
 (defn ^:private >0? [n]
   (clojure.lang.Numbers/gt n 0))
+
+

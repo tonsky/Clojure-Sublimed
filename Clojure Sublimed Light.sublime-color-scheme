@@ -6,13 +6,6 @@
         "active":     "#007ACC",
         "fg":         "#000",
         "bg":         "#fff",
-        "blue":       "#DBF1FF",
-        "green":      "#F1FADF",
-        "dark_green": "#DBECB6",
-        "red":        "#FFE0E0",
-        "magenta":    "#7A3E9D",
-        "yellow":     "#FFFABC",
-        "orange":     "#FFBC5D",
         "gray":       "#A0A0A0",
     },
     "globals":
@@ -26,9 +19,9 @@
         "inactive_selection":          "#E0E0E0",
         "selection_border_width":      "0",
         "selection_corner_radius":     "2",
-        "highlight":                   "var(orange)",
+        "highlight":                   "#FFBC5D",
+        "find_highlight":              "#FFBC5D",
         "find_highlight_foreground":   "#000",
-        "find_highlight":              "var(orange)",
         "brackets_options":            "underline",
         "brackets_foreground":         "var(active)",
         "bracket_contents_options":    "underline",
@@ -42,19 +35,21 @@
     "rules":
     [   {"name":       "Strings",
          "scope":      "string - meta.metadata, meta.quoted string - meta.metadata - comment",
-         "background": "var(green)"},
+         "background": "#eefbd9",
+         "foreground": "#3c5c00"},
         
         {"name":       "Escapes",
          "scope":      "constant.character.escape - meta.metadata, constant.other.placeholder - meta.metadata",
-         "background": "var(dark_green)"},
+         "background": "#DBECB6"},
 
         {"name":       "Constants",
          "scope":      "constant - constant.character.escape, punctuation.definition.constant",
-         "foreground": "var(magenta)"},
+         "foreground": "#8a3eb5"},
 
         {"name":       "Definitions",
          "scope":      "entity.name - entity.name.tag - meta.metadata",
-         "background": "var(blue)"},
+         "background": "#DBF1FF",
+         "foreground": "#195b7c"},
 
         {"name":       "Symbol namespaces",
          "scope":      "meta.namespace.symbol, source.symbol punctuation.definition.namespace",
@@ -74,8 +69,8 @@
 
         {"name":       "Line Comments",
          "scope":      "comment - comment.reader - comment.form, invalid comment, meta.quoted comment.line, meta.quoted comment.line punctuation.definition.comment, meta.metadata comment.line punctuation.definition.comment",
-         "foreground": "var(fg)",
-         "background": "var(yellow)"},
+         "foreground": "#6d6607",
+         "background": "#FFFABC"},
 
         {"name":       "Reader comments",
          "scope":      "comment.reader, comment.reader keyword.operator, comment.reader string, comment.reader constant, comment.reader punctuation.definition.constant, comment.reader punctuation, comment.reader constant.character.escape, comment.reader invalid.illegal.escape, comment.reader string invalid, comment.reader string invalid punctuation, comment.reader entity.name, comment.reader meta.quoted",
@@ -129,7 +124,7 @@
         {"name":       "Mistakes",
          "scope":      "invalid, invalid string, invalid constant, invalid entity.name, invalid punctuation, invalid source.symbol",
          "foreground": "#c33",
-         "background": "var(red)"},
+         "background": "#FFE0E0"},
          
         // MARKUP
         

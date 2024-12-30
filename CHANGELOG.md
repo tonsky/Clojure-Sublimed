@@ -1,3 +1,7 @@
+### WIP
+
+- Color scheme adjustments
+
 ### 4.3.2 - Dec 9, 2024
 
 - Clarified some symbol/keyword edge cases in syntax
