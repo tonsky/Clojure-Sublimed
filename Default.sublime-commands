@@ -97,6 +97,10 @@
         "command": "clojure_sublimed_add_watch"
     },
     {
+        "caption": "Clojure Sublimed: Align Cursors",
+        "command": "clojure_sublimed_align_cursors_command"
+    },
+    {
         "caption": "Preferences: Clojure Sublimed Settings",
         "command": "edit_settings",
         "args": {

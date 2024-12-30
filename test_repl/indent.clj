@@ -100,3 +100,10 @@ nil)
 y 4]
 (sum (square x)
 (square y))))
+
+(let [x 1
+      x+y 22
+      x+y+z 333
+      a {:a 1, :b 2, :c 3}
+      bb {:a+b 123, :c+d 456, :e+f 789}
+      ccc {:a+b+c 12345, :d+e+f 67890, :g+h+i 0xFFFFFF}])

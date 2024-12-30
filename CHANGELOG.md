@@ -1,5 +1,6 @@
-### WIP
+### 4.4.0 - Dec 30, 2024
 
+- New `Align Cursors` command
 - Color scheme adjustments
 
 ### 4.3.2 - Dec 9, 2024

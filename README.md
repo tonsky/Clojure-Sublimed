@@ -94,6 +94,11 @@ By default Sublime will try to use `;;` because it’s most similar to other lan
 
 Clojure Sublimed offer `Toggle Comment` command that can be used instead of Sublime provided one in Clojure sources. See Keymap on how to enable.
 
+# Align cursors command
+
+If you select multiple cursors on different lines and run `Align cursors` command, Clojure Sublimed will align them in a column. Works with multiple columns, too:
+
+<img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/align_cursors.gif" width="500" height="201" alt="Align cursors">
 
 # REPL clients
 

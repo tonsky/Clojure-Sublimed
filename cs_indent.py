@@ -1,4 +1,4 @@
-import re
+import collections, re
 import sublime, sublime_plugin
 from . import cs_cljfmt, cs_common, cs_parser, cs_printer
 
@@ -195,3 +195,43 @@ class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
             view.replace(edit, region, string)
             # Add selection at the end of newly inserted region
             view.sel().add(sublime.Region(point, point))
+
+class ClojureSublimedAlignCursorsCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        by_row = collections.defaultdict(list)
+        for region in view.sel():
+            row, col = view.rowcol(region.a)
+            by_row[row].append(region)
+        # print('by_row', by_row)
+        cols = max(len(line_regions) for line_regions in by_row.values())
+        # print('cols', cols)
+        change_id = view.change_id()
+        # upd = lambda r: view.transform_region_from(r, change_id)
+        for col in range(0, cols):
+            col_regions = [line_regions[col] for line_regions in by_row.values() if len(line_regions) > col]
+            col_regions = [view.transform_region_from(r, change_id) for r in col_regions]
+            col_regions.sort(key = lambda r: view.rowcol(r.a)[0])
+            # print('col', col, col_regions)
+            max_col = max(view.rowcol(r.a)[1] for r in col_regions)
+            max_len = max(r.size() for r in col_regions)
+            # print("max_col", max_col, "max_len", max_len)
+            change_id_2 = view.change_id()
+            for r in col_regions:
+                r = view.transform_region_from(r, change_id_2)
+                _, col = view.rowcol(r.begin())
+                length = r.size()
+                prepend = max_col - col
+                append = max_len - length
+                # print("r", r, "col", col, "len", length, "left", max_col - col, "right", max_len - length)
+                view.replace(edit, sublime.Region(r.begin()), ' ' * prepend)
+                # r = view.transform_region_from(r, change_id)
+                # print("new r", r)
+                view.replace(edit, sublime.Region(r.end() + prepend), ' ' * append)
+
+
+        # change_id = view.change_id()
+        # for region in list(view.sel()):
+        #     region = view.transform_region_from(region, change_id)
+        #     _, col = view.rowcol(region.a)
+        #     view.replace(edit, region, ' ' * (max_col - col))
