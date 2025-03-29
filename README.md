@@ -90,7 +90,7 @@ There are three types of comment in Clojure:
 - Reader discard form `#_` is intended for temporarily disabling parts of code
 - `comment` form for coding snippets for future use
 
-By default Sublime will try to use `;;` because it’s most similar to other languages and is simple to implmenet. One can argue, however, that we disable/enable parts of the code way more often that write textual comments about them. Therefore `#_` might work better.
+By default, Sublime will try to use `;;` because it’s most similar to other languages and is simple to implement. One can argue, however, that we disable/enable parts of the code way more often than write textual comments about them. Therefore, `#_` might work better.
 
 Clojure Sublimed offer `Toggle Comment` command that can be used instead of Sublime provided one in Clojure sources. See Keymap on how to enable.
 
