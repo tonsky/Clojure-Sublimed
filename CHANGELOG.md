@@ -1,3 +1,7 @@
+### 4.4.1 - Apr 5, 2025
+
+- Autoscroll on Enter #135
+
 ### 4.4.0 - Dec 30, 2024
 
 - New `Align Cursors` command

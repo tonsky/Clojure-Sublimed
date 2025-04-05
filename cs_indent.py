@@ -196,6 +196,8 @@ class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
             # Add selection at the end of newly inserted region
             view.sel().add(sublime.Region(point, point))
 
+        view.show(view.sel(), show_surrounds = False)
+
 class ClojureSublimedAlignCursorsCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view

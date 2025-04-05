@@ -164,6 +164,9 @@
         {"scope": "region.pinkish",
          "background": "#E64CE680"},
 
+        {"scope": "region.greyish",
+         "background": "#FFFFFF10"},
+
         // {"scope": "region.eval.lookup",
         //  "foreground": "hsl(208, 100%, 50%)"},
     ]
