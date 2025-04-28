@@ -3,10 +3,10 @@
     "author": "Nikita Prokopov",
     "variables":
     {
-        "active":     "#007ACC",
-        "fg":         "#000",
-        "bg":         "#fff",
-        "gray":       "#A0A0A0",
+        "active": "#43bef4",
+        "fg":     "#000",
+        "bg":     "#fff",
+        "gray":   "#A0A0A0",
     },
     "globals":
     {
@@ -91,6 +91,10 @@
 
         {"name":       "Quoted",
          "scope":      "meta.quoted - meta.quoted meta.unquoted, meta.quoted meta.unquoted meta.quoted - meta.quoted meta.unquoted meta.quoted meta.unquoted, meta.quoted meta.unquoted meta.quoted meta.unquoted meta.quoted - meta.quoted meta.unquoted meta.quoted meta.unquoted meta.quoted meta.unquoted, meta.quoted comment.reader, meta.quoted punctuation.definition.comment, meta.quoted comment.form, meta.quoted comment.form punctuation",
+         "background": "#00000010"},
+
+        {"name":       "JSX",
+         "scope":      "meta.jsx - meta.jsx source.js.embedded, meta.jsx source.js.embedded meta.jsx - meta.jsx source.js.embedded meta.jsx source.js.embedded, meta.jsx source.js.embedded meta.jsx source.js.embedded meta.jsx - meta.jsx source.js.embedded meta.jsx source.js.embedded meta.jsx source.js.embedded",
          "background": "#00000010"},
 
         {"name":       "Inner brackets",

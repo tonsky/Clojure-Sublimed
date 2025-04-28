@@ -124,7 +124,7 @@ class ClojureSublimedReindentBufferCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         with cs_common.Measure("Reindent Buffer {} chars", view.size()):
-            if 'cljfmt' == cs_common.setting('formatter'):
+            if 'cljfmt' == cs_common.setting('formatter', view = view):
                 cs_cljfmt.indent_lines(view, [sublime.Region(0, view.size())], edit)
             else:
                 indent_lines(view, [sublime.Region(0, view.size())], edit)
@@ -133,7 +133,7 @@ class ClojureSublimedReindentLinesCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         with cs_common.Measure("Reindent Lines {} chars", sum([r.size() for r in view.sel()])):
-            if 'cljfmt' == cs_common.setting('formatter'):
+            if 'cljfmt' == cs_common.setting('formatter', view = view):
                 cs_cljfmt.indent_lines(view, view.sel(), edit)
             else:
                 indent_lines(view, view.sel(), edit)
@@ -177,7 +177,7 @@ def cljfmt_indent(view, point):
 class ClojureSublimedInsertNewlineCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        newline_indent_fn = cljfmt_indent if 'cljfmt' == cs_common.setting('formatter') else newline_indent
+        newline_indent_fn = cljfmt_indent if 'cljfmt' == cs_common.setting('formatter', view = view) else newline_indent
         
         # Calculate all replacements first
         replacements = []

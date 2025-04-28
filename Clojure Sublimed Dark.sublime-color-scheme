@@ -3,7 +3,7 @@
     "author": "Nikita Prokopov",
     "variables":
     {
-        "active":     "#CD974B",
+        "active":     "#00BFFF",
         "fg":         "#CECECE",
         "bg":         "#0E1415",
         "blue":       "#71ADE7",

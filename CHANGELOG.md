@@ -1,3 +1,7 @@
+### 4.4.2 - Apr 28, 2025
+
+- Get settings from view, which merges in project and syntax settings on top of `Preferences.sublime-settings`
+
 ### 4.4.1 - Apr 5, 2025
 
 - Autoscroll on Enter #135

@@ -32,20 +32,22 @@ class Form:
         self.file   = file
         self.print_quota = print_quota
 
+def main_settings(view = None):
+    if view := view or sublime.active_window().active_view():
+        return view.settings()
+    return sublime.load_settings("Preferences.sublime-settings")
+
 def settings():
     """
     Plugin settings
     """
     return sublime.load_settings("Clojure Sublimed.sublime-settings")
 
-def main_settings():
-    return sublime.load_settings("Preferences.sublime-settings")
-
-def setting(key, default = None):
+def setting(key, default = None, view = None):
     """
     Shortcut to get value of a particular plugin setting
     """
-    s = main_settings()
+    s = main_settings(view = view)
     if s and (res := s.get("clojure_sublimed_" + key)) is not None:
         return res
     s = settings()
