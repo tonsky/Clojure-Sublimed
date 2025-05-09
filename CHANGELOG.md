@@ -1,3 +1,7 @@
+### 4.4.3 - May 9, 2025
+
+- Fixed `Align Cursors` not appearing in Command Palette #136
+
 ### 4.4.2 - Apr 28, 2025
 
 - Get settings from view, which merges in project and syntax settings on top of `Preferences.sublime-settings`

@@ -98,7 +98,7 @@
     },
     {
         "caption": "Clojure Sublimed: Align Cursors",
-        "command": "clojure_sublimed_align_cursors_command"
+        "command": "clojure_sublimed_align_cursors"
     },
     {
         "caption": "Preferences: Clojure Sublimed Settings",
