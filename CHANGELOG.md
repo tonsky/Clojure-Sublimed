@@ -1,3 +1,7 @@
+### 4.5.0 - Jun 29, 2025
+
+- Improved stacktrace formatting, closer match for clojure+
+
 ### 4.4.3 - May 9, 2025
 
 - Fixed `Align Cursors` not appearing in Command Palette #136

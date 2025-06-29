@@ -1,10 +1,10 @@
 (ns clojure-sublimed.core
   (:require
-    [clojure.spec.alpha :as spec]
-    [clojure.string :as str])
+   [clojure.spec.alpha :as spec]
+   [clojure.string :as str])
   (:import
-    [clojure.lang Compiler Compiler$CompilerException ExceptionInfo LispReader$ReaderException]
-    [java.io BufferedWriter OutputStream OutputStreamWriter PrintWriter Writer]))
+   [clojure.lang Compiler Compiler$CompilerException ExceptionInfo LispReader$ReaderException]
+   [java.io BufferedWriter OutputStream OutputStreamWriter PrintWriter StringWriter Writer]))
 
 (def ^:dynamic *print-quota*
   4096)
@@ -45,13 +45,13 @@
 
 (defn bounded-pr-str [x]
   (let [writer (if (> *print-quota* 0)
-                 (bounded-writer (java.io.StringWriter.) *print-quota*)
-                 (java.io.StringWriter.))]
+                 (bounded-writer (StringWriter.) *print-quota*)
+                 (StringWriter.))]
     (try
       (binding [*out* writer]
         (pr x))
       (str writer)
-      (catch clojure.lang.ExceptionInfo e
+      (catch ExceptionInfo e
         (if (identical? quota-marker (ex-data e))
           (str writer "...")
           (throw e))))))
@@ -78,83 +78,189 @@
                      (.append sb cbuf ^int off ^int len)))))]
     (PrintWriter. proxy true)))
 
-;; CompilerException has location info, but its cause RuntimeException has the message ¯\_(ツ)_/¯
-(defn root-cause [^Throwable t]
-  (loop [t t
-         data nil]
-    (if (and
-          (nil? data)
-          (or
-            (instance? Compiler$CompilerException t)
-            (instance? LispReader$ReaderException t))
-          (not= [0 0] ((juxt :clojure.error/line :clojure.error/column) (ex-data t))))
-      (recur t (ex-data t))
-      (if-some [cause (some-> t .getCause)]
-        (recur cause data)
-        (if data
-          (ExceptionInfo. "Wrapper to pass CompilerException ex-data" data t)
-          t)))))
+;; errors
 
-(defn duplicate? [^StackTraceElement prev-el ^StackTraceElement el]
+(defn- noise? [^StackTraceElement el]
+  (let [class (.getClassName el)]
+    (#{"clojure.lang.RestFn" "clojure.lang.AFn"} class)))
+
+(defn- duplicate? [^StackTraceElement prev-el ^StackTraceElement el]
   (and
     (= (.getClassName prev-el) (.getClassName el))
     (= (.getFileName prev-el) (.getFileName el))
-    (= "invokeStatic" (.getMethodName prev-el))
-    (#{"invoke" "doInvoke"} (.getMethodName el))))
+    (#{"invokeStatic"} (.getMethodName prev-el))
+    (#{"invoke" "doInvoke" "invokePrim"} (.getMethodName el))))
 
-(defn clear-duplicates [els]
+(defn- clear-duplicates [els]
   (for [[prev-el el] (map vector (cons nil els) els)
         :when (or (nil? prev-el) (not (duplicate? prev-el el)))]
     el))
 
-(defn trace-element [^StackTraceElement el]
+(defn- trace-element [^StackTraceElement el]
   (let [file     (.getFileName el)
-        clojure? (or (nil? file)
-                   (= file "NO_SOURCE_FILE")
-                   (.endsWith file ".clj")
-                   (.endsWith file ".cljc"))]
-    {:method (if clojure?
-               (Compiler/demunge (.getClassName el))
-               (str (.getClassName el) "." (.getMethodName el)))
-     :file   (.getFileName el)
-     :line   (.getLineNumber el)}))
+        line     (.getLineNumber el)
+        cls      (.getClassName el)
+        method   (.getMethodName el)
+        clojure? (if file
+                   (or (.endsWith file ".clj") (.endsWith file ".cljc") (= file "NO_SOURCE_FILE"))
+                   (#{"invoke" "doInvoke" "invokePrim" "invokeStatic"} method))
 
-(defn as-table [table]
-  (let [[method file] (for [col [:method :file]]
-                        (->> table
-                          (map #(get % col))
-                          (map str)
-                          (map count)
-                          (reduce max (count "null"))))
-        format-str (str "\t%-" method "s\t%-" file "s\t:%d")]
-    (->> table
-      (map #(format format-str (:method %) (:file %) (:line %)))
-      (str/join "\n"))))
+        [ns separator method]
+        (cond
+          (not clojure?)
+          [(-> cls (str/split #"\.") last) "." method]
 
-(defn trace-str
-  ([t]
-   (trace-str t nil))
-  ([^Throwable t opts]
-   (let [{:clojure.error/keys [source line column]} (ex-data t)
-         cause (or (.getCause t) t)]
-     (str
-       (->> (.getStackTrace cause)
-         (take-while #(not (#{"clojure.lang.Compiler" "clojure.lang.LispReader"}
-                            (.getClassName ^StackTraceElement %))))
-         (remove #(#{"clojure.lang.RestFn" "clojure.lang.AFn"} (.getClassName ^StackTraceElement %)))
-         (clear-duplicates)
-         (map trace-element)
-         (reverse)
-         (as-table))
-       "\n>>> "
-       (.getSimpleName (class cause))
-       ": "
-       (.getMessage cause)
-       (when (:location? opts true)
-         (when (or source line column)
-           (str " (" source ":" line ":" column ")")))
-       (when-some [data (ex-data cause)]
-         (str " " (bounded-pr-str data)))))))
+          (#{"invoke" "doInvoke" "invokeStatic"} method)
+          (let [[ns method] (str/split (Compiler/demunge cls) #"/" 2)
+                method (-> method
+                         (str/replace #"eval\d{3,}" "eval")
+                         (str/replace #"--\d{3,}" ""))]
+            [ns "/" method])
+
+          :else
+          [(Compiler/demunge cls) "/" (Compiler/demunge method)])]
+    {:element   el
+     :file      (if (= "NO_SOURCE_FILE" file) nil file)
+     :line      line
+     :ns        ns
+     :separator separator
+     :method    method}))
+
+(defn- get-trace [^Throwable t]
+  (->> (.getStackTrace t)
+    (take-while
+      (fn [^StackTraceElement el]
+        (and
+          (not= "clojure.lang.Compiler" (.getClassName el))
+          (not= "clojure.lang.LispReader" (.getClassName el))
+          (not (str/starts-with? (.getClassName el) "clojure_sublimed")))))
+    (remove noise?)
+    (clear-duplicates)
+    (mapv trace-element)))
+
+(defn datafy-throwable [^Throwable t]
+  (let [trace  (get-trace t)
+        common (when-some [prev-t (.getCause t)]
+                 (let [prev-trace (get-trace prev-t)]
+                   (loop [m (dec (count trace))
+                          n (dec (count prev-trace))]
+                     (if (and (>= m 0) (>= n 0) (= (nth trace m) (nth prev-trace n)))
+                       (recur (dec m) (dec n))
+                       (- (dec (count trace)) m)))))]
+    {:message (.getMessage t)
+     :class   (class t)
+     :data    (ex-data t)
+     :trace   trace
+     :common  (or common 0)
+     :cause   (some-> (.getCause t) datafy-throwable)}))
+
+(defmacro write [w & args]
+  (list* 'do
+    (for [arg args]
+      (if (or (string? arg) (= String (:tag (meta arg))))
+        `(Writer/.write ~w ~arg)
+        `(Writer/.write ~w (str ~arg))))))
+
+(defn- pad [ch ^long len]
+  (when (pos? len)
+    (let [sb (StringBuilder. len)]
+      (dotimes [_ len]
+        (.append sb (char ch)))
+      (str sb))))
+
+(defn- split-file [s]
+  (if-some [[_ name ext] (re-matches #"(.*)(\.[^.]+)" s)]
+    [name ext]
+    [s ""]))
+
+(defn- linearize [key xs]
+  (->> xs (iterate key) (take-while some?)))
+
+(defn- longest-method [indent ts]
+  (reduce max 0
+    (for [[t depth] (map vector ts (range))
+          el        (:trace t)]
+      (+ (* depth indent) (count (:ns el)) (count (:separator el)) (count (:method el))))))
+
+(defn print-humanly [^Writer w ^Throwable t]
+  (let [ts      (linearize :cause (datafy-throwable t))
+        max-len (longest-method 0 ts)
+        indent  "  "]
+    (doseq [[idx t] (map vector (range) ts)
+            :let [{:keys [class message data trace common]} t]]
+      ;; class
+      (write w (when (pos? idx) "\nCaused by: ") (.getSimpleName ^Class class))
+
+      ;; message
+      (when message
+        (write w ": ")
+        (print-method message w))
+
+      ;; data
+      (when data
+        (write w " ")
+        (print-method data w))
+
+      ;; trace
+      (doseq [el   (drop-last common trace)
+              :let [{:keys [ns separator method file line]} el
+                    right-pad (pad \space (- max-len (count ns) (count separator) (count method)))]]
+        (write w "\n" indent)
+
+        ;; method
+        (write w ns separator method)
+
+        ;; locaiton
+        (cond
+          (= -2 line)
+          (write w right-pad "  " "Native Method")
+
+          file
+          (write w right-pad "  " file " " line)))
+
+      ;; ... common elements
+      (when (pos? common)
+        (write w "\n" indent "... " common " common elements")))))
+
+(defn compiler-err-str [^Throwable t]
+  (when (and
+          (instance? Compiler$CompilerException t)
+          (not (= :execution (:clojure.error/phase (ex-data t))))
+          (str/starts-with? (.getMessage t) "Syntax error")
+          (.getCause t)
+          (instance? RuntimeException t))
+    (let [cause (.getCause t)
+          {:clojure.error/keys [source line column]} (ex-data t)
+          source (some-> source (str/split #"/") last)]
+      (str (.getMessage cause) " (" source ":" line ":" (some-> column inc) ")"))))
+
+(defn root-cause ^Throwable [^Throwable t]
+  (when t
+    (if-some [cause (.getCause t)]
+      (recur cause)
+      t)))
+
+(defn error-str [^Throwable t]
+  (or
+    (compiler-err-str t)
+    (let [cause (root-cause t)
+          data  (ex-data cause)
+          class (.getSimpleName (class cause))
+          msg   (.getMessage cause)]
+      (cond-> (str class ": " msg)
+        data (str " " (bounded-pr-str data))))))
+
+(defn trace-str [^Throwable t]
+  (or
+    (compiler-err-str t)
+    (let [w (StringWriter.)
+          t (if (and
+                  (instance? Compiler$CompilerException t)
+                  (= :execution (:clojure.error/phase (ex-data t))))
+              (.getCause t)
+              t)]
+      (print-humanly w t)
+      (str w))))
 
 ;; Allow dynamic vars to be set in root thread when changed in spawned threads
 

@@ -36,23 +36,14 @@
     form))
 
 (defn report-throwable [^Throwable t]
-  (let [root  ^Throwable (core/root-cause t)
-        {:clojure.error/keys [source line column]} (ex-data root)
-        cause ^Throwable (or (some-> root .getCause) root)
-        data  (ex-data cause)
-        class (.getSimpleName (class cause))
-        msg   (.getMessage cause)
-        val   (cond-> (str class ": " msg)
-                data
-                (str " " (core/bounded-pr-str data)))
-        trace (core/trace-str root {:location? false})]
+  (let [{:clojure.error/keys [source line column]} (ex-data t)]
     (*out-fn*
       {"tag"    "ex"
-       "val"    val
-       "trace"  trace
+       "val"    (core/error-str t)
+       "trace"  (core/trace-str t)
        "source" source
        "line"   line
-       "column" column})))
+       "column" (some-> column inc)})))
 
 (defn reader ^LineNumberingPushbackReader [code line column]
   (let [reader (LineNumberingPushbackReader. (StringReader. code))]

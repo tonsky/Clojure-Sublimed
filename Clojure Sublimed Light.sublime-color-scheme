@@ -43,7 +43,7 @@
          "background": "#DBECB6"},
 
         {"name":       "Constants",
-         "scope":      "constant - constant.character.escape, punctuation.definition.constant, support.type",
+         "scope":      "constant - constant.character.escape, punctuation.definition.constant, support.type, source.sql keyword",
          "foreground": "#8a3eb5"},
 
         {"name":       "Definitions",
@@ -60,7 +60,7 @@
          "foreground": "var(gray)"},
 
         {"name":       "Punctuation",
-         "scope":      "punctuation - punctuation.section - punctuation.definition",
+         "scope":      "punctuation - punctuation.section - punctuation.definition - punctuation.accessor",
          "foreground": "var(gray)"},
 
         {"name":       "Comma",
