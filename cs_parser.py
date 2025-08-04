@@ -392,7 +392,7 @@ def search(node, pos, pred = None, max_depth = 1000):
         elif pos < child.start:
             break
 
-if __package__:
+if __spec__.parent:
     import sublime, sublime_plugin
 
 def parse_tree(view, region = None):

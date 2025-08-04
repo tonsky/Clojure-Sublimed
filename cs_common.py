@@ -280,7 +280,7 @@ class EventListener(sublime_plugin.EventListener):
 
 def plugin_loaded():
     global package
-    package_path = os.path.dirname(os.path.abspath(__file__))
+    package_path = os.path.dirname(os.path.abspath(__spec__.origin))
     if os.path.isfile(package_path):
         # Package is a .sublime-package so get its filename
         package, _ = os.path.splitext(os.path.basename(package_path))

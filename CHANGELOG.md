@@ -1,3 +1,7 @@
+### 4.5.2 - Aug 4, 2025
+
+- Prepare for python 3.13 #137
+
 ### 4.5.0 - Jun 29, 2025
 
 - Improved stacktrace formatting, closer match for clojure+
