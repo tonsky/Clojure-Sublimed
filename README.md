@@ -42,7 +42,7 @@ Want to put your parser to test? Check out [syntax_test_clojure.cljc](./test_syn
 
 <img src="https://raw.github.com/tonsky/Clojure-Sublimed/master/screenshots/scheme.png" width="850" height="508" alt="Color Scheme">
 
-To make best use of improved syntax definitions, Clojure Submiled offers its own color scheme:
+To make best use of improved syntax definitions, Clojure Sublimed offers its own color scheme:
 
 - Cmd/Ctrl + Shift + P (Command Palette)
 - `UI: Select Color Scheme`
