@@ -1,3 +1,7 @@
+### 4.5.3 - Mar 3, 2026
+
+- More contrast for gray color in dark theme #139
+
 ### 4.5.2 - Aug 4, 2025
 
 - Prepare for python 3.13 #137

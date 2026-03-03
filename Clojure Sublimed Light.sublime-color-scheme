@@ -3,17 +3,18 @@
     "author": "Nikita Prokopov",
     "variables":
     {
-        "active": "#43bef4",
-        "fg":     "#000",
-        "bg":     "#fff",
-        "gray":   "#A0A0A0",
+        "active":  "#43bef4",
+        "fg":      "#000",
+        "bg":      "#fff",
+        "gray":    "#A0A0A0",
+        "gray-bg": "#00000010",
     },
     "globals":
     {
         "foreground":                  "var(fg)",
         "background":                  "var(bg)",
         "caret":                       "var(active)",
-        "line_highlight":              "#00000008",
+        "line_highlight":              "var(gray-bg)",
         "misspelling":                 "#f00",
         "selection":                   "#B4D8FD",
         "inactive_selection":          "#E0E0E0",
@@ -28,7 +29,7 @@
         "bracket_contents_foreground": "var(active)",
         "tags_options":                "underline",
         "tags_foreground":             "var(active)",
-        // "gutter":                      "#E6E6E6",
+        // "gutter":                      "var(gray-bg)",
         "gutter_foreground":           "#CCC",
         "gutter_foreground_highlight": "#CCC",
     },
@@ -91,11 +92,11 @@
 
         {"name":       "Quoted",
          "scope":      "meta.quoted - meta.quoted meta.unquoted, meta.quoted meta.unquoted meta.quoted - meta.quoted meta.unquoted meta.quoted meta.unquoted, meta.quoted meta.unquoted meta.quoted meta.unquoted meta.quoted - meta.quoted meta.unquoted meta.quoted meta.unquoted meta.quoted meta.unquoted, meta.quoted comment.reader, meta.quoted punctuation.definition.comment, meta.quoted comment.form, meta.quoted comment.form punctuation",
-         "background": "#00000010"},
+         "background": "var(gray-bg)"},
 
         {"name":       "JSX",
          "scope":      "meta.jsx - meta.jsx source.js.embedded, meta.jsx source.js.embedded meta.jsx - meta.jsx source.js.embedded meta.jsx source.js.embedded, meta.jsx source.js.embedded meta.jsx source.js.embedded meta.jsx - meta.jsx source.js.embedded meta.jsx source.js.embedded meta.jsx source.js.embedded",
-         "background": "#00000010"},
+         "background": "var(gray-bg)"},
 
         {"name":       "Inner brackets",
          "scope":      "meta.parens meta.parens punctuation.section, meta.parens meta.brackets punctuation.section, meta.parens meta.braces punctuation.section, meta.brackets meta.parens punctuation.section, meta.brackets meta.brackets punctuation.section, meta.brackets meta.braces punctuation.section, meta.braces meta.parens punctuation.section, meta.braces meta.brackets punctuation.section, meta.braces meta.braces punctuation.section",

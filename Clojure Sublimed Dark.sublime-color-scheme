@@ -14,17 +14,18 @@
         "magenta":    "#CC8BC9",
         "yellow":     "#FFF080",
         // "orange":     "#FFBC5D",
-        "gray":       "#606060",
+        "gray":       "#73808c",
+        "gray-bg":    "#18232d",
     },
     "globals":
     {
         "foreground":                  "var(fg)",
         "background":                  "var(bg)",
         "caret":                       "var(active)",
-        "line_highlight":              "#ffffff10",
+        "line_highlight":              "var(gray-bg)",
         "misspelling":                 "#ff0000",
         "selection":                   "#293334",
-        "inactive_selection":          "#ffffff10",
+        "inactive_selection":          "var(gray-bg)",
         "selection_border_width":      "0",
         "selection_corner_radius":     "2",
         "highlight":                   "var(active)",
@@ -37,8 +38,8 @@
         "tags_options":                "underline",
         "tags_foreground":             "var(active)",
         "gutter":                      "#121819",
-        "gutter_foreground":           "#282828",
-        "gutter_foreground_active":    "#282828",
+        "gutter_foreground":           "#454d54",
+        "gutter_foreground_active":    "#454d54",
     },
     "rules":
     [
@@ -98,7 +99,7 @@
 
         {"name":       "Quoted",
          "scope":      "meta.quoted - meta.quoted meta.unquoted, meta.quoted meta.unquoted meta.quoted - meta.quoted meta.unquoted meta.quoted meta.unquoted, meta.quoted meta.unquoted meta.quoted meta.unquoted meta.quoted - meta.quoted meta.unquoted meta.quoted meta.unquoted meta.quoted meta.unquoted, meta.quoted comment.reader, meta.quoted punctuation.definition.comment, meta.quoted comment.form, meta.quoted comment.form punctuation",
-         "background": "#FFFFFF10"},
+         "background": "var(gray-bg)"},
 
         {"name":       "Inner brackets",
          "scope":      "meta.parens meta.parens punctuation.section, meta.parens meta.brackets punctuation.section, meta.parens meta.braces punctuation.section, meta.brackets meta.parens punctuation.section, meta.brackets meta.brackets punctuation.section, meta.brackets meta.braces punctuation.section, meta.braces meta.parens punctuation.section, meta.braces meta.brackets punctuation.section, meta.braces meta.braces punctuation.section",
