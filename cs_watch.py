@@ -93,7 +93,7 @@ class Watch:
             .light body { background-color: hsl(285, 100%, 90%); }
             .dark body  { background-color: hsl(285, 100%, 10%); }
         """ 
-        if phantom_styles := cs_common.phantom_styles(self.view, "phantom_success"):
+        if phantom_styles := cs_common.phantom_styles(self.view, "phantom_watch"):
             styles += f".light body, .dark body {{ { phantom_styles }; border: 4px solid #CC33CC; }}"
 
         body = f"""<body id='clojure-sublimed'>

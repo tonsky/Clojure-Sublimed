@@ -184,18 +184,15 @@ def scope_color(view, scope):
     return colors[scope]
 
 def phantom_styles(view, scope):
-    try:
-        styles = []
-        _, fg = cs_common.scope_color(view, f"{scope}_fg")
-        if fg:
-            styles.append(f"color: {fg};")
-        _, bg = cs_common.scope_color(view, f"{scope}_bg")
-        if bg:
-            styles.append(f"background-color: {bg};")
-        if styles:
-            return " ".join(styles)
-    except:
-        pass
+    styles = []
+    _, fg = scope_color(view, f"{scope}_fg") or (None, None)
+    if fg:
+        styles.append(f"color: {fg};")
+    _, bg = scope_color(view, f"{scope}_bg") or (None, None)
+    if bg:
+        styles.append(f"background-color: {bg};")
+    if styles:
+        return " ".join(styles)
 
 def find_in_folders(name = None, pred = None):
     if window := sublime.active_window():

@@ -1,3 +1,7 @@
+### 4.5.4 - Oct 11, 2026
+
+- Fixed `region.phantom.*` color scheme scopes not being applied to phantoms #140
+
 ### 4.5.3 - Mar 3, 2026
 
 - More contrast for gray color in dark theme #139
